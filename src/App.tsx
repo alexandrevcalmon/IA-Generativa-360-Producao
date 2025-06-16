@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import ProducerDashboard from "./pages/ProducerDashboard";
+import CompanyDashboard from "./pages/CompanyDashboard";
 import Courses from "./pages/Courses";
 import Learning from "./pages/Learning";
 import Community from "./pages/Community";
@@ -27,6 +29,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/producer-dashboard" element={<ProducerDashboard />} />
+              <Route path="/company-dashboard" element={<CompanyDashboard />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/learning" element={<Learning />} />
               <Route path="/community" element={<Community />} />
