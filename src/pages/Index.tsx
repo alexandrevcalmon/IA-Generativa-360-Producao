@@ -1,11 +1,224 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, BookOpen, Brain, Users, Award, BarChart3, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center space-y-8">
+            <Badge variant="outline" className="ai-gradient text-white border-0 px-6 py-2 text-sm font-medium">
+              Plataforma de Aprendizagem Corporativa
+            </Badge>
+            
+            <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 leading-tight">
+              <span className="ai-gradient-text">IA Generativa</span>
+              <br />
+              <span className="text-4xl lg:text-6xl">360º</span>
+            </h1>
+            
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Transforme sua equipe com aprendizagem contínua em IA Generativa e saúde mental. 
+              Uma plataforma completa para empresas que querem liderar o futuro.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link to="/dashboard">
+                <Button size="lg" className="ai-gradient hover:scale-105 transition-all duration-200 px-8 py-6 text-lg">
+                  Acessar Plataforma
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Button variant="outline" size="lg" className="px-8 py-6 text-lg border-2">
+                Conhecer Recursos
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Features Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Tudo que sua empresa precisa em uma plataforma
+          </h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Gerencie aprendizagem, engajamento e resultados com tecnologia de ponta
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Feature Cards */}
+          <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+                <BookOpen className="h-6 w-6 text-white" />
+              </div>
+              <CardTitle>Cursos & Trilhas</CardTitle>
+              <CardDescription>
+                Biblioteca completa de cursos com trilhas personalizadas por IA
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Vídeos HD com transcrição automática</li>
+                <li>• Quizzes adaptativos</li>
+                <li>• Certificados digitais</li>
+                <li>• Progresso em tempo real</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+                <Brain className="h-6 w-6 text-white" />
+              </div>
+              <CardTitle>IA Contextual</CardTitle>
+              <CardDescription>
+                Chatbot inteligente e recomendações personalizadas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Suporte por aula via Gemini API</li>
+                <li>• Recomendações inteligentes</li>
+                <li>• Análise de progresso</li>
+                <li>• Insights comportamentais</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <CardTitle>Gestão de Equipes</CardTitle>
+              <CardDescription>
+                Controle total de assentos e colaboradores
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Planos Starter 5-100</li>
+                <li>• SSO empresarial</li>
+                <li>• Provisionamento SCIM</li>
+                <li>• Relatórios detalhados</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+                <Award className="h-6 w-6 text-white" />
+              </div>
+              <CardTitle>Gamificação</CardTitle>
+              <CardDescription>
+                Sistema completo de engajamento e recompensas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• XP e leaderboards</li>
+                <li>• Badges e conquistas</li>
+                <li>• Nudges automáticos</li>
+                <li>• Competições em equipe</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+                <BarChart3 className="h-6 w-6 text-white" />
+              </div>
+              <CardTitle>Analytics Avançado</CardTitle>
+              <CardDescription>
+                Dashboards e relatórios customizáveis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• KPIs em tempo real</li>
+                <li>• Construtor drag-and-drop</li>
+                <li>• Alertas proativos</li>
+                <li>• Exportação CSV/Excel</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+                <MessageCircle className="h-6 w-6 text-white" />
+              </div>
+              <CardTitle>Comunidade</CardTitle>
+              <CardDescription>
+                Networking e mentorias ao vivo
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Feed de discussões</li>
+                <li>• Mentorias agendadas</li>
+                <li>• Calendário integrado</li>
+                <li>• Suporte em tempo real</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="bg-white/50 backdrop-blur-sm border-y">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+            <div className="space-y-2">
+              <div className="text-4xl font-bold ai-gradient-text">500+</div>
+              <div className="text-gray-600">Horas de Conteúdo</div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-4xl font-bold ai-gradient-text">50+</div>
+              <div className="text-gray-600">Empresas Ativas</div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-4xl font-bold ai-gradient-text">10k+</div>
+              <div className="text-gray-600">Colaboradores</div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-4xl font-bold ai-gradient-text">95%</div>
+              <div className="text-gray-600">Satisfação</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 ai-gradient opacity-90" />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
+            Pronto para transformar sua equipe?
+          </h2>
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            Junte-se às empresas líderes que já estão preparando seus colaboradores para o futuro da IA.
+          </p>
+          <Link to="/dashboard">
+            <Button size="lg" variant="outline" className="bg-white text-blue-600 hover:bg-gray-50 px-8 py-6 text-lg">
+              Começar Agora
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
