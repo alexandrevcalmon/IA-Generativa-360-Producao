@@ -7,18 +7,27 @@ import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-blue-50">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center space-y-8">
-            <Badge variant="outline" className="ai-gradient text-white border-0 px-6 py-2 text-sm font-medium">
+            {/* Logo */}
+            <div className="flex justify-center mb-8">
+              <img 
+                src="/logo-calmon-academy.png" 
+                alt="Calmon Academy" 
+                className="h-24 w-auto"
+              />
+            </div>
+            
+            <Badge variant="outline" className="calmon-gradient text-white border-0 px-6 py-2 text-sm font-medium">
               Plataforma de Aprendizagem Corporativa
             </Badge>
             
             <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 leading-tight">
-              <span className="ai-gradient-text">IA Generativa</span>
+              <span className="calmon-gradient-text">IA Generativa</span>
               <br />
               <span className="text-4xl lg:text-6xl">360º</span>
             </h1>
@@ -45,9 +54,9 @@ const Index = () => {
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {/* Producer Access */}
           <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-600" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-600" />
             <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mb-4">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mb-4">
                 <Briefcase className="h-8 w-8 text-white" />
               </div>
               <CardTitle className="text-2xl">Sou Produtor</CardTitle>
@@ -63,7 +72,7 @@ const Index = () => {
                 <li>• Biblioteca de recursos</li>
               </ul>
               <Link to="/producer-dashboard" className="block">
-                <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white">
+                <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white">
                   Acessar Painel do Produtor
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -73,9 +82,9 @@ const Index = () => {
 
           {/* Company Access */}
           <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-600" />
+            <div className="absolute top-0 left-0 w-full h-1 calmon-gradient" />
             <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto ai-gradient rounded-full flex items-center justify-center mb-4">
+              <div className="w-16 h-16 mx-auto calmon-gradient rounded-full flex items-center justify-center mb-4">
                 <Building2 className="h-8 w-8 text-white" />
               </div>
               <CardTitle className="text-2xl">Sou Empresa</CardTitle>
@@ -91,7 +100,7 @@ const Index = () => {
                 <li>• Dashboard executivo</li>
               </ul>
               <Link to="/company-dashboard" className="block">
-                <Button className="w-full ai-gradient hover:scale-105 transition-all duration-200 text-white">
+                <Button className="w-full calmon-gradient hover:scale-105 transition-all duration-200 text-white">
                   Acessar Painel da Empresa
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -144,7 +153,7 @@ const Index = () => {
           {/* Feature Cards */}
           <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 calmon-gradient rounded-lg flex items-center justify-center mb-4">
                 <BookOpen className="h-6 w-6 text-white" />
               </div>
               <CardTitle>Cursos & Trilhas</CardTitle>
@@ -164,7 +173,7 @@ const Index = () => {
 
           <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 calmon-gradient rounded-lg flex items-center justify-center mb-4">
                 <Brain className="h-6 w-6 text-white" />
               </div>
               <CardTitle>IA Contextual</CardTitle>
@@ -184,7 +193,7 @@ const Index = () => {
 
           <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 calmon-gradient rounded-lg flex items-center justify-center mb-4">
                 <Users className="h-6 w-6 text-white" />
               </div>
               <CardTitle>Gestão de Equipes</CardTitle>
@@ -204,7 +213,7 @@ const Index = () => {
 
           <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 calmon-gradient rounded-lg flex items-center justify-center mb-4">
                 <Award className="h-6 w-6 text-white" />
               </div>
               <CardTitle>Gamificação</CardTitle>
@@ -224,7 +233,7 @@ const Index = () => {
 
           <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 calmon-gradient rounded-lg flex items-center justify-center mb-4">
                 <BarChart3 className="h-6 w-6 text-white" />
               </div>
               <CardTitle>Analytics Avançado</CardTitle>
@@ -244,7 +253,7 @@ const Index = () => {
 
           <Card className="hover-lift border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <div className="w-12 h-12 ai-gradient rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 calmon-gradient rounded-lg flex items-center justify-center mb-4">
                 <MessageCircle className="h-6 w-6 text-white" />
               </div>
               <CardTitle>Comunidade</CardTitle>
@@ -269,19 +278,19 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             <div className="space-y-2">
-              <div className="text-4xl font-bold ai-gradient-text">500+</div>
+              <div className="text-4xl font-bold calmon-gradient-text">500+</div>
               <div className="text-gray-600">Horas de Conteúdo</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl font-bold ai-gradient-text">50+</div>
+              <div className="text-4xl font-bold calmon-gradient-text">50+</div>
               <div className="text-gray-600">Empresas Ativas</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl font-bold ai-gradient-text">10k+</div>
+              <div className="text-4xl font-bold calmon-gradient-text">10k+</div>
               <div className="text-gray-600">Colaboradores</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl font-bold ai-gradient-text">95%</div>
+              <div className="text-4xl font-bold calmon-gradient-text">95%</div>
               <div className="text-gray-600">Satisfação</div>
             </div>
           </div>
@@ -290,7 +299,7 @@ const Index = () => {
 
       {/* CTA Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 ai-gradient opacity-90" />
+        <div className="absolute inset-0 calmon-gradient opacity-90" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
             Pronto para transformar sua equipe?
@@ -300,13 +309,13 @@ const Index = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/company-dashboard">
-              <Button size="lg" variant="outline" className="bg-white text-blue-600 hover:bg-gray-50 px-8 py-6 text-lg">
+              <Button size="lg" variant="outline" className="bg-white text-purple-600 hover:bg-gray-50 px-8 py-6 text-lg">
                 Começar como Empresa
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link to="/dashboard">
-              <Button size="lg" variant="outline" className="bg-white text-blue-600 hover:bg-gray-50 px-8 py-6 text-lg">
+              <Button size="lg" variant="outline" className="bg-white text-purple-600 hover:bg-gray-50 px-8 py-6 text-lg">
                 Começar como Aluno
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
