@@ -32,10 +32,11 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
 
-    /* Calmon Academy Brand Colors */
-    --calmon-primary: 263 70% 50%;
-    --calmon-secondary: 213 94% 68%;
-    --calmon-accent: 183 100% 32%;
+    /* Calmon Academy Brand Colors - Inspired by the golden logo */
+    --calmon-primary: 43 96% 56%; /* Rich golden yellow */
+    --calmon-secondary: 38 92% 50%; /* Deeper gold */
+    --calmon-accent: 48 100% 67%; /* Lighter gold accent */
+    --calmon-dark: 25 45% 37%; /* Dark bronze for contrast */
   }
 
   .dark {
@@ -79,11 +80,11 @@
 @layer components {
   /* Calmon Academy Brand Gradients */
   .calmon-gradient {
-    background: linear-gradient(135deg, hsl(var(--calmon-primary)) 0%, hsl(var(--calmon-secondary)) 50%, hsl(var(--calmon-accent)) 100%);
+    background: linear-gradient(135deg, hsl(var(--calmon-primary)) 0%, hsl(var(--calmon-secondary)) 50%, hsl(var(--calmon-dark)) 100%);
   }
 
   .calmon-gradient-text {
-    background: linear-gradient(135deg, hsl(var(--calmon-primary)) 0%, hsl(var(--calmon-secondary)) 50%, hsl(var(--calmon-accent)) 100%);
+    background: linear-gradient(135deg, hsl(var(--calmon-primary)) 0%, hsl(var(--calmon-secondary)) 50%, hsl(var(--calmon-dark)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -91,11 +92,11 @@
 
   /* Legacy AI gradient classes for backward compatibility */
   .ai-gradient {
-    background: linear-gradient(135deg, hsl(var(--calmon-primary)) 0%, hsl(var(--calmon-secondary)) 50%, hsl(var(--calmon-accent)) 100%);
+    background: linear-gradient(135deg, hsl(var(--calmon-primary)) 0%, hsl(var(--calmon-secondary)) 50%, hsl(var(--calmon-dark)) 100%);
   }
 
   .ai-gradient-text {
-    background: linear-gradient(135deg, hsl(var(--calmon-primary)) 0%, hsl(var(--calmon-secondary)) 50%, hsl(var(--calmon-accent)) 100%);
+    background: linear-gradient(135deg, hsl(var(--calmon-primary)) 0%, hsl(var(--calmon-secondary)) 50%, hsl(var(--calmon-dark)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -167,6 +168,15 @@
     background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  /* Calmon Academy specific gradients */
+  .calmon-golden-gradient {
+    background: linear-gradient(135deg, #f4d03f 0%, #d4af37 50%, #b8860b 100%);
+  }
+
+  .calmon-bg-gradient {
+    background: linear-gradient(135deg, #fef7e0 0%, #fdf2c7 50%, #f9e79f 100%);
   }
 
   /* Responsive text utilities */

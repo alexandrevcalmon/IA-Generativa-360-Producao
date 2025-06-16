@@ -63,30 +63,44 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// IA Generativa 360º brand colors
+				// Calmon Academy brand colors
+				calmon: {
+					50: '#fefcf0',
+					100: '#fef7e0',
+					200: '#fdf2c7',
+					300: '#fbe49e',
+					400: '#f7d065',
+					500: '#f4c430', // Primary golden
+					600: '#e6b800',
+					700: '#d4af37', // Rich gold
+					800: '#b8860b', // Dark gold
+					900: '#996515', // Bronze
+					950: '#5d3c0a'
+				},
+				// Legacy brand colors for backward compatibility
 				brand: {
-					50: '#f0f9ff',
-					100: '#e0f2fe',
-					200: '#bae6fd',
-					300: '#7dd3fc',
-					400: '#38bdf8',
-					500: '#0ea5e9',
-					600: '#0284c7',
-					700: '#0369a1',
-					800: '#075985',
-					900: '#0c4a6e',
+					50: '#fefcf0',
+					100: '#fef7e0',
+					200: '#fdf2c7',
+					300: '#fbe49e',
+					400: '#f7d065',
+					500: '#f4c430',
+					600: '#e6b800',
+					700: '#d4af37',
+					800: '#b8860b',
+					900: '#996515',
 				},
 				ai: {
-					50: '#faf5ff',
-					100: '#f3e8ff',
-					200: '#e9d5ff',
-					300: '#d8b4fe',
-					400: '#c084fc',
-					500: '#a855f7',
-					600: '#9333ea',
-					700: '#7c3aed',
-					800: '#6b21a8',
-					900: '#581c87',
+					50: '#fefcf0',
+					100: '#fef7e0',
+					200: '#fdf2c7',
+					300: '#fbe49e',
+					400: '#f7d065',
+					500: '#f4c430',
+					600: '#e6b800',
+					700: '#d4af37',
+					800: '#b8860b',
+					900: '#996515',
 				}
 			},
 			borderRadius: {
@@ -145,8 +159,11 @@ export default {
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-				'ai-gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-				'brand-gradient': 'linear-gradient(135deg, #0ea5e9 0%, #a855f7 100%)'
+				'calmon-gradient': 'linear-gradient(135deg, #f4c430 0%, #d4af37 50%, #b8860b 100%)',
+				'calmon-bg-gradient': 'linear-gradient(135deg, #fef7e0 0%, #fdf2c7 50%, #f9e79f 100%)',
+				// Legacy gradients for backward compatibility
+				'ai-gradient': 'linear-gradient(135deg, #f4c430 0%, #d4af37 50%, #b8860b 100%)',
+				'brand-gradient': 'linear-gradient(135deg, #f4c430 0%, #d4af37 100%)'
 			}
 		}
 	},
