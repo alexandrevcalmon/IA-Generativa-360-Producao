@@ -16,23 +16,13 @@ import {
   Users
 } from 'lucide-react';
 import { useStudentCourse } from '@/hooks/useStudentCourses';
-import { useEnrollInCourse, useMarkLessonComplete } from '@/hooks/useStudentProgress';
+import { useMarkLessonComplete } from '@/hooks/useStudentProgress';
 
 const StudentCourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { data: course, isLoading } = useStudentCourse(courseId!);
-  const enrollMutation = useEnrollInCourse();
   const markCompleteMutation = useMarkLessonComplete();
-
-  const handleEnroll = async () => {
-    if (!courseId) return;
-    try {
-      await enrollMutation.mutateAsync(courseId);
-    } catch (error) {
-      console.error('Failed to enroll:', error);
-    }
-  };
 
   const handleLessonComplete = async (lessonId: string) => {
     try {
@@ -118,27 +108,11 @@ const StudentCourseDetail = () => {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            {course.enrolled_at ? (
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Inscrito
-                </Badge>
-                {course.progress_percentage === 100 && (
-                  <Badge className="bg-amber-500 text-white">
-                    <Award className="w-3 h-3 mr-1" />
-                    Concluído
-                  </Badge>
-                )}
-              </div>
-            ) : (
-              <Button 
-                onClick={handleEnroll}
-                disabled={enrollMutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {enrollMutation.isPending ? 'Inscrevendo...' : 'Inscrever-se'}
-              </Button>
+            {course.progress_percentage === 100 && (
+              <Badge className="bg-amber-500 text-white">
+                <Award className="w-3 h-3 mr-1" />
+                Concluído
+              </Badge>
             )}
           </div>
         </div>
@@ -178,17 +152,15 @@ const StudentCourseDetail = () => {
                 </div>
               </div>
 
-              {course.enrolled_at && (
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700">Progresso do Curso</span>
-                    <span className="text-sm text-gray-600">
-                      {completedLessons}/{totalLessons} lições ({Math.round(course.progress_percentage)}%)
-                    </span>
-                  </div>
-                  <Progress value={course.progress_percentage} className="h-3" />
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Progresso do Curso</span>
+                  <span className="text-sm text-gray-600">
+                    {completedLessons}/{totalLessons} lições ({Math.round(course.progress_percentage)}%)
+                  </span>
                 </div>
-              )}
+                <Progress value={course.progress_percentage} className="h-3" />
+              </div>
 
               <div className="flex flex-wrap gap-2 mt-4">
                 <Badge variant="outline">{course.category}</Badge>
@@ -206,120 +178,76 @@ const StudentCourseDetail = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {course.enrolled_at ? (
-                <Accordion type="multiple" className="space-y-2">
-                  {course.modules.map((module, moduleIndex) => (
-                    <AccordionItem key={module.id} value={module.id} className="border rounded-lg">
-                      <AccordionTrigger className="px-4 hover:no-underline">
-                        <div className="flex items-center justify-between w-full mr-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
-                              {moduleIndex + 1}
-                            </div>
-                            <div className="text-left">
-                              <h3 className="font-medium">{module.title}</h3>
-                              <p className="text-sm text-gray-600">
-                                {module.lessons.length} lições
-                              </p>
-                            </div>
+              <Accordion type="multiple" className="space-y-2">
+                {course.modules.map((module, moduleIndex) => (
+                  <AccordionItem key={module.id} value={module.id} className="border rounded-lg">
+                    <AccordionTrigger className="px-4 hover:no-underline">
+                      <div className="flex items-center justify-between w-full mr-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
+                            {moduleIndex + 1}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {module.lessons.filter(l => l.completed).length}/{module.lessons.length} concluídas
+                          <div className="text-left">
+                            <h3 className="font-medium">{module.title}</h3>
+                            <p className="text-sm text-gray-600">
+                              {module.lessons.length} lições
+                            </p>
                           </div>
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-4 pb-4">
-                        <div className="space-y-2">
-                          {module.lessons.map((lesson, lessonIndex) => (
-                            <div
-                              key={lesson.id}
-                              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-6 h-6 flex items-center justify-center">
-                                  {lesson.completed ? (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
-                                  ) : lesson.is_free ? (
-                                    <Play className="h-4 w-4 text-blue-600" />
-                                  ) : (
-                                    <Lock className="h-4 w-4 text-gray-400" />
-                                  )}
-                                </div>
-                                <div>
-                                  <h4 className="font-medium text-sm">{lesson.title}</h4>
-                                  {lesson.duration_minutes && (
-                                    <p className="text-xs text-gray-500">
-                                      {lesson.duration_minutes} min
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {!lesson.completed && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleLessonComplete(lesson.id)}
-                                    disabled={markCompleteMutation.isPending}
-                                  >
-                                    Marcar como Concluída
-                                  </Button>
-                                )}
-                                <Button size="sm" variant="ghost">
-                                  <Play className="h-3 w-3 mr-1" />
-                                  {lesson.completed ? 'Revisar' : 'Assistir'}
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              ) : (
-                <div className="space-y-4">
-                  {course.modules.map((module, moduleIndex) => (
-                    <div key={module.id} className="border rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">
-                          {moduleIndex + 1}
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{module.title}</h3>
-                          <p className="text-sm text-gray-600">
-                            {module.lessons.length} lições
-                          </p>
+                        <div className="text-sm text-gray-500">
+                          {module.lessons.filter(l => l.completed).length}/{module.lessons.length} concluídas
                         </div>
                       </div>
-                      <div className="ml-11 space-y-2">
-                        {module.lessons.slice(0, 2).map((lesson) => (
-                          <div key={lesson.id} className="flex items-center gap-3 text-sm text-gray-600">
-                            <Lock className="h-3 w-3" />
-                            <span>{lesson.title}</span>
-                            {lesson.duration_minutes && (
-                              <span className="text-xs">({lesson.duration_minutes} min)</span>
-                            )}
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      <div className="space-y-2">
+                        {module.lessons.map((lesson, lessonIndex) => (
+                          <div
+                            key={lesson.id}
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-6 h-6 flex items-center justify-center">
+                                {lesson.completed ? (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                ) : lesson.is_free ? (
+                                  <Play className="h-4 w-4 text-blue-600" />
+                                ) : (
+                                  <Play className="h-4 w-4 text-blue-600" />
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-sm">{lesson.title}</h4>
+                                {lesson.duration_minutes && (
+                                  <p className="text-xs text-gray-500">
+                                    {lesson.duration_minutes} min
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {!lesson.completed && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleLessonComplete(lesson.id)}
+                                  disabled={markCompleteMutation.isPending}
+                                >
+                                  Marcar como Concluída
+                                </Button>
+                              )}
+                              <Button size="sm" variant="ghost">
+                                <Play className="h-3 w-3 mr-1" />
+                                {lesson.completed ? 'Revisar' : 'Assistir'}
+                              </Button>
+                            </div>
                           </div>
                         ))}
-                        {module.lessons.length > 2 && (
-                          <div className="text-sm text-gray-500 ml-6">
-                            +{module.lessons.length - 2} mais lições
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  ))}
-                  <div className="text-center py-6">
-                    <p className="text-gray-600 mb-4">
-                      Inscreva-se no curso para acessar todo o conteúdo
-                    </p>
-                    <Button onClick={handleEnroll} disabled={enrollMutation.isPending}>
-                      {enrollMutation.isPending ? 'Inscrevendo...' : 'Inscrever-se Agora'}
-                    </Button>
-                  </div>
-                </div>
-              )}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </CardContent>
           </Card>
         </div>

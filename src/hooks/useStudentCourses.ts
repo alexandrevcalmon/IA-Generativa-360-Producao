@@ -12,7 +12,6 @@ export interface StudentCourse {
   difficulty_level: string;
   estimated_hours: number;
   progress_percentage: number;
-  enrolled_at: string;
   modules: StudentModule[];
 }
 
@@ -62,22 +61,10 @@ export const useStudentCourses = () => {
 
       console.log('Found published courses:', courses?.length || 0);
 
-      // For each course, get enrollment info and modules/lessons
+      // For each course, get modules/lessons and progress
       const coursesWithProgress = await Promise.all(
         (courses || []).map(async (course) => {
           console.log('Processing course:', course.title);
-
-          // Get enrollment info
-          const { data: enrollment, error: enrollmentError } = await supabase
-            .from('enrollments')
-            .select('progress_percentage, enrolled_at')
-            .eq('course_id', course.id)
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-          if (enrollmentError) {
-            console.error('Error fetching enrollment for course', course.id, ':', enrollmentError);
-          }
 
           // Get modules - this will now work with RLS policies
           const { data: modules, error: modulesError } = await supabase
@@ -106,30 +93,24 @@ export const useStudentCourses = () => {
                 console.error('Error fetching lessons for module', module.id, ':', lessonsError);
               }
 
-              // Get progress for each lesson if user is enrolled
+              // Get progress for each lesson
               const lessonsWithProgress = await Promise.all(
                 (lessons || []).map(async (lesson) => {
-                  let progress = null;
-                  
-                  if (enrollment) {
-                    const { data: lessonProgress, error: progressError } = await supabase
-                      .from('lesson_progress')
-                      .select('completed, watch_time_seconds')
-                      .eq('lesson_id', lesson.id)
-                      .eq('user_id', user.id)
-                      .maybeSingle();
+                  const { data: lessonProgress, error: progressError } = await supabase
+                    .from('lesson_progress')
+                    .select('completed, watch_time_seconds')
+                    .eq('lesson_id', lesson.id)
+                    .eq('user_id', user.id)
+                    .maybeSingle();
 
-                    if (progressError) {
-                      console.error('Error fetching lesson progress:', progressError);
-                    } else {
-                      progress = lessonProgress;
-                    }
+                  if (progressError) {
+                    console.error('Error fetching lesson progress:', progressError);
                   }
 
                   return {
                     ...lesson,
-                    completed: progress?.completed || false,
-                    watch_time_seconds: progress?.watch_time_seconds || 0,
+                    completed: lessonProgress?.completed || false,
+                    watch_time_seconds: lessonProgress?.watch_time_seconds || 0,
                   };
                 })
               );
@@ -141,10 +122,16 @@ export const useStudentCourses = () => {
             })
           );
 
+          // Calculate progress percentage based on completed lessons
+          const totalLessons = modulesWithLessons.reduce((total, module) => total + module.lessons.length, 0);
+          const completedLessons = modulesWithLessons.reduce((total, module) => 
+            total + module.lessons.filter(lesson => lesson.completed).length, 0
+          );
+          const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+
           return {
             ...course,
-            progress_percentage: enrollment?.progress_percentage || 0,
-            enrolled_at: enrollment?.enrolled_at || null,
+            progress_percentage: progressPercentage,
             modules: modulesWithLessons,
           };
         })
@@ -179,14 +166,6 @@ export const useStudentCourse = (courseId: string) => {
         throw error;
       }
 
-      // Get enrollment info
-      const { data: enrollment } = await supabase
-        .from('enrollments')
-        .select('progress_percentage, enrolled_at')
-        .eq('course_id', courseId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
       // Get modules with lessons
       const { data: modules } = await supabase
         .from('course_modules')
@@ -205,23 +184,17 @@ export const useStudentCourse = (courseId: string) => {
 
           const lessonsWithProgress = await Promise.all(
             (lessons || []).map(async (lesson) => {
-              let progress = null;
-              
-              if (enrollment) {
-                const { data: lessonProgress } = await supabase
-                  .from('lesson_progress')
-                  .select('completed, watch_time_seconds')
-                  .eq('lesson_id', lesson.id)
-                  .eq('user_id', user.id)
-                  .maybeSingle();
-
-                progress = lessonProgress;
-              }
+              const { data: lessonProgress } = await supabase
+                .from('lesson_progress')
+                .select('completed, watch_time_seconds')
+                .eq('lesson_id', lesson.id)
+                .eq('user_id', user.id)
+                .maybeSingle();
 
               return {
                 ...lesson,
-                completed: progress?.completed || false,
-                watch_time_seconds: progress?.watch_time_seconds || 0,
+                completed: lessonProgress?.completed || false,
+                watch_time_seconds: lessonProgress?.watch_time_seconds || 0,
               };
             })
           );
@@ -233,10 +206,16 @@ export const useStudentCourse = (courseId: string) => {
         })
       );
 
+      // Calculate progress percentage
+      const totalLessons = modulesWithLessons.reduce((total, module) => total + module.lessons.length, 0);
+      const completedLessons = modulesWithLessons.reduce((total, module) => 
+        total + module.lessons.filter(lesson => lesson.completed).length, 0
+      );
+      const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+
       return {
         ...course,
-        progress_percentage: enrollment?.progress_percentage || 0,
-        enrolled_at: enrollment?.enrolled_at || null,
+        progress_percentage: progressPercentage,
         modules: modulesWithLessons,
       } as StudentCourse;
     },

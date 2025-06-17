@@ -27,26 +27,16 @@ import {
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useStudentCourses } from "@/hooks/useStudentCourses";
-import { useEnrollInCourse } from "@/hooks/useStudentProgress";
 
 const StudentCourses = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { data: courses, isLoading } = useStudentCourses();
-  const enrollMutation = useEnrollInCourse();
 
   const categories = ["Todos", "IA Generativa", "Técnicas", "Bem-estar", "Desenvolvimento", "Ética", "Automação"];
   const levels = ["Todos os níveis", "Iniciante", "Intermediário", "Avançado"];
 
-  const enrolledCourses = courses?.filter(c => c.enrolled_at) || [];
-  const availableCourses = courses?.filter(c => !c.enrolled_at) || [];
-
-  const handleEnrollInCourse = async (courseId: string) => {
-    try {
-      await enrollMutation.mutateAsync(courseId);
-    } catch (error) {
-      console.error('Failed to enroll:', error);
-    }
-  };
+  const inProgressCourses = courses?.filter(c => c.progress_percentage > 0 && c.progress_percentage < 100) || [];
+  const completedCourses = courses?.filter(c => c.progress_percentage === 100) || [];
 
   const CourseCard = ({ course, isListView = false }: { course: any, isListView?: boolean }) => (
     <Card className={`hover-lift transition-all duration-200 ${isListView ? 'flex flex-row' : ''}`}>
@@ -100,30 +90,13 @@ const StudentCourses = () => {
                 </Badge>
               </div>
               
-              {course.enrolled_at ? (
-                <div className="flex gap-2">
-                  <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                    <Link to={`/student/courses/${course.id}`}>
-                      {course.progress_percentage > 0 ? 'Continuar' : 'Começar'}
-                    </Link>
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => handleEnrollInCourse(course.id)}
-                    disabled={enrollMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {enrollMutation.isPending ? 'Inscrevendo...' : 'Inscrever-se'}
-                  </Button>
-                  <Button variant="outline" asChild>
-                    <Link to={`/student/courses/${course.id}`}>
-                      Ver Detalhes
-                    </Link>
-                  </Button>
-                </div>
-              )}
+              <div className="flex gap-2">
+                <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Link to={`/student/courses/${course.id}`}>
+                    {course.progress_percentage > 0 ? 'Continuar' : 'Começar Curso'}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
           
@@ -286,12 +259,12 @@ const StudentCourses = () => {
             <TabsContent value="in-progress" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold">
-                  {enrolledCourses.filter(c => c.progress_percentage > 0 && c.progress_percentage < 100).length} cursos em andamento
+                  {inProgressCourses.length} cursos em andamento
                 </h2>
               </div>
 
               <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-                {enrolledCourses.filter(course => course.progress_percentage > 0 && course.progress_percentage < 100).map(course => (
+                {inProgressCourses.map(course => (
                   <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} />
                 ))}
               </div>
@@ -300,12 +273,12 @@ const StudentCourses = () => {
             <TabsContent value="completed" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold">
-                  {enrolledCourses.filter(c => c.progress_percentage === 100).length} cursos concluídos
+                  {completedCourses.length} cursos concluídos
                 </h2>
               </div>
 
               <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-                {enrolledCourses.filter(course => course.progress_percentage === 100).map(course => (
+                {completedCourses.map(course => (
                   <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} />
                 ))}
               </div>
