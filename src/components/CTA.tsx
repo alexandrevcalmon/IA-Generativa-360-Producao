@@ -18,7 +18,7 @@ export function CTA() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Main CTA */}
-          <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-8 lg:p-12 text-center relative overflow-hidden">
+          <div className="bg-gradient-to-br from-calmon-600 to-calmon-800 rounded-3xl p-8 lg:p-12 text-center relative overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/20 to-transparent"></div>
@@ -29,7 +29,7 @@ export function CTA() {
               <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
                 Transforme sua empresa hoje mesmo
               </h2>
-              <p className="text-xl text-emerald-100 mb-8 max-w-2xl mx-auto">
+              <p className="text-xl text-calmon-100 mb-8 max-w-2xl mx-auto">
                 Junte-se a centenas de empresas que já revolucionaram a capacitação 
                 de suas equipes. Comece seu teste gratuito agora mesmo.
               </p>
@@ -38,7 +38,7 @@ export function CTA() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                 <Button 
                   size="lg" 
-                  className="bg-white text-emerald-600 hover:bg-gray-50 px-8 py-4 text-lg font-semibold"
+                  className="bg-white text-calmon-600 hover:bg-gray-50 px-8 py-4 text-lg font-semibold"
                   onClick={() => navigate('/auth')}
                 >
                   Começar teste gratuito
@@ -56,8 +56,8 @@ export function CTA() {
               {/* Benefits */}
               <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
                 {benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-center justify-center md:justify-start text-emerald-100">
-                    <CheckCircle className="h-5 w-5 text-emerald-300 mr-3 flex-shrink-0" />
+                  <div key={index} className="flex items-center justify-center md:justify-start text-calmon-100">
+                    <CheckCircle className="h-5 w-5 text-calmon-300 mr-3 flex-shrink-0" />
                     <span className="text-sm">{benefit}</span>
                   </div>
                 ))}
@@ -77,7 +77,7 @@ export function CTA() {
                 de capacitação corporativa.
               </p>
               <Button 
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-calmon-600 hover:bg-calmon-700"
                 onClick={() => navigate('/auth')}
               >
                 Cadastrar empresa
@@ -95,7 +95,7 @@ export function CTA() {
               </p>
               <Button 
                 variant="outline" 
-                className="w-full border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+                className="w-full border-calmon-600 text-calmon-600 hover:bg-calmon-50"
                 onClick={() => navigate('/login-produtor')}
               >
                 Tornar-se produtor

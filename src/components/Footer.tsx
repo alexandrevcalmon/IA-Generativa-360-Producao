@@ -11,7 +11,7 @@ export function Footer() {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center space-x-2 mb-6">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600"></div>
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-calmon-500 to-calmon-700"></div>
               <span className="font-bold text-xl">Calmon Academy</span>
             </Link>
             <p className="text-gray-400 mb-6 leading-relaxed">
@@ -21,13 +21,13 @@ export function Footer() {
             
             {/* Social Links */}
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                 <Linkedin className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                 <Github className="h-5 w-5" />
               </a>
             </div>
@@ -38,22 +38,22 @@ export function Footer() {
             <h3 className="font-semibold text-lg mb-6">Plataforma</h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/courses" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                <Link to="/courses" className="text-gray-400 hover:text-calmon-400 transition-colors">
                   Cursos
                 </Link>
               </li>
               <li>
-                <Link to="/community" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                <Link to="/community" className="text-gray-400 hover:text-calmon-400 transition-colors">
                   Comunidade
                 </Link>
               </li>
               <li>
-                <Link to="/analytics" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                <Link to="/analytics" className="text-gray-400 hover:text-calmon-400 transition-colors">
                   Analytics
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                   Certificações
                 </a>
               </li>
@@ -65,27 +65,27 @@ export function Footer() {
             <h3 className="font-semibold text-lg mb-6">Para empresas</h3>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                   Planos empresariais
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                   Gestão de equipes
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                   Relatórios
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                   Integrações
                 </a>
               </li>
               <li>
-                <Link to="/login-produtor" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                <Link to="/login-produtor" className="text-gray-400 hover:text-calmon-400 transition-colors">
                   Seja um produtor
                 </Link>
               </li>
@@ -120,9 +120,9 @@ export function Footer() {
                 <input 
                   type="email" 
                   placeholder="Seu email"
-                  className="bg-gray-800 border border-gray-700 rounded-l-lg px-3 py-2 text-sm flex-1 focus:outline-none focus:border-emerald-500"
+                  className="bg-gray-800 border border-gray-700 rounded-l-lg px-3 py-2 text-sm flex-1 focus:outline-none focus:border-calmon-500"
                 />
-                <button className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-r-lg transition-colors">
+                <button className="bg-calmon-600 hover:bg-calmon-700 px-4 py-2 rounded-r-lg transition-colors">
                   <Mail className="h-4 w-4" />
                 </button>
               </div>
@@ -137,13 +137,13 @@ export function Footer() {
               © 2024 Calmon Academy. Todos os direitos reservados.
             </div>
             <div className="flex space-x-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                 Política de Privacidade
               </a>
-              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                 Termos de Uso
               </a>
-              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-calmon-400 transition-colors">
                 Cookies
               </a>
             </div>
