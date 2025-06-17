@@ -3,81 +3,30 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
   BookOpen,
   Users,
   TrendingUp,
   Clock,
   Brain,
-  Play,
   Plus,
-  Eye,
-  Edit,
-  BarChart3,
-  Upload,
-  FileText,
   Building2,
   CreditCard,
   MessageCircle,
-  Trophy
+  Trophy,
+  BarChart3,
+  Upload,
+  FileText
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCourses } from "@/hooks/useCourses";
 
 const ProducerDashboard = () => {
-  const myCourses = [
-    {
-      title: "Prompt Engineering Avançado",
-      students: 245,
-      completion: 78,
-      status: "Publicado",
-      revenue: "R$ 12.450",
-      thumbnail: "/api/placeholder/200/120"
-    },
-    {
-      title: "ChatGPT para Produtividade",
-      students: 189,
-      completion: 92,
-      status: "Publicado",
-      revenue: "R$ 8.920",
-      thumbnail: "/api/placeholder/200/120"
-    },
-    {
-      title: "Saúde Mental no Trabalho",
-      students: 67,
-      completion: 45,
-      status: "Rascunho",
-      revenue: "R$ 0",
-      thumbnail: "/api/placeholder/200/120"
-    }
-  ];
+  const { data: courses = [], isLoading } = useCourses();
 
-  const recentActivity = [
-    {
-      action: "Nova empresa cadastrada",
-      course: "TechCorp Solutions",
-      time: "5 min atrás",
-      type: "company"
-    },
-    {
-      action: "Novo colaborador adicionado",
-      course: "Inovação Digital Ltda",
-      time: "15 min atrás",
-      type: "user"
-    },
-    {
-      action: "Curso finalizado por aluno",
-      course: "ChatGPT para Produtividade",
-      time: "1 hora atrás",
-      type: "completion"
-    },
-    {
-      action: "Plano atualizado",
-      course: "Empresa ABC - Plano Premium",
-      time: "2 horas atrás",
-      type: "plan"
-    }
-  ];
+  // Calculate real statistics from actual data
+  const publishedCourses = courses.filter(course => course.is_published);
+  const totalCourses = courses.length;
 
   return (
     <div className="flex flex-col h-full">
@@ -95,10 +44,12 @@ const ProducerDashboard = () => {
             <Badge className="bg-green-100 text-green-700">
               Status: Ativo
             </Badge>
-            <Button className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Novo Curso
-            </Button>
+            <Link to="/producer/courses">
+              <Button className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Novo Curso
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -116,9 +67,9 @@ const ProducerDashboard = () => {
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">12</div>
+                <div className="text-2xl font-bold">{totalCourses}</div>
                 <p className="text-xs text-muted-foreground">
-                  +2 este mês
+                  {publishedCourses.length} publicados
                 </p>
               </CardContent>
             </Card>
@@ -131,9 +82,9 @@ const ProducerDashboard = () => {
                 <Building2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">28</div>
+                <div className="text-2xl font-bold">0</div>
                 <p className="text-xs text-muted-foreground">
-                  +4 esta semana
+                  Nenhuma empresa cadastrada
                 </p>
               </CardContent>
             </Card>
@@ -146,9 +97,9 @@ const ProducerDashboard = () => {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">1,247</div>
+                <div className="text-2xl font-bold">0</div>
                 <p className="text-xs text-muted-foreground">
-                  +89 esta semana
+                  Nenhum colaborador
                 </p>
               </CardContent>
             </Card>
@@ -161,9 +112,9 @@ const ProducerDashboard = () => {
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">R$ 85.640</div>
+                <div className="text-2xl font-bold">R$ 0,00</div>
                 <p className="text-xs text-muted-foreground">
-                  +R$ 12.380 este mês
+                  Sem vendas ainda
                 </p>
               </CardContent>
             </Card>
@@ -181,58 +132,68 @@ const ProducerDashboard = () => {
                       <Brain className="h-5 w-5 mr-2 text-calmon-600" />
                       Meus Cursos
                     </div>
-                    <Button variant="outline" size="sm">
-                      Ver Todos
-                    </Button>
+                    <Link to="/producer/courses">
+                      <Button variant="outline" size="sm">
+                        Ver Todos
+                      </Button>
+                    </Link>
                   </CardTitle>
                   <CardDescription>
                     Gerencie e acompanhe o desempenho dos seus cursos
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {myCourses.map((course, index) => (
-                      <div key={index} className="flex items-center space-x-4 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="w-20 h-12 bg-gradient-to-r from-calmon-500 to-calmon-700 rounded flex items-center justify-center">
-                          <Play className="h-6 w-6 text-white" />
+                  {isLoading ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">Carregando cursos...</p>
+                    </div>
+                  ) : courses.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500 mb-4">Você ainda não criou nenhum curso.</p>
+                      <Link to="/producer/courses">
+                        <Button className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Criar Primeiro Curso
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {courses.slice(0, 3).map((course) => (
+                        <div key={course.id} className="flex items-center space-x-4 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <div className="w-20 h-12 bg-gradient-to-r from-calmon-500 to-calmon-700 rounded flex items-center justify-center">
+                            <BookOpen className="h-6 w-6 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 truncate">
+                              {course.title}
+                            </h4>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <span>{course.category || 'Sem categoria'}</span>
+                              <Badge 
+                                variant={course.is_published ? 'default' : 'outline'}
+                                className="text-xs"
+                              >
+                                {course.is_published ? 'Publicado' : 'Rascunho'}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-calmon-600">
+                              R$ 0,00
+                            </div>
+                            <div className="flex space-x-2 mt-2">
+                              <Link to={`/producer/courses/${course.id}`}>
+                                <Button size="sm" variant="outline">
+                                  Ver
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">
-                            {course.title}
-                          </h4>
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <span>{course.students} alunos</span>
-                            <Badge 
-                              variant={course.status === 'Publicado' ? 'default' : 'outline'}
-                              className="text-xs"
-                            >
-                              {course.status}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center space-x-2 mt-2">
-                            <span className="text-xs text-gray-500">Conclusão:</span>
-                            <Progress value={course.completion} className="h-2 flex-1" />
-                            <span className="text-xs font-medium">{course.completion}%</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium text-calmon-600">
-                            {course.revenue}
-                          </div>
-                          <div className="flex space-x-2 mt-2">
-                            <Button size="sm" variant="outline">
-                              <Eye className="h-3 w-3 mr-1" />
-                              Ver
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Edit className="h-3 w-3 mr-1" />
-                              Editar
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -250,15 +211,15 @@ const ProducerDashboard = () => {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">4.8</div>
+                      <div className="text-2xl font-bold text-blue-600">-</div>
                       <div className="text-sm text-gray-600">Avaliação Média</div>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">92%</div>
+                      <div className="text-2xl font-bold text-green-600">-</div>
                       <div className="text-sm text-gray-600">Satisfação</div>
                     </div>
                     <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600">156</div>
+                      <div className="text-2xl font-bold text-purple-600">0</div>
                       <div className="text-sm text-gray-600">Avaliações</div>
                     </div>
                   </div>
@@ -274,10 +235,12 @@ const ProducerDashboard = () => {
                   <CardTitle>Ações Rápidas</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Criar Novo Curso
-                  </Button>
+                  <Link to="/producer/courses" className="block">
+                    <Button className="w-full justify-start bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Novo Curso
+                    </Button>
+                  </Link>
                   <Link to="/producer/companies" className="block">
                     <Button className="w-full justify-start" variant="outline">
                       <Building2 className="h-4 w-4 mr-2" />
@@ -290,15 +253,15 @@ const ProducerDashboard = () => {
                       Gerenciar Planos
                     </Button>
                   </Link>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" disabled>
                     <Upload className="h-4 w-4 mr-2" />
                     Upload de Conteúdo
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" disabled>
                     <FileText className="h-4 w-4 mr-2" />
                     Criar Material
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" disabled>
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Suporte ao Aluno
                   </Button>
@@ -314,30 +277,8 @@ const ProducerDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {recentActivity.map((activity, index) => (
-                      <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
-                        <div className={`w-2 h-2 rounded-full mt-2 ${
-                          activity.type === 'company' ? 'bg-blue-500' :
-                          activity.type === 'user' ? 'bg-green-500' :
-                          activity.type === 'completion' ? 'bg-purple-500' : 'bg-yellow-500'
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900">
-                            {activity.action}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {activity.course}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {activity.time}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                    <Button variant="outline" className="w-full" size="sm">
-                      Ver Todas Atividades
-                    </Button>
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">Nenhuma atividade recente.</p>
                   </div>
                 </CardContent>
               </Card>
@@ -354,24 +295,24 @@ const ProducerDashboard = () => {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Cursos Ativos</span>
-                      <span className="font-medium">8</span>
+                      <span className="font-medium">{publishedCourses.length}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Empresas Ativas</span>
-                      <span className="font-medium">28</span>
+                      <span className="font-medium">0</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Colaboradores Ativos</span>
-                      <span className="font-medium">1,247</span>
+                      <span className="font-medium">0</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Taxa de Conclusão</span>
-                      <span className="font-medium text-green-600">84%</span>
+                      <span className="font-medium text-green-600">-</span>
                     </div>
                     <div className="pt-2 border-t">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Avaliação Geral</span>
-                        <Badge className="bg-yellow-100 text-yellow-700">4.8/5.0</Badge>
+                        <Badge className="bg-yellow-100 text-yellow-700">-</Badge>
                       </div>
                     </div>
                   </div>
