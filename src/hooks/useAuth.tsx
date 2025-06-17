@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
   const [companyUserData, setCompanyUserData] = useState<any>(null);
+  const [sessionProtected, setSessionProtected] = useState(false);
   const { toast } = useToast();
 
   const fetchUserRole = async (userId: string): Promise<string | null> => {
@@ -78,15 +79,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Protection against session interference during user creation
+  const protectCurrentSession = () => {
+    if (user && userRole === 'producer') {
+      setSessionProtected(true);
+      console.log('Session protection activated for producer:', user.email);
+      
+      // Auto-disable protection after 10 seconds
+      setTimeout(() => {
+        setSessionProtected(false);
+        console.log('Session protection auto-disabled');
+      }, 10000);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
 
-    // Set up auth state listener
+    // Set up auth state listener with session protection
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMounted) return;
 
         console.log('Auth state changed:', event, session?.user?.email);
+        
+        // If session is protected and this is a user creation event, ignore it
+        if (sessionProtected && event === 'SIGNED_IN' && session?.user) {
+          console.log('Ignoring auth state change due to session protection');
+          
+          // Force logout the new user to prevent session takeover
+          try {
+            await supabase.auth.signOut();
+            console.log('Forced logout of newly created user');
+          } catch (error) {
+            console.error('Error during forced logout:', error);
+          }
+          return;
+        }
+
+        // Check if this is an unwanted session change (user creation interfering with producer session)
+        if (user && userRole === 'producer' && session?.user && session.user.id !== user.id) {
+          console.warn('Detected session interference - restoring producer session');
+          
+          // Don't update the session state, keep the current producer session
+          return;
+        }
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -143,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [user, userRole, sessionProtected]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -252,6 +289,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserRole(null);
         setNeedsPasswordChange(false);
         setCompanyUserData(null);
+        setSessionProtected(false);
         toast({
           title: "Logout realizado com sucesso!",
           description: "Até mais!",

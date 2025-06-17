@@ -9,9 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react"; // Added useEffect
-import { UserPlus, Mail, User, Briefcase, Loader2 } from "lucide-react"; // Added Briefcase, Loader2
+import { useState, useEffect } from "react";
+import { UserPlus, Mail, User, Briefcase, Loader2 } from "lucide-react";
 import { useAddCompanyCollaborator, CreateCollaboratorData } from "@/hooks/useCompanyCollaborators";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AddCollaboratorDialogProps {
   isOpen: boolean;
@@ -34,9 +35,10 @@ const initialFormData: CollaboratorFormData = {
 export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollaboratorDialogProps) {
   const [formData, setFormData] = useState<CollaboratorFormData>(initialFormData);
   const addCollaboratorMutation = useAddCompanyCollaborator();
+  const { userRole } = useAuth();
 
   useEffect(() => {
-    // Reset form when dialog opens or companyId changes (though companyId is not expected to change while open)
+    // Reset form when dialog opens or companyId changes
     if (isOpen) {
       setFormData(initialFormData);
     }
@@ -49,17 +51,23 @@ export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollabo
       return;
     }
 
+    // Ensure only producers can create collaborators
+    if (userRole !== 'producer') {
+      alert("Apenas produtores podem adicionar colaboradores.");
+      return;
+    }
+
     const submissionData: CreateCollaboratorData = {
       ...formData,
       company_id: companyId,
-      position: formData.position || null, // Ensure position can be null if empty
+      position: formData.position || null,
     };
+
+    console.log('Producer creating collaborator, session protection should be active');
 
     try {
       await addCollaboratorMutation.mutateAsync(submissionData);
-      onClose(); // Close dialog on success (hook handles toast)
-      // Form reset is handled by useEffect when isOpen becomes false then true again, or can be explicit here
-      // setFormData(initialFormData); // Explicit reset if preferred over useEffect for this case
+      onClose();
     } catch (error) {
       // Error is handled by the hook's onError toast
       console.error("Failed to add collaborator from dialog:", error);
@@ -68,7 +76,7 @@ export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollabo
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) onClose(); // Ensure onClose is called when dialog is dismissed
+      if (!open) onClose();
     }}>
       <DialogContent className="sm:max-w-[450px] bg-white">
         <DialogHeader>
