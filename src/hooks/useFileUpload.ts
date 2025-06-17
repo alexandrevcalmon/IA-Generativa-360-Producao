@@ -13,6 +13,14 @@ export const useFileUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
+  const formatFileSize = (bytes: number): string => {
+    if (bytes >= 1024 * 1024 * 1024) {
+      return `${Math.round(bytes / (1024 * 1024 * 1024) * 10) / 10}GB`;
+    } else {
+      return `${Math.round(bytes / (1024 * 1024))}MB`;
+    }
+  };
+
   const uploadFile = async (
     file: File,
     options: FileUploadOptions
@@ -22,10 +30,7 @@ export const useFileUpload = () => {
 
       // Validate file size
       if (options.maxSize && file.size > options.maxSize) {
-        const maxSizeInMB = options.maxSize / 1024 / 1024;
-        const maxSizeDisplay = maxSizeInMB >= 1024 
-          ? `${Math.round(maxSizeInMB / 1024 * 10) / 10}GB`
-          : `${Math.round(maxSizeInMB)}MB`;
+        const maxSizeDisplay = formatFileSize(options.maxSize);
         
         toast({
           title: "Erro",

@@ -1,9 +1,8 @@
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { FileUploadField } from "@/components/FileUploadField";
 import { Control } from "react-hook-form";
 import { LessonFormData } from "./types";
+import { FileUploadField } from "@/components/FileUploadField";
 
 interface LessonFileFieldsProps {
   control: Control<LessonFormData>;
@@ -12,8 +11,6 @@ interface LessonFileFieldsProps {
 export const LessonFileFields = ({ control }: LessonFileFieldsProps) => {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Arquivos da Aula</h3>
-      
       <FormField
         control={control}
         name="image_url"
@@ -21,8 +18,8 @@ export const LessonFileFields = ({ control }: LessonFileFieldsProps) => {
           <FormItem>
             <FormControl>
               <FileUploadField
-                label="Thumbnail da Aula"
-                description="Recomendado: 1920x1080px (formato 16:9)"
+                label="Imagem da Aula"
+                description="Recomendado: 1280x720px (16:9)"
                 value={field.value || ""}
                 onChange={(url) => field.onChange(url || "")}
                 uploadOptions={{
@@ -46,8 +43,8 @@ export const LessonFileFields = ({ control }: LessonFileFieldsProps) => {
           <FormItem>
             <FormControl>
               <FileUploadField
-                label="Arquivo de Vídeo"
-                description="Formato recomendado: MP4, máximo 2GB"
+                label="Vídeo da Aula"
+                description="Tamanho máximo: 2GB. Formatos aceitos: MP4, WebM, OGG, AVI, MOV"
                 value={field.value || ""}
                 onChange={(url) => field.onChange(url || "")}
                 uploadOptions={{
@@ -66,33 +63,13 @@ export const LessonFileFields = ({ control }: LessonFileFieldsProps) => {
 
       <FormField
         control={control}
-        name="video_url"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>URL do Vídeo (Opcional)</FormLabel>
-            <FormControl>
-              <Input 
-                placeholder="https://youtube.com/watch?v=... ou https://vimeo.com/..."
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage />
-            <p className="text-sm text-muted-foreground">
-              Use este campo para vídeos do YouTube, Vimeo ou outras plataformas
-            </p>
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={control}
         name="material_url"
         render={({ field }) => (
           <FormItem>
             <FormControl>
               <FileUploadField
                 label="Material de Apoio"
-                description="Formatos aceitos: PDF, Excel, Word, CSV (máximo 10MB)"
+                description="PDF, Word, Excel ou CSV. Tamanho máximo: 10MB"
                 value={field.value || ""}
                 onChange={(url) => field.onChange(url || "")}
                 uploadOptions={{
@@ -100,12 +77,13 @@ export const LessonFileFields = ({ control }: LessonFileFieldsProps) => {
                   maxSize: 10 * 1024 * 1024, // 10MB
                   allowedTypes: [
                     'application/pdf',
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     'text/csv'
                   ],
                 }}
-                accept=".pdf,.xlsx,.docx,.csv"
+                accept=".pdf,.docx,.xlsx,.csv"
+                preview={false}
               />
             </FormControl>
             <FormMessage />
