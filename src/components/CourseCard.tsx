@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Edit, Trash2, Eye, MoreVertical, Users, Clock, DollarSign } from "lucide-react";
+import { Edit, Trash2, Eye, MoreVertical, Users, Clock } from "lucide-react";
 import { Course } from "@/hooks/useCourses";
 
 interface CourseCardProps {
@@ -42,6 +42,16 @@ export const CourseCard = ({ course, onEdit, onDelete, onView }: CourseCardProps
 
   return (
     <Card className="hover:shadow-md transition-shadow">
+      {course.thumbnail_url && (
+        <div className="aspect-video w-full overflow-hidden rounded-t-lg">
+          <img 
+            src={course.thumbnail_url} 
+            alt={course.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -99,18 +109,11 @@ export const CourseCard = ({ course, onEdit, onDelete, onView }: CourseCardProps
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-2 gap-4 text-sm">
           {course.estimated_hours && (
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span>{course.estimated_hours}h</span>
-            </div>
-          )}
-          
-          {course.price !== null && (
-            <div className="flex items-center gap-1">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <span>R$ {course.price.toFixed(2)}</span>
             </div>
           )}
 

@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -10,7 +9,6 @@ export interface Course {
   category: string | null;
   difficulty_level: string | null;
   estimated_hours: number | null;
-  price: number | null;
   thumbnail_url: string | null;
   is_published: boolean | null;
   tags: string[] | null;

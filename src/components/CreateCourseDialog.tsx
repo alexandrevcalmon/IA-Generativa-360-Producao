@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,8 +24,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, Upload, Image } from "lucide-react";
 import { useCreateCourse, useUpdateCourse, Course } from "@/hooks/useCourses";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const courseSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -32,7 +35,6 @@ const courseSchema = z.object({
   category: z.string().optional(),
   difficulty_level: z.enum(["beginner", "intermediate", "advanced"]).optional(),
   estimated_hours: z.number().min(0).optional(),
-  price: z.number().min(0).optional(),
   thumbnail_url: z.string().url().optional().or(z.literal("")),
   is_published: z.boolean().default(false),
   tags: z.array(z.string()).default([]),
@@ -48,8 +50,13 @@ interface CreateCourseDialogProps {
 
 export const CreateCourseDialog = ({ isOpen, onClose, course }: CreateCourseDialogProps) => {
   const [newTag, setNewTag] = useState("");
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(course?.thumbnail_url || null);
+  
   const createCourseMutation = useCreateCourse();
   const updateCourseMutation = useUpdateCourse();
+  const { toast } = useToast();
 
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
@@ -59,15 +66,65 @@ export const CreateCourseDialog = ({ isOpen, onClose, course }: CreateCourseDial
       category: course?.category || "",
       difficulty_level: course?.difficulty_level as "beginner" | "intermediate" | "advanced" || undefined,
       estimated_hours: course?.estimated_hours || undefined,
-      price: course?.price || undefined,
       thumbnail_url: course?.thumbnail_url || "",
       is_published: course?.is_published || false,
       tags: course?.tags || [],
     },
   });
 
+  const uploadBannerImage = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('course-banners')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('course-banners')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading banner:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao fazer upload da imagem",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setBannerFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
   const onSubmit = async (data: CourseFormData) => {
     try {
+      setIsUploading(true);
+      
+      let thumbnailUrl = data.thumbnail_url;
+      
+      // Upload banner image if a new file was selected
+      if (bannerFile) {
+        const uploadedUrl = await uploadBannerImage(bannerFile);
+        if (uploadedUrl) {
+          thumbnailUrl = uploadedUrl;
+        }
+      }
+
       // Ensure title is present (it's required by the schema)
       const courseData = {
         title: data.title, // This is guaranteed to be string due to schema validation
@@ -75,8 +132,7 @@ export const CreateCourseDialog = ({ isOpen, onClose, course }: CreateCourseDial
         category: data.category || null,
         difficulty_level: data.difficulty_level || null,
         estimated_hours: data.estimated_hours || null,
-        price: data.price || null,
-        thumbnail_url: data.thumbnail_url || null,
+        thumbnail_url: thumbnailUrl || null,
         is_published: data.is_published,
         tags: data.tags,
         instructor_id: null, // Por enquanto, não temos sistema de instrutores
@@ -89,9 +145,13 @@ export const CreateCourseDialog = ({ isOpen, onClose, course }: CreateCourseDial
       }
       
       form.reset();
+      setBannerFile(null);
+      setPreviewUrl(null);
       onClose();
     } catch (error) {
       console.error("Erro ao salvar curso:", error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -117,7 +177,7 @@ export const CreateCourseDialog = ({ isOpen, onClose, course }: CreateCourseDial
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {course ? "Editar Curso" : "Criar Novo Curso"}
@@ -180,7 +240,7 @@ export const CreateCourseDialog = ({ isOpen, onClose, course }: CreateCourseDial
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="difficulty_level"
@@ -222,26 +282,67 @@ export const CreateCourseDialog = ({ isOpen, onClose, course }: CreateCourseDial
                   </FormItem>
                 )}
               />
+            </div>
 
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preço (R$)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        placeholder="Ex: 199.90"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+            <div className="space-y-4">
+              <FormLabel>Imagem do Banner</FormLabel>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                {previewUrl ? (
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <img 
+                        src={previewUrl} 
+                        alt="Preview do banner" 
+                        className="w-full h-48 object-cover rounded-lg"
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setPreviewUrl(null);
+                          setBannerFile(null);
+                        }}
+                        className="absolute top-2 right-2"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <Image className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-4">
+                      <label htmlFor="banner-upload" className="cursor-pointer">
+                        <span className="mt-2 block text-sm font-medium text-gray-900">
+                          Clique para fazer upload da imagem do banner
+                        </span>
+                        <span className="mt-1 block text-xs text-gray-500">
+                          PNG, JPG até 5MB
+                        </span>
+                      </label>
+                      <input
+                        id="banner-upload"
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                  </div>
                 )}
-              />
+                
+                {!previewUrl && (
+                  <div className="mt-4">
+                    <Button type="button" variant="outline" asChild>
+                      <label htmlFor="banner-upload" className="cursor-pointer">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Escolher Arquivo
+                      </label>
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <FormField
@@ -249,7 +350,7 @@ export const CreateCourseDialog = ({ isOpen, onClose, course }: CreateCourseDial
               name="thumbnail_url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL da Imagem de Capa</FormLabel>
+                  <FormLabel>URL da Imagem (alternativa)</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="https://exemplo.com/imagem.jpg"
@@ -312,8 +413,11 @@ export const CreateCourseDialog = ({ isOpen, onClose, course }: CreateCourseDial
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createCourseMutation.isPending || updateCourseMutation.isPending}>
-                {course ? "Atualizar" : "Criar"} Curso
+              <Button 
+                type="submit" 
+                disabled={createCourseMutation.isPending || updateCourseMutation.isPending || isUploading}
+              >
+                {isUploading ? "Enviando..." : course ? "Atualizar" : "Criar"} Curso
               </Button>
             </div>
           </form>
