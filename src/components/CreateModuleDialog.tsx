@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useCreateModule, useUpdateModule, CourseModule } from "@/hooks/useCourseModules";
 import { FileUploadField } from "@/components/FileUploadField";
+import { useEffect } from "react";
 
 const moduleSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -48,13 +49,26 @@ export const CreateModuleDialog = ({ isOpen, onClose, courseId, module }: Create
   const form = useForm<ModuleFormData>({
     resolver: zodResolver(moduleSchema),
     defaultValues: {
-      title: module?.title || "",
-      description: module?.description || "",
-      order_index: module?.order_index || 0,
-      is_published: module?.is_published || false,
-      image_url: module?.image_url || "",
+      title: "",
+      description: "",
+      order_index: 0,
+      is_published: false,
+      image_url: "",
     },
   });
+
+  // Reset form values when module changes or dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      form.reset({
+        title: module?.title || "",
+        description: module?.description || "",
+        order_index: module?.order_index || 0,
+        is_published: module?.is_published || false,
+        image_url: module?.image_url || "",
+      });
+    }
+  }, [module, isOpen, form]);
 
   const onSubmit = async (data: ModuleFormData) => {
     try {

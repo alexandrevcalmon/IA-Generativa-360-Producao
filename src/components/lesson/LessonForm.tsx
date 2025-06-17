@@ -9,6 +9,7 @@ import { LessonBasicFields } from "./LessonBasicFields";
 import { LessonFileFields } from "./LessonFileFields";
 import { LessonSettingsFields } from "./LessonSettingsFields";
 import { LessonFormData } from "./types";
+import { useEffect } from "react";
 
 const lessonSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -35,6 +36,21 @@ export const LessonForm = ({ moduleId, lesson, onClose }: LessonFormProps) => {
   const form = useForm<LessonFormData>({
     resolver: zodResolver(lessonSchema),
     defaultValues: {
+      title: "",
+      content: "",
+      video_url: "",
+      duration_minutes: undefined,
+      order_index: 0,
+      is_free: false,
+      image_url: "",
+      video_file_url: "",
+      material_url: "",
+    },
+  });
+
+  // Reset form values when lesson changes
+  useEffect(() => {
+    form.reset({
       title: lesson?.title || "",
       content: lesson?.content || "",
       video_url: lesson?.video_url || "",
@@ -44,8 +60,8 @@ export const LessonForm = ({ moduleId, lesson, onClose }: LessonFormProps) => {
       image_url: lesson?.image_url || "",
       video_file_url: lesson?.video_file_url || "",
       material_url: lesson?.material_url || "",
-    },
-  });
+    });
+  }, [lesson, form]);
 
   const onSubmit = async (data: LessonFormData) => {
     try {
