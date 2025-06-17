@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthGuard } from "@/components/AuthGuard";
+import { AuthProvider } from "@/hooks/useAuth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -28,92 +29,94 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <SidebarProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/login-produtor" element={<LoginProdutor />} />
-            
-            {/* Protected Student Routes */}
-            <Route path="/dashboard" element={
-              <AuthGuard>
-                <Dashboard />
-              </AuthGuard>
-            } />
-            <Route path="/courses" element={
-              <AuthGuard>
-                <Courses />
-              </AuthGuard>
-            } />
-            <Route path="/learning" element={
-              <AuthGuard>
-                <Learning />
-              </AuthGuard>
-            } />
-            <Route path="/community" element={
-              <AuthGuard>
-                <Community />
-              </AuthGuard>
-            } />
-            <Route path="/profile" element={
-              <AuthGuard>
-                <Profile />
-              </AuthGuard>
-            } />
-            <Route path="/analytics" element={
-              <AuthGuard>
-                <Analytics />
-              </AuthGuard>
-            } />
-            
-            {/* Protected Producer Routes */}
-            <Route path="/producer/dashboard" element={
-              <AuthGuard>
-                <ProducerDashboard />
-              </AuthGuard>
-            } />
-            <Route path="/producer/courses" element={
-              <AuthGuard>
-                <ProducerCourses />
-              </AuthGuard>
-            } />
-            <Route path="/producer/courses/:courseId" element={
-              <AuthGuard>
-                <CourseDetails />
-              </AuthGuard>
-            } />
-            <Route path="/producer/companies" element={
-              <AuthGuard>
-                <ProducerCompanies />
-              </AuthGuard>
-            } />
-            <Route path="/producer/companies/:companyId" element={
-              <AuthGuard>
-                <ProducerCompanyDetails />
-              </AuthGuard>
-            } />
-            <Route path="/producer/plans" element={
-              <AuthGuard>
-                <ProducerPlans />
-              </AuthGuard>
-            } />
-            
-            {/* Protected Company Routes */}
-            <Route path="/company/dashboard" element={
-              <AuthGuard>
-                <CompanyDashboard />
-              </AuthGuard>
-            } />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </SidebarProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <SidebarProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/login-produtor" element={<LoginProdutor />} />
+              
+              {/* Protected Student Routes */}
+              <Route path="/dashboard" element={
+                <AuthGuard>
+                  <Dashboard />
+                </AuthGuard>
+              } />
+              <Route path="/courses" element={
+                <AuthGuard>
+                  <Courses />
+                </AuthGuard>
+              } />
+              <Route path="/learning" element={
+                <AuthGuard>
+                  <Learning />
+                </AuthGuard>
+              } />
+              <Route path="/community" element={
+                <AuthGuard>
+                  <Community />
+                </AuthGuard>
+              } />
+              <Route path="/profile" element={
+                <AuthGuard>
+                  <Profile />
+                </AuthGuard>
+              } />
+              <Route path="/analytics" element={
+                <AuthGuard>
+                  <Analytics />
+                </AuthGuard>
+              } />
+              
+              {/* Protected Producer Routes */}
+              <Route path="/producer/dashboard" element={
+                <AuthGuard>
+                  <ProducerDashboard />
+                </AuthGuard>
+              } />
+              <Route path="/producer/courses" element={
+                <AuthGuard>
+                  <ProducerCourses />
+                </AuthGuard>
+              } />
+              <Route path="/producer/courses/:courseId" element={
+                <AuthGuard>
+                  <CourseDetails />
+                </AuthGuard>
+              } />
+              <Route path="/producer/companies" element={
+                <AuthGuard>
+                  <ProducerCompanies />
+                </AuthGuard>
+              } />
+              <Route path="/producer/companies/:companyId" element={
+                <AuthGuard>
+                  <ProducerCompanyDetails />
+                </AuthGuard>
+              } />
+              <Route path="/producer/plans" element={
+                <AuthGuard>
+                  <ProducerPlans />
+                </AuthGuard>
+              } />
+              
+              {/* Protected Company Routes */}
+              <Route path="/company/dashboard" element={
+                <AuthGuard>
+                  <CompanyDashboard />
+                </AuthGuard>
+              } />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </SidebarProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
