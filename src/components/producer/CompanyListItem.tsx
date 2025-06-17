@@ -1,21 +1,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Building2,
-  Eye,
-  Edit,
-  Trash2,
-  MoreVertical,
-  Loader2
-} from "lucide-react";
-import { Link } from "react-router-dom";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Edit, MoreVertical, Trash2, Users, Building } from "lucide-react";
 import { CompanyWithPlan } from "@/hooks/useCompaniesWithPlans";
 import { Company } from "@/hooks/useCompanies";
 import { getPlanBadgeColor, getPlanIcon } from "@/utils/planUtils";
@@ -24,109 +11,78 @@ interface CompanyListItemProps {
   company: CompanyWithPlan;
   onEdit: (company: Company) => void;
   onDelete: (companyId: string) => Promise<void>;
-  isDeleting: boolean;
+  deletingCompanyId: string | null;
   transformCompany: (company: CompanyWithPlan) => Company;
 }
 
-export function CompanyListItem({ 
-  company, 
-  onEdit, 
-  onDelete, 
-  isDeleting,
-  transformCompany 
+export function CompanyListItem({
+  company,
+  onEdit,
+  onDelete,
+  deletingCompanyId,
+  transformCompany,
 }: CompanyListItemProps) {
-  return (
-    <div className="flex items-center justify-between p-4 rounded-lg border bg-white hover:shadow-md transition-shadow">
-      <div className="flex items-center space-x-4">
-        {company.logo_url ? (
-          <img src={company.logo_url} alt={`${company.name} logo`} className="w-12 h-12 rounded-lg object-cover" />
-        ) : (
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-calmon-500 to-calmon-700 flex items-center justify-center">
-            <Building2 className="h-6 w-6 text-white" />
-          </div>
-        )}
-        <div>
-          <div className="flex items-center space-x-2">
-            <h3 className="font-semibold text-gray-900">{company.name}</h3>
-            {company.subscription_plan && (
-              <Badge
-                variant="outline"
-                className={`text-xs ${getPlanBadgeColor(company.subscription_plan.name)}`}
-              >
-                {getPlanIcon(company.subscription_plan.name)}
-                <span className="ml-1 capitalize">{company.subscription_plan.name}</span>
-              </Badge>
-            )}
-            {!company.is_active && (
-              <Badge variant="outline" className="text-xs bg-red-100 text-red-700 border-red-200">
-                Inativa
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-            <span>{company.current_students || 0}/{company.max_students || 'N/A'} colaboradores</span>
-            <span>•</span>
-            <span>Desde {new Date(company.created_at).toLocaleDateString('pt-BR')}</span>
-          </div>
-        </div>
-      </div>
+  const isDeleting = deletingCompanyId === company.id;
+  const planName = company.subscription_plan?.name;
 
-      <div className="flex items-center space-x-2">
-        <div className="text-right mr-4">
-          <div className="text-sm font-medium">
-            {company.max_students && company.max_students > 0
-              ? `${Math.round(((company.current_students || 0) / company.max_students) * 100)}% ocupação`
-              : "N/A"}
-          </div>
-          {company.max_students && company.max_students > 0 && (
-            <div className="w-20 h-2 bg-gray-200 rounded-full mt-1">
-              <div
-                className="h-full bg-gradient-to-r from-calmon-500 to-calmon-700 rounded-full"
-                style={{ width: `${((company.current_students || 0) / company.max_students) * 100}%` }}
-              />
+  return (
+    <div className="bg-white rounded-lg border p-4 hover:shadow-sm transition-shadow">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
+              <Building className="w-5 h-5 text-blue-600" />
             </div>
+            
+            <div>
+              <h3 className="font-semibold text-gray-900">{company.name}</h3>
+              {company.official_name && company.official_name !== company.name && (
+                <p className="text-sm text-gray-500">{company.official_name}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              <span>{company.current_students || 0} colaboradores</span>
+            </div>
+            
+            {planName && (
+              <Badge className={getPlanBadgeColor(planName)}>
+                {getPlanIcon(planName)}
+                <span className="ml-1">{planName}</span>
+              </Badge>
+            )}
+            
+            <Badge variant={company.is_active ? "default" : "secondary"}>
+              {company.is_active ? "Ativa" : "Inativa"}
+            </Badge>
+          </div>
+
+          {company.contact_email && (
+            <p className="text-sm text-gray-500 mt-1">{company.contact_email}</p>
           )}
         </div>
 
-        <Link to={`/producer/companies/${company.id}`}>
-          <Button size="sm" variant="outline">
-            <Eye className="h-3 w-3 mr-1" />
-            Ver Detalhes
-          </Button>
-        </Link>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" variant="outline">
-              <MoreVertical className="h-3 w-3" />
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-white">
-            <DropdownMenuItem
-              onClick={() => onEdit(transformCompany(company))}
-            >
-              <Edit className="h-3 w-3 mr-2" />
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(transformCompany(company))}>
+              <Edit className="mr-2 h-4 w-4" />
               Editar
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-red-600 hover:bg-red-50 focus:bg-red-50 focus:text-red-700"
-              onClick={async () => {
-                if (window.confirm(`Tem certeza que deseja excluir a empresa "${company.name}"? Esta ação não pode ser desfeita.`)) {
-                  try {
-                    await onDelete(company.id);
-                  } catch (err) {
-                    console.error("Falha ao excluir empresa:", err);
-                  }
-                }
-              }}
+            <DropdownMenuItem 
+              onClick={() => onDelete(company.id)}
               disabled={isDeleting}
+              className="text-red-600"
             >
-              {isDeleting ? (
-                <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-              ) : (
-                <Trash2 className="h-3 w-3 mr-2" />
-              )}
-              Excluir
+              <Trash2 className="mr-2 h-4 w-4" />
+              {isDeleting ? "Excluindo..." : "Excluir"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
