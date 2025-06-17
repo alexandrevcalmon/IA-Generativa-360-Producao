@@ -71,7 +71,7 @@ const Index = () => {
                 <li>• Analytics de engajamento</li>
                 <li>• Biblioteca de recursos</li>
               </ul>
-              <Link to="/producer-dashboard" className="block">
+              <Link to="/login-produtor" className="block">
                 <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg">
                   Acessar Painel do Produtor
                   <ArrowRight className="ml-2 h-4 w-4" />
