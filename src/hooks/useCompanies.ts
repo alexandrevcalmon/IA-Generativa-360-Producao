@@ -93,6 +93,41 @@ export const useCompanies = () => {
   });
 };
 
+export const useCompanyById = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ['company', id],
+    queryFn: async () => {
+      if (!id) {
+        throw new Error('Company ID is required');
+      }
+
+      const { data, error } = await supabase
+        .from('companies')
+        .select(`
+          *,
+          subscription_plan:subscription_plan_id (
+            id,
+            name,
+            price,
+            annual_price,
+            semester_price,
+            max_students
+          )
+        `)
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching company:', error);
+        throw error;
+      }
+
+      return data as Company | null;
+    },
+    enabled: !!id
+  });
+};
+
 export const useCreateCompany = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -156,6 +191,7 @@ export const useUpdateCompany = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['company'] });
       toast({
         title: "Empresa atualizada com sucesso!",
         description: "As alterações foram salvas.",
@@ -191,6 +227,7 @@ export const useDeleteCompany = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['company'] });
       toast({
         title: "Empresa desativada com sucesso!",
         description: "A empresa foi desativada.",
@@ -201,6 +238,42 @@ export const useDeleteCompany = () => {
       toast({
         title: "Erro ao desativar empresa",
         description: "Ocorreu um erro ao desativar a empresa.",
+        variant: "destructive",
+      });
+    }
+  });
+};
+
+export const useToggleCompanyStatus = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, currentStatus }: { id: string; currentStatus: boolean }) => {
+      const { error } = await supabase
+        .from('companies')
+        .update({ is_active: !currentStatus })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error toggling company status:', error);
+        throw error;
+      }
+    },
+    onSuccess: (_, { currentStatus }) => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['company'] });
+      toast({
+        title: currentStatus ? "Empresa bloqueada com sucesso!" : "Empresa desbloqueada com sucesso!",
+        description: currentStatus ? "A empresa foi bloqueada." : "A empresa foi desbloqueada.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error toggling company status:', error);
+      toast({
+        title: "Erro ao alterar status da empresa",
+        description: "Ocorreu um erro ao alterar o status da empresa.",
         variant: "destructive",
       });
     }
