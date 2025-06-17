@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,6 +11,7 @@ export interface StudentCourse {
   difficulty_level: string;
   estimated_hours: number;
   progress_percentage: number;
+  enrolled_at?: string;
   modules: StudentModule[];
 }
 
@@ -61,10 +61,22 @@ export const useStudentCourses = () => {
 
       console.log('Found published courses:', courses?.length || 0);
 
+      // Get enrollment data for the current user
+      const { data: enrollments } = await supabase
+        .from('enrollments')
+        .select('course_id, enrolled_at, progress_percentage')
+        .eq('user_id', user.id);
+
+      const enrollmentMap = new Map(
+        enrollments?.map(e => [e.course_id, e]) || []
+      );
+
       // For each course, get modules/lessons and progress
       const coursesWithProgress = await Promise.all(
         (courses || []).map(async (course) => {
           console.log('Processing course:', course.title);
+
+          const enrollment = enrollmentMap.get(course.id);
 
           // Get modules - this will now work with RLS policies
           const { data: modules, error: modulesError } = await supabase
@@ -131,7 +143,8 @@ export const useStudentCourses = () => {
 
           return {
             ...course,
-            progress_percentage: progressPercentage,
+            progress_percentage: enrollment?.progress_percentage || progressPercentage,
+            enrolled_at: enrollment?.enrolled_at,
             modules: modulesWithLessons,
           };
         })

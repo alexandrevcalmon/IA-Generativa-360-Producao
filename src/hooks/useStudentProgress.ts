@@ -71,3 +71,51 @@ export const useMarkLessonComplete = () => {
     },
   });
 };
+
+export const useEnrollInCourse = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      if (!user) throw new Error('User not authenticated');
+
+      console.log('Enrolling in course:', courseId);
+
+      const { data, error } = await supabase
+        .from('enrollments')
+        .insert({
+          course_id: courseId,
+          user_id: user.id,
+          enrolled_at: new Date().toISOString(),
+          progress_percentage: 0
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error enrolling in course:', error);
+        throw error;
+      }
+
+      console.log('Successfully enrolled in course:', data);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-courses'] });
+      toast({
+        title: "Inscrição realizada!",
+        description: "Você foi inscrito no curso com sucesso.",
+      });
+    },
+    onError: (error) => {
+      console.error('Enrollment error:', error);
+      toast({
+        title: "Erro na inscrição",
+        description: "Não foi possível realizar a inscrição no curso.",
+        variant: "destructive",
+      });
+    },
+  });
+};
