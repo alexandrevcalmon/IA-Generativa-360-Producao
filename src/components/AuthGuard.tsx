@@ -14,30 +14,10 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        navigate(redirectTo);
-        return;
-      }
-
-      if (requiredRole && userRole !== requiredRole) {
-        // Redirect based on user role
-        switch (userRole) {
-          case 'producer':
-            navigate('/producer-dashboard');
-            break;
-          case 'company':
-            navigate('/company-dashboard');
-            break;
-          case 'student':
-            navigate('/learning');
-            break;
-          default:
-            navigate('/auth');
-        }
-      }
+    if (!loading && !user) {
+      navigate(redirectTo);
     }
-  }, [user, loading, userRole, requiredRole, navigate, redirectTo]);
+  }, [user, loading, navigate, redirectTo]);
 
   if (loading) {
     return (
@@ -52,7 +32,20 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
   }
 
   if (requiredRole && userRole !== requiredRole) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
+          <p className="text-gray-600 mb-4">Você não tem permissão para acessar esta página.</p>
+          <button 
+            onClick={() => navigate('/')}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Voltar ao Início
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;

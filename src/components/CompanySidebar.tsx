@@ -1,118 +1,97 @@
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
-import {
-  LayoutDashboard,
-  BookOpen,
+import { 
+  Sidebar, 
+  SidebarContent, 
+  SidebarHeader, 
+  SidebarMenu, 
+  SidebarMenuItem, 
+  SidebarMenuButton 
+} from '@/components/ui/sidebar';
+import { 
+  Home, 
+  Users, 
+  BookOpen, 
+  Calendar, 
+  BarChart3, 
   User,
-  CreditCard,
-  Calendar
-} from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
-
-const navigation = {
-  main: [
-    { title: "Dashboard", url: "/company-dashboard", icon: LayoutDashboard },
-    { title: "Cursos Ativos", url: "/company/courses", icon: BookOpen },
-    { title: "Mentorias", url: "/company/mentorships", icon: Calendar },
-  ],
-  account: [
-    { title: "Perfil", url: "/company/profile", icon: User },
-    { title: "Plano", url: "/company/plan", icon: CreditCard },
-  ],
-};
+  LogOut 
+} from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 export function CompanySidebar() {
-  const location = useLocation();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const menuItems = [
+    {
+      title: 'Dashboard',
+      icon: Home,
+      href: '/company-dashboard'
+    },
+    {
+      title: 'Colaboradores',
+      icon: Users,
+      href: '/company/collaborators'
+    },
+    {
+      title: 'Cursos',
+      icon: BookOpen,
+      href: '/company/courses'
+    },
+    {
+      title: 'Mentorias',
+      icon: Calendar,
+      href: '/company/mentorships'
+    },
+    {
+      title: 'Analytics',
+      icon: BarChart3,
+      href: '/analytics'
+    },
+    {
+      title: 'Perfil',
+      icon: User,
+      href: '/profile'
+    }
+  ];
 
   return (
-    <Sidebar className="border-r-0 bg-sidebar">
-      <SidebarHeader className="p-6">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10">
-            <img 
-              src="/logo-calmon-academy.png" 
-              alt="Calmon Academy" 
-              className="w-full h-full object-contain"
-            />
+    <Sidebar>
+      <SidebarHeader className="p-4">
+        <Link to="/" className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-calmon-600 rounded flex items-center justify-center text-white font-bold">
+            C
           </div>
-          <div>
-            <h2 className="font-bold text-lg text-sidebar-foreground">Calmon Academy</h2>
-            <p className="text-sm text-sidebar-foreground/70">Painel da Empresa</p>
-          </div>
-        </div>
+          <span className="font-bold text-lg">Calmon Academy</span>
+        </Link>
       </SidebarHeader>
-
-      <SidebarContent className="px-3">
-        {/* Navigation Menu */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/70 uppercase text-xs font-semibold tracking-wider">
-            Principal
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigation.main.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.url}
-                    className="data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
-                  >
-                    <Link to={item.url} className="flex items-center space-x-3">
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/70 uppercase text-xs font-semibold tracking-wider">
-            Conta
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigation.account.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.url}
-                    className="data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
-                  >
-                    <Link to={item.url} className="flex items-center space-x-3">
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      
+      <SidebarContent>
+        <SidebarMenu>
+          {menuItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton asChild>
+                <Link to={item.href} className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100">
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleSignOut} className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-red-600">
+              <LogOut className="h-5 w-5" />
+              <span>Sair</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarContent>
-
-      <SidebarFooter className="p-4">
-        <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
-          <span>v1.1.0</span>
-          <Badge variant="outline" className="text-xs">
-            EMPRESA
-          </Badge>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }

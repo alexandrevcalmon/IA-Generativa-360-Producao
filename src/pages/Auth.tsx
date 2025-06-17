@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Building2, GraduationCap, Briefcase } from 'lucide-react';
 
 export default function Auth() {
@@ -34,19 +33,24 @@ export default function Auth() {
   // Redirect if already authenticated
   useEffect(() => {
     if (user && userRole) {
-      switch (userRole) {
-        case 'producer':
-          navigate('/producer/dashboard');
-          break;
-        case 'company':
-          navigate('/company-dashboard');
-          break;
-        case 'student':
-          navigate('/learning');
-          break;
-        default:
-          navigate('/dashboard');
-      }
+      console.log('Redirecting user with role:', userRole);
+      
+      // Use setTimeout to avoid navigation conflicts
+      setTimeout(() => {
+        switch (userRole) {
+          case 'producer':
+            navigate('/producer/dashboard', { replace: true });
+            break;
+          case 'company':
+            navigate('/company-dashboard', { replace: true });
+            break;
+          case 'student':
+            navigate('/learning', { replace: true });
+            break;
+          default:
+            navigate('/dashboard', { replace: true });
+        }
+      }, 100);
     }
   }, [user, userRole, navigate]);
 
@@ -58,8 +62,7 @@ export default function Auth() {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (!error) {
-          // Navigation will be handled by the useEffect above
-          console.log('Login successful');
+          console.log('Login successful, waiting for redirect...');
         }
       } else {
         const { error } = await signUp(email, password, role);

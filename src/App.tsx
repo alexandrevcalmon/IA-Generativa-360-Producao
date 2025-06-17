@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/hooks/useAuth';
@@ -40,24 +40,17 @@ function App() {
               <Route path="/login-produtor" element={<LoginProdutor />} />
               
               {/* Producer routes */}
-              <Route path="/producer/*" element={
+              <Route path="/producer" element={
                 <AuthGuard requiredRole="producer">
                   <ProdutorLayout />
                 </AuthGuard>
               }>
-                <Route index element={<ProducerDashboard />} />
+                <Route index element={<Navigate to="/producer/dashboard" replace />} />
                 <Route path="dashboard" element={<ProducerDashboard />} />
                 <Route path="companies" element={<ProducerCompanies />} />
                 <Route path="companies/:id" element={<ProducerCompanyDetails />} />
                 <Route path="plans" element={<ProducerPlans />} />
               </Route>
-              
-              {/* Legacy producer routes (redirect) */}
-              <Route path="/producer-dashboard" element={
-                <AuthGuard requiredRole="producer">
-                  <div>Redirecting...</div>
-                </AuthGuard>
-              } />
               
               {/* Company routes */}
               <Route path="/company-dashboard" element={
