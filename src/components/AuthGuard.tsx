@@ -1,11 +1,11 @@
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
 import { PasswordChangeDialog } from '@/components/PasswordChangeDialog';
 
 interface AuthGuardProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   requiredRole?: 'producer' | 'company' | 'student';
   redirectTo?: string;
 }
@@ -92,5 +92,7 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
   }
 
   console.log('✅ AuthGuard access granted for:', user.email, 'with role:', userRole);
-  return <>{children}</>;
+  
+  // If children are provided, render them; otherwise render Outlet for nested routes
+  return children ? <>{children}</> : <Outlet />;
 }
