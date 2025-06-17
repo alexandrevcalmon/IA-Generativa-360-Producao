@@ -197,12 +197,12 @@ const CourseDetails = () => {
                 </Card>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {modules.map((module) => (
+                  {modules.map((module, index) => (
                     <ModuleCard
                       key={module.id}
                       module={module}
+                      index={index}
                       onEdit={handleEditModule}
-                      onCreateLesson={handleCreateLesson}
                     />
                   ))}
                 </div>
