@@ -9,8 +9,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { UserPlus, Mail, User } from "lucide-react";
+import { useState, useEffect } from "react"; // Added useEffect
+import { UserPlus, Mail, User, Briefcase, Loader2 } from "lucide-react"; // Added Briefcase, Loader2
+import { useAddCompanyCollaborator, CreateCollaboratorData } from "@/hooks/useCompanyCollaborators";
 
 interface AddCollaboratorDialogProps {
   isOpen: boolean;
@@ -18,34 +19,69 @@ interface AddCollaboratorDialogProps {
   companyId: string;
 }
 
-export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollaboratorDialogProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: ""
-  });
+interface CollaboratorFormData {
+  name: string;
+  email: string;
+  position: string;
+}
 
-  const handleSubmit = (e: React.FormEvent) => {
+const initialFormData: CollaboratorFormData = {
+  name: "",
+  email: "",
+  position: "",
+};
+
+export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollaboratorDialogProps) {
+  const [formData, setFormData] = useState<CollaboratorFormData>(initialFormData);
+  const addCollaboratorMutation = useAddCompanyCollaborator();
+
+  useEffect(() => {
+    // Reset form when dialog opens or companyId changes (though companyId is not expected to change while open)
+    if (isOpen) {
+      setFormData(initialFormData);
+    }
+  }, [isOpen, companyId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Adding collaborator to company:", companyId, formData);
-    // Here you would integrate with Supabase to create the collaborator
-    onClose();
-    setFormData({ name: "", email: "" });
+    if (!companyId) {
+      alert("ID da empresa não encontrado. Não é possível adicionar colaborador.");
+      return;
+    }
+
+    const submissionData: CreateCollaboratorData = {
+      ...formData,
+      company_id: companyId,
+      position: formData.position || null, // Ensure position can be null if empty
+    };
+
+    try {
+      await addCollaboratorMutation.mutateAsync(submissionData);
+      onClose(); // Close dialog on success (hook handles toast)
+      // Form reset is handled by useEffect when isOpen becomes false then true again, or can be explicit here
+      // setFormData(initialFormData); // Explicit reset if preferred over useEffect for this case
+    } catch (error) {
+      // Error is handled by the hook's onError toast
+      console.error("Failed to add collaborator from dialog:", error);
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px] bg-white">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose(); // Ensure onClose is called when dialog is dismissed
+    }}>
+      <DialogContent className="sm:max-w-[450px] bg-white">
         <DialogHeader>
           <DialogTitle className="flex items-center text-xl">
             <UserPlus className="h-5 w-5 mr-2 text-calmon-600" />
             Adicionar Colaborador
           </DialogTitle>
           <DialogDescription>
-            Adicione um novo colaborador à empresa. Ele receberá um convite por email.
+            Adicione um novo colaborador à empresa. Um usuário será criado e ele precisará definir uma senha.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="collaborator-name" className="flex items-center">
               <User className="h-4 w-4 mr-1" />
@@ -73,20 +109,37 @@ export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollabo
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               required
             />
-            <p className="text-xs text-gray-500">
-              O colaborador receberá um convite para se cadastrar na plataforma
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="collaborator-position" className="flex items-center">
+              <Briefcase className="h-4 w-4 mr-1" />
+              Cargo (Opcional)
+            </Label>
+            <Input
+              id="collaborator-position"
+              placeholder="Ex: Desenvolvedor, Designer"
+              value={formData.position}
+              onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+            />
+             <p className="text-xs text-gray-500">
+              O colaborador será criado no sistema e precisará definir uma senha no primeiro acesso.
             </p>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-6">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button type="button" variant="outline" onClick={onClose} disabled={addCollaboratorMutation.isPending}>
               Cancelar
             </Button>
             <Button 
               type="submit"
-              className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white"
+              className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white min-w-[160px]"
+              disabled={addCollaboratorMutation.isPending}
             >
-              Enviar Convite
+              {addCollaboratorMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              {addCollaboratorMutation.isPending ? "Adicionando..." : "Adicionar Colaborador"}
             </Button>
           </div>
         </form>

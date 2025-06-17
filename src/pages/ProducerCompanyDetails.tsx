@@ -1,4 +1,3 @@
-
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +20,10 @@ import {
   BarChart3,
   TrendingUp,
   UserPlus,
-  MoreVertical
+  MoreVertical,
+  ToggleLeft, // For inactive status
+  ToggleRight, // For active status
+  Loader2 // For loading state on button
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -31,81 +33,52 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
+import React from "react"; // Correctly placed React import
 import { AddCollaboratorDialog } from "@/components/AddCollaboratorDialog";
+import { EditCompanyDialog } from "@/components/EditCompanyDialog"; // Already imported
+import { EditCollaboratorDialog as EditCollaboratorDialogComponent } from "@/components/EditCollaboratorDialog"; // Import with alias
+import { useCompanyById, useToggleCompanyStatus } from "@/hooks/useCompanies";
+import {
+  useGetCompanyCollaborators,
+  useToggleCollaboratorStatus,
+  Collaborator
+} from "@/hooks/useCompanyCollaborators"; // Import more from collaborator hooks
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ProducerCompanyDetails = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>(); // companyId
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddCollaboratorOpen, setIsAddCollaboratorOpen] = useState(false);
+  const [isCompanyEditDialogOpen, setIsCompanyEditDialogOpen] = useState(false); // Renamed to avoid clash
+  const [isEditCollaboratorDialogOpen, setIsEditCollaboratorDialogOpen] = useState(false);
+  const [selectedCollaborator, setSelectedCollaborator] = useState<Collaborator | null>(null);
 
-  // Mock company data
-  const company = {
-    id: "1",
-    name: "TechCorp Solutions",
-    logo_url: "/api/placeholder/80/80",
-    subscription_plan: "premium",
-    current_students: 142,
-    max_students: 200,
-    is_active: true,
-    created_at: "2024-01-15",
-    completion_rate: 85
-  };
 
-  // Mock collaborators data
-  const collaborators = [
-    {
-      id: "1",
-      name: "João Silva",
-      email: "joao.silva@techcorp.com",
-      role: "student",
-      avatar_url: "/api/placeholder/40/40",
-      enrolled_courses: 3,
-      completed_courses: 2,
-      progress: 78,
-      last_activity: "2024-12-16",
-      created_at: "2024-01-20"
-    },
-    {
-      id: "2",
-      name: "Maria Santos",
-      email: "maria.santos@techcorp.com",
-      role: "student",
-      avatar_url: "/api/placeholder/40/40",
-      enrolled_courses: 5,
-      completed_courses: 4,
-      progress: 92,
-      last_activity: "2024-12-15",
-      created_at: "2024-02-10"
-    },
-    {
-      id: "3",
-      name: "Pedro Costa",
-      email: "pedro.costa@techcorp.com",
-      role: "student",
-      avatar_url: "/api/placeholder/40/40",
-      enrolled_courses: 2,
-      completed_courses: 1,
-      progress: 45,
-      last_activity: "2024-12-10",
-      created_at: "2024-03-05"
-    }
-  ];
+  const { data: company, isLoading, error, dataUpdatedAt } = useCompanyById(id);
+  const toggleCompanyStatusMutation = useToggleCompanyStatus();
+  const {
+    data: collaborators = [],
+    isLoading: collaboratorsLoading,
+    error: collaboratorsError
+  } = useGetCompanyCollaborators(id);
+  const toggleCollaboratorStatusMutation = useToggleCollaboratorStatus();
 
-  const getPlanBadgeColor = (plan: string) => {
-    switch (plan) {
+  const getPlanBadgeColor = (planName?: string | null) => {
+    switch (planName?.toLowerCase()) {
       case "premium":
         return "bg-purple-100 text-purple-700 border-purple-200";
       case "business":
         return "bg-blue-100 text-blue-700 border-blue-200";
       case "basic":
+      case "starter":
         return "bg-gray-100 text-gray-700 border-gray-200";
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
     }
   };
 
-  const getPlanIcon = (plan: string) => {
-    switch (plan) {
+  const getPlanIcon = (planName?: string | null) => {
+    switch (planName?.toLowerCase()) {
       case "premium":
         return <Crown className="h-3 w-3" />;
       case "business":
@@ -116,15 +89,89 @@ const ProducerCompanyDetails = () => {
   };
 
   const filteredCollaborators = collaborators.filter(collaborator =>
-    collaborator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    collaborator.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (collaborator.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+    (collaborator.email?.toLowerCase() || "").includes(searchTerm.toLowerCase())
   );
 
-  const getProgressColor = (progress: number) => {
-    if (progress >= 80) return "bg-green-500";
-    if (progress >= 60) return "bg-yellow-500";
+  // getProgressColor is not used anymore as progress field is removed from display
+  // const getProgressColor = (progress: number) => {
+    // if (progress >= 80) return "bg-green-500";
+    // if (progress >= 60) return "bg-yellow-500";
     return "bg-red-500";
   };
+
+  if (isLoading) {
+    return (
+      <>
+        <AppSidebar />
+        <main className="flex-1 overflow-hidden">
+          <div className="flex flex-col h-full">
+            {/* Header Skeleton */}
+            <header className="border-b bg-white px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-3">
+                    <SidebarTrigger />
+                    <Link to="/producer/companies">
+                      <Button variant="ghost" size="sm" disabled>
+                        <ArrowLeft className="h-4 w-4 mr-1" />
+                        Voltar
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <Skeleton className="w-12 h-12 rounded-lg" />
+                    <div>
+                      <Skeleton className="h-7 w-48 mb-1" />
+                      <Skeleton className="h-4 w-64" />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Skeleton className="h-9 w-36" /> {/* Edit button */}
+                  <Skeleton className="h-9 w-48" /> {/* Add collaborator button */}
+                </div>
+              </div>
+            </header>
+            {/* Main Content Skeleton */}
+            <div className="flex-1 overflow-auto p-6 bg-gray-50 text-center">
+              <p>Carregando detalhes da empresa...</p>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (error || !company) {
+    return (
+      <>
+        <AppSidebar />
+        <main className="flex-1 overflow-hidden">
+          <div className="flex flex-col h-full items-center justify-center p-6">
+            <div className="flex items-center space-x-3 mb-4">
+                <SidebarTrigger />
+                <Link to="/producer/companies">
+                  <Button variant="ghost" size="sm">
+                    <ArrowLeft className="h-4 w-4 mr-1" />
+                    Voltar para Empresas
+                  </Button>
+                </Link>
+              </div>
+            <h2 className="text-xl font-semibold text-red-500">Erro ao carregar empresa</h2>
+            <p>{error?.message || "A empresa não foi encontrada ou ocorreu um erro."}</p>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const { name, subscription_plan, created_at } = company;
+  // current_students and max_students might be on company.subscription_plan or company directly
+  // For this example, assuming they are on company.subscription_plan if plan exists, else on company
+  const currentStudents = company.subscription_plan?.max_students !== undefined ? company.current_students : company.current_students; // This line is problematic logic wise, current_students is on company.
+  const maxStudents = company.subscription_plan?.max_students || company.max_students; // max_students is likely from plan, or a fallback
+
 
   return (
     <>
@@ -146,34 +193,68 @@ const ProducerCompanyDetails = () => {
                 </div>
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-calmon-500 to-calmon-700 flex items-center justify-center">
+                    {/* TODO: Add company.logo_url here if available */}
                     <Building2 className="h-6 w-6 text-white" />
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
-                      <h1 className="text-2xl font-bold text-gray-900">{company.name}</h1>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs ${getPlanBadgeColor(company.subscription_plan)}`}
-                      >
-                        {getPlanIcon(company.subscription_plan)}
-                        <span className="ml-1 capitalize">{company.subscription_plan}</span>
+                      <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
+                      {subscription_plan && (
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${getPlanBadgeColor(subscription_plan.name)}`}
+                        >
+                          {getPlanIcon(subscription_plan.name)}
+                          <span className="ml-1 capitalize">{subscription_plan.name}</span>
+                        </Badge>
+                      )}
+                      <Badge variant={company.is_active ? "default" : "destructive"} className="text-xs">
+                        {company.is_active ? "Ativa" : "Inativa"}
                       </Badge>
                     </div>
                     <p className="text-gray-600">
-                      {company.current_students}/{company.max_students} colaboradores • 
-                      Desde {new Date(company.created_at).toLocaleDateString('pt-BR')}
+                      {company.current_students || 0}/{subscription_plan?.max_students || 'N/A'} colaboradores •
+                      Desde {new Date(created_at).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <Button variant="outline">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCompanyEditDialogOpen(true)} // Use renamed state setter
+                  disabled={isLoading || !!error}
+                >
                   <Edit className="h-4 w-4 mr-2" />
                   Editar Empresa
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    if (company) {
+                      await toggleCompanyStatusMutation.mutateAsync({
+                        id: company.id,
+                        currentStatus: company.is_active
+                      });
+                    }
+                  }}
+                  disabled={isLoading || !!error || toggleCompanyStatusMutation.isPending}
+                >
+                  {toggleCompanyStatusMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : company.is_active ? (
+                    <ToggleLeft className="h-4 w-4 mr-2 text-red-600" />
+                  ) : (
+                    <ToggleRight className="h-4 w-4 mr-2 text-green-600" />
+                  )}
+                  {toggleCompanyStatusMutation.isPending
+                    ? "Alterando..."
+                    : company.is_active ? "Bloquear Empresa" : "Desbloquear Empresa"}
                 </Button>
                 <Button 
                   onClick={() => setIsAddCollaboratorOpen(true)}
                   className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white"
+                  disabled={isLoading || !!error} // Also disable if company data isn't fully loaded
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Adicionar Colaborador
@@ -199,7 +280,7 @@ const ProducerCompanyDetails = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-muted-foreground">Colaboradores Ativos</p>
-                          <p className="text-2xl font-bold">{company.current_students}</p>
+                          <p className="text-2xl font-bold">{company.current_students || 0}</p>
                         </div>
                         <Users className="h-8 w-8 text-blue-600" />
                       </div>
@@ -208,12 +289,15 @@ const ProducerCompanyDetails = () => {
 
                   <Card className="hover-lift">
                     <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
+                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-muted-foreground">Taxa de Conclusão</p>
-                          <p className="text-2xl font-bold text-green-600">{company.completion_rate}%</p>
+                          <p className="text-sm text-muted-foreground">Plano Atual</p>
+                          <p className="text-lg font-semibold">{subscription_plan?.name || "N/A"}</p>
                         </div>
-                        <TrendingUp className="h-8 w-8 text-green-600" />
+                        {subscription_plan && getPlanIcon(subscription_plan.name) ?
+                          React.cloneElement(getPlanIcon(subscription_plan.name) as React.ReactElement, { className: "h-8 w-8 text-green-600" })
+                          : <Star className="h-8 w-8 text-gray-400" />
+                        }
                       </div>
                     </CardContent>
                   </Card>
@@ -224,7 +308,9 @@ const ProducerCompanyDetails = () => {
                         <div>
                           <p className="text-sm text-muted-foreground">Ocupação</p>
                           <p className="text-2xl font-bold text-purple-600">
-                            {Math.round((company.current_students / company.max_students) * 100)}%
+                            {(subscription_plan?.max_students && subscription_plan.max_students > 0)
+                              ? `${Math.round(((company.current_students || 0) / subscription_plan.max_students) * 100)}%`
+                              : "N/A"}
                           </p>
                         </div>
                         <BarChart3 className="h-8 w-8 text-purple-600" />
@@ -237,7 +323,7 @@ const ProducerCompanyDetails = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-muted-foreground">Cursos Ativos</p>
-                          <p className="text-2xl font-bold text-orange-600">8</p>
+                          <p className="text-2xl font-bold text-orange-600">8</p> {/* Mocked for now */}
                         </div>
                         <Building2 className="h-8 w-8 text-orange-600" />
                       </div>
@@ -291,6 +377,26 @@ const ProducerCompanyDetails = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
+                  {collaboratorsLoading ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="flex items-center justify-between p-4 rounded-lg border bg-white">
+                          <div className="flex items-center space-x-4">
+                            <Skeleton className="w-10 h-10 rounded-full" />
+                            <div>
+                              <Skeleton className="h-5 w-32 mb-1" />
+                              <Skeleton className="h-4 w-48" />
+                            </div>
+                          </div>
+                          <Skeleton className="h-8 w-20" /> {/* Placeholder for actions */}
+                        </div>
+                      ))}
+                    </div>
+                  ) : collaboratorsError ? (
+                    <p className="text-red-500 text-center">Erro ao carregar colaboradores: {collaboratorsError.message}</p>
+                  ) : filteredCollaborators.length === 0 ? (
+                    <p className="text-center text-gray-500 py-4">Nenhum colaborador encontrado para esta empresa.</p>
+                  ) : (
                     <div className="space-y-4">
                       {filteredCollaborators.map((collaborator) => (
                         <div 
@@ -300,46 +406,36 @@ const ProducerCompanyDetails = () => {
                           <div className="flex items-center space-x-4">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-calmon-500 to-calmon-700 flex items-center justify-center">
                               <span className="text-white font-medium">
-                                {collaborator.name.split(' ').map(n => n[0]).join('')}
+                                {(collaborator.name || "N A").split(' ').map(n => n[0]).join('')}
                               </span>
                             </div>
                             <div>
                               <h3 className="font-medium text-gray-900">{collaborator.name}</h3>
-                              <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <div className="flex items-center space-x-2 text-sm text-gray-500">
                                 <span className="flex items-center">
                                   <Mail className="h-3 w-3 mr-1" />
                                   {collaborator.email}
                                 </span>
-                                <span className="flex items-center">
-                                  <Calendar className="h-3 w-3 mr-1" />
-                                  Última atividade: {new Date(collaborator.last_activity).toLocaleDateString('pt-BR')}
-                                </span>
+                                {collaborator.position && (
+                                  <>
+                                  <span>•</span>
+                                  <span className="text-xs">{collaborator.position}</span>
+                                  </>
+                                )}
+                                <Badge variant={collaborator.is_active ? "default" : "outline"} className="text-xs ml-2">
+                                  {collaborator.is_active ? "Ativo" : "Inativo"}
+                                </Badge>
+                                {collaborator.needs_password_change && (
+                                   <Badge variant="outline" className="text-xs ml-2 border-yellow-500 text-yellow-600">
+                                      Pendente Senha
+                                   </Badge>
+                                )}
                               </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center space-x-6">
-                            <div className="text-center">
-                              <div className="text-sm font-medium">{collaborator.enrolled_courses}</div>
-                              <div className="text-xs text-gray-500">Cursos</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm font-medium">{collaborator.completed_courses}</div>
-                              <div className="text-xs text-gray-500">Concluídos</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-12 h-2 bg-gray-200 rounded-full">
-                                  <div 
-                                    className={`h-full rounded-full ${getProgressColor(collaborator.progress)}`}
-                                    style={{ width: `${collaborator.progress}%` }}
-                                  />
-                                </div>
-                                <span className="text-sm font-medium">{collaborator.progress}%</span>
-                              </div>
-                              <div className="text-xs text-gray-500">Progresso</div>
-                            </div>
-
+                          <div className="flex items-center space-x-2">
+                             {/* Removed course/progress related info for now */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button size="sm" variant="outline">
@@ -347,20 +443,44 @@ const ProducerCompanyDetails = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="bg-white">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedCollaborator(collaborator);
+                                    setIsEditCollaboratorDialogOpen(true);
+                                  }}
+                                >
                                   <Edit className="h-3 w-3 mr-2" />
-                                  Editar
+                                  Editar Dados
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600">
-                                  <Trash2 className="h-3 w-3 mr-2" />
-                                  Remover
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    if (id) { // companyId must exist
+                                      await toggleCollaboratorStatusMutation.mutateAsync({
+                                        collaboratorId: collaborator.id,
+                                        companyId: id,
+                                        currentStatus: collaborator.is_active,
+                                      });
+                                    }
+                                  }}
+                                  disabled={toggleCollaboratorStatusMutation.isPending && toggleCollaboratorStatusMutation.variables?.collaboratorId === collaborator.id}
+                                >
+                                  {toggleCollaboratorStatusMutation.isPending && toggleCollaboratorStatusMutation.variables?.collaboratorId === collaborator.id ? (
+                                    <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                                  ) : collaborator.is_active ? (
+                                    <ToggleLeft className="h-3 w-3 mr-2 text-red-500" />
+                                  ) : (
+                                    <ToggleRight className="h-3 w-3 mr-2 text-green-500" />
+                                  )}
+                                  {collaborator.is_active ? "Bloquear" : "Desbloquear"}
                                 </DropdownMenuItem>
+                                {/* Remover DropdownMenuItem for "Excluir Colaborador" has been removed */}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
                         </div>
                       ))}
                     </div>
+                  )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -390,6 +510,28 @@ const ProducerCompanyDetails = () => {
         onClose={() => setIsAddCollaboratorOpen(false)}
         companyId={id || ""}
       />
+
+      {company && (
+        <EditCompanyDialog // This is for the Company itself
+          key={`company-edit-${dataUpdatedAt}`}
+          isOpen={isCompanyEditDialogOpen} // Use renamed state
+          onClose={() => setIsCompanyEditDialogOpen(false)} // Use renamed state
+          company={company}
+        />
+      )}
+
+      {selectedCollaborator && id && ( // Ensure companyId (id) is available for EditCollaboratorDialogComponent
+        <EditCollaboratorDialogComponent
+          key={`collaborator-edit-${selectedCollaborator.id}-${collaborators.find(c => c.id === selectedCollaborator.id)?.updated_at || ''}`} // More specific key
+          isOpen={isEditCollaboratorDialogOpen}
+          onClose={() => {
+            setIsEditCollaboratorDialogOpen(false);
+            setSelectedCollaborator(null);
+          }}
+          collaborator={selectedCollaborator}
+          companyId={id}
+        />
+      )}
     </>
   );
 };

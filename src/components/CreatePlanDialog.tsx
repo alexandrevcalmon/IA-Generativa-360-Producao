@@ -23,7 +23,8 @@ export function CreatePlanDialog({ isOpen, onClose }: CreatePlanDialogProps) {
   const [formData, setFormData] = useState<CreatePlanData>({
     name: "",
     description: "",
-    price: 0,
+    semester_price: 0,
+    annual_price: 0,
     max_students: 50,
     features: [""]
   });
@@ -44,7 +45,8 @@ export function CreatePlanDialog({ isOpen, onClose }: CreatePlanDialogProps) {
     setFormData({
       name: "",
       description: "",
-      price: 0,
+      semester_price: 0,
+      annual_price: 0,
       max_students: 50,
       features: [""]
     });
@@ -109,19 +111,31 @@ export function CreatePlanDialog({ isOpen, onClose }: CreatePlanDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Preço (R$) *</Label>
+              <Label htmlFor="semester_price">Preço Semestral (R$) *</Label>
               <Input
-                id="price"
+                id="semester_price"
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="99.00"
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                placeholder="299.00"
+                value={formData.semester_price}
+                onChange={(e) => setFormData(prev => ({ ...prev, semester_price: parseFloat(e.target.value) || 0 }))}
                 required
               />
             </div>
-
+            <div className="space-y-2">
+              <Label htmlFor="annual_price">Preço Anual (R$) *</Label>
+              <Input
+                id="annual_price"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="499.00"
+                value={formData.annual_price}
+                onChange={(e) => setFormData(prev => ({ ...prev, annual_price: parseFloat(e.target.value) || 0 }))}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="max_students">Máx. Colaboradores *</Label>
               <Input
@@ -130,7 +144,7 @@ export function CreatePlanDialog({ isOpen, onClose }: CreatePlanDialogProps) {
                 min="1"
                 placeholder="50"
                 value={formData.max_students}
-                onChange={(e) => setFormData(prev => ({ ...prev, max_students: parseInt(e.target.value) || 50 }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, max_students: parseInt(e.target.value) || 1 }))}
                 required
               />
             </div>
