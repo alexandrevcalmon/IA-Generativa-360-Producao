@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Edit, Trash2, Plus, MoreVertical, Play, BookOpen, ChevronDown, ChevronRight } from "lucide-react";
+import { Edit, Trash2, Plus, MoreVertical, Play, BookOpen, ChevronDown, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { CourseModule, useDeleteModule } from "@/hooks/useCourseModules";
 import { useLessons, Lesson } from "@/hooks/useLessons";
 import { CreateLessonDialog } from "@/components/CreateLessonDialog";
@@ -40,23 +40,26 @@ export const ModuleCard = ({ module, index, onEdit }: ModuleCardProps) => {
       <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="h-8 w-8 p-0"
-              >
-                {isExpanded ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-              </Button>
+            <div className="flex items-center gap-3 flex-1">
               <div>
-                <CardTitle className="text-lg font-semibold">
-                  {index + 1}. {module.title}
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg font-semibold">
+                    {index + 1}. {module.title}
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="h-8 w-8 p-0 ml-2"
+                    title={isExpanded ? "Ocultar aulas" : "Mostrar aulas"}
+                  >
+                    {isExpanded ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
                 {module.description && (
                   <p className="text-sm text-muted-foreground mt-1">
                     {module.description}
