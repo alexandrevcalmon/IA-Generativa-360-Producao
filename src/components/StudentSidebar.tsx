@@ -18,8 +18,7 @@ import {
   BookOpen, 
   Trophy, 
   BarChart3, 
-  MessageCircle, 
-  Settings,
+  MessageCircle,
   Target,
   Calendar,
   GraduationCap,
@@ -72,11 +71,6 @@ const studentMenuItems = [
     title: 'Calendário',
     url: '/student/calendar',
     icon: Calendar,
-  },
-  {
-    title: 'Perfil',
-    url: '/student/profile',
-    icon: Settings,
   },
 ];
 

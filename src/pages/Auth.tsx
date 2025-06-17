@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,7 +18,6 @@ export default function Auth() {
   const [role, setRole] = useState('student');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [shouldRedirect, setShouldRedirect] = useState(false);
   
   const { signIn, signUp, user, userRole, needsPasswordChange, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -31,20 +31,19 @@ export default function Auth() {
     }
   }, [searchParams]);
 
-  // Show password change dialog if needed - this should take priority
+  // Priority 1: Show password change dialog if user needs to change password
   if (!authLoading && user && needsPasswordChange) {
     console.log('Showing password change dialog for user:', user.email);
     return <PasswordChangeDialog />;
   }
 
-  // Handle redirects after authentication is complete and user data is loaded
+  // Priority 2: Handle redirects for authenticated users who don't need password change
   useEffect(() => {
     console.log('Auth redirect check:', {
       authLoading,
       user: user?.email,
       userRole,
-      needsPasswordChange,
-      shouldRedirect
+      needsPasswordChange
     });
 
     // Only redirect if:
@@ -52,9 +51,8 @@ export default function Auth() {
     // 2. User is authenticated
     // 3. User role is determined
     // 4. User doesn't need password change
-    // 5. We should redirect (flag set after successful login)
-    if (!authLoading && user && userRole && !needsPasswordChange && shouldRedirect) {
-      console.log('All conditions met for redirect. User role:', userRole);
+    if (!authLoading && user && userRole && !needsPasswordChange) {
+      console.log('Redirecting authenticated user. Role:', userRole);
       
       switch (userRole) {
         case 'producer':
@@ -74,28 +72,23 @@ export default function Auth() {
           navigate('/student/dashboard', { replace: true });
       }
     }
-  }, [user, userRole, authLoading, needsPasswordChange, shouldRedirect, navigate]);
+  }, [user, userRole, authLoading, needsPasswordChange, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setShouldRedirect(false); // Reset redirect flag
 
     try {
       if (isLogin) {
         console.log('Attempting login for:', email);
-        const { error, needsPasswordChange: loginNeedsPasswordChange } = await signIn(email, password);
+        const { error } = await signIn(email, password);
         
         if (error) {
           console.error('Login error:', error);
+          // Error handling is done in the useAuth hook with toast
         } else {
-          console.log('Login successful. Needs password change:', loginNeedsPasswordChange);
-          
-          // If user needs password change, don't set redirect flag
-          // The password change dialog will be shown instead
-          if (!loginNeedsPasswordChange) {
-            setShouldRedirect(true);
-          }
+          console.log('Login successful');
+          // Redirect will be handled by useEffect above based on needsPasswordChange
         }
       } else {
         console.log('Attempting signup for:', email, 'with role:', role);

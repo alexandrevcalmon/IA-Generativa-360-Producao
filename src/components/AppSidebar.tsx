@@ -12,8 +12,7 @@ import {
   Building2, 
   CreditCard, 
   BookOpen,
-  BarChart3, 
-  User,
+  BarChart3,
   LogOut 
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -53,11 +52,6 @@ export function AppSidebar() {
       title: 'Analytics',
       icon: BarChart3,
       href: '/analytics'
-    },
-    {
-      title: 'Perfil',
-      icon: User,
-      href: '/profile'
     }
   ];
 
