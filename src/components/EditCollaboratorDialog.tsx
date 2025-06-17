@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { UserCog, Mail, Briefcase, Loader2 } from "lucide-react"; // UserCog for edit icon
+import { UserCog, Mail, Briefcase, Phone, Loader2 } from "lucide-react";
 import {
   Collaborator,
   UpdateCollaboratorData,
@@ -21,19 +22,21 @@ interface EditCollaboratorDialogProps {
   isOpen: boolean;
   onClose: () => void;
   collaborator: Collaborator | null;
-  companyId: string; // Needed for query invalidation
+  companyId: string;
 }
 
 interface CollaboratorEditFormData {
   name: string;
   email: string;
   position: string;
+  phone: string;
 }
 
 const initialFormData: CollaboratorEditFormData = {
   name: "",
   email: "",
   position: "",
+  phone: "",
 };
 
 export function EditCollaboratorDialog({
@@ -51,9 +54,10 @@ export function EditCollaboratorDialog({
         name: collaborator.name || "",
         email: collaborator.email || "",
         position: collaborator.position || "",
+        phone: collaborator.phone || "",
       });
     } else if (!isOpen) {
-      setFormData(initialFormData); // Reset form when dialog is closed or collaborator is null
+      setFormData(initialFormData);
     }
   }, [collaborator, isOpen]);
 
@@ -61,28 +65,26 @@ export function EditCollaboratorDialog({
     e.preventDefault();
     if (!collaborator) return;
 
-    const updateData: UpdateCollaboratorData = { ...formData };
-    if (formData.position === "") { // Handle empty string for optional field
-        updateData.position = null;
-    }
-
-    // TODO: Consider implications of email change on auth.users.
-    // The hook useUpdateCompanyCollaborator already has a console.warn for this.
+    const updateData: UpdateCollaboratorData = {
+      name: formData.name,
+      email: formData.email,
+      position: formData.position || null,
+      phone: formData.phone || null,
+    };
 
     try {
       await updateCollaboratorMutation.mutateAsync({
         collaboratorId: collaborator.id,
-        companyId: companyId, // Pass companyId for query invalidation
+        companyId: companyId,
         data: updateData
       });
       onClose();
     } catch (error) {
-      // Error is handled by the hook's onError toast
       console.error("Failed to update collaborator from dialog:", error);
     }
   };
 
-  if (!collaborator) return null; // Don't render if no collaborator is provided (though isOpen should prevent this)
+  if (!collaborator) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
@@ -96,7 +98,6 @@ export function EditCollaboratorDialog({
           </DialogTitle>
           <DialogDescription>
             Atualize os dados do colaborador.
-            {/* TODO: Consider implications of email change on auth.users. */}
           </DialogDescription>
         </DialogHeader>
 
@@ -137,6 +138,19 @@ export function EditCollaboratorDialog({
               placeholder="Ex: Desenvolvedor, Designer"
               value={formData.position}
               onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-collaborator-phone" className="flex items-center">
+              <Phone className="h-4 w-4 mr-1" /> Telefone (Opcional)
+            </Label>
+            <Input
+              id="edit-collaborator-phone"
+              type="tel"
+              placeholder="Ex: (11) 99999-9999"
+              value={formData.phone}
+              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
             />
           </div>
 

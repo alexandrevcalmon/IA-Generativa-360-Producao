@@ -5,14 +5,14 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
-import { UserPlus, Mail, User, Briefcase, Loader2 } from "lucide-react";
-import { useAddCompanyCollaborator, CreateCollaboratorData } from "@/hooks/useCompanyCollaborators";
-import { useAuth } from "@/hooks/useAuth";
+import { useState } from "react";
+import { UserPlus, Mail, Briefcase, Phone, Loader2 } from "lucide-react";
+import { useAddCompanyCollaborator } from "@/hooks/useCompanyCollaborators";
 
 interface AddCollaboratorDialogProps {
   isOpen: boolean;
@@ -24,59 +24,54 @@ interface CollaboratorFormData {
   name: string;
   email: string;
   position: string;
+  phone: string;
 }
 
 const initialFormData: CollaboratorFormData = {
   name: "",
   email: "",
   position: "",
+  phone: "",
 };
 
-export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollaboratorDialogProps) {
+export function AddCollaboratorDialog({
+  isOpen,
+  onClose,
+  companyId
+}: AddCollaboratorDialogProps) {
   const [formData, setFormData] = useState<CollaboratorFormData>(initialFormData);
   const addCollaboratorMutation = useAddCompanyCollaborator();
-  const { userRole } = useAuth();
-
-  useEffect(() => {
-    // Reset form when dialog opens or companyId changes
-    if (isOpen) {
-      setFormData(initialFormData);
-    }
-  }, [isOpen, companyId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!companyId) {
-      alert("ID da empresa não encontrado. Não é possível adicionar colaborador.");
-      return;
-    }
-
-    // Ensure only producers can create collaborators
-    if (userRole !== 'producer') {
-      alert("Apenas produtores podem adicionar colaboradores.");
-      return;
-    }
-
-    const submissionData: CreateCollaboratorData = {
-      ...formData,
-      company_id: companyId,
+    
+    const submitData = {
+      name: formData.name,
+      email: formData.email,
       position: formData.position || null,
+      phone: formData.phone || null,
     };
 
-    console.log('Producer creating collaborator, session protection should be active');
-
     try {
-      await addCollaboratorMutation.mutateAsync(submissionData);
+      await addCollaboratorMutation.mutateAsync({
+        companyId,
+        collaboratorData: submitData
+      });
+      setFormData(initialFormData);
       onClose();
     } catch (error) {
-      // Error is handled by the hook's onError toast
       console.error("Failed to add collaborator from dialog:", error);
     }
   };
 
+  const handleClose = () => {
+    setFormData(initialFormData);
+    onClose();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) onClose();
+      if (!open) handleClose();
     }}>
       <DialogContent className="sm:max-w-[450px] bg-white">
         <DialogHeader>
@@ -85,15 +80,14 @@ export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollabo
             Adicionar Colaborador
           </DialogTitle>
           <DialogDescription>
-            Adicione um novo colaborador à empresa. Um usuário será criado e ele precisará definir uma senha.
+            Preencha os dados do novo colaborador. Um email de convite será enviado.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="collaborator-name" className="flex items-center">
-              <User className="h-4 w-4 mr-1" />
-              Nome Completo *
+              <UserPlus className="h-4 w-4 mr-1" /> Nome Completo *
             </Label>
             <Input
               id="collaborator-name"
@@ -106,8 +100,7 @@ export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollabo
 
           <div className="space-y-2">
             <Label htmlFor="collaborator-email" className="flex items-center">
-              <Mail className="h-4 w-4 mr-1" />
-              Email *
+              <Mail className="h-4 w-4 mr-1" /> Email *
             </Label>
             <Input
               id="collaborator-email"
@@ -121,8 +114,7 @@ export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollabo
 
           <div className="space-y-2">
             <Label htmlFor="collaborator-position" className="flex items-center">
-              <Briefcase className="h-4 w-4 mr-1" />
-              Cargo (Opcional)
+              <Briefcase className="h-4 w-4 mr-1" /> Cargo (Opcional)
             </Label>
             <Input
               id="collaborator-position"
@@ -130,26 +122,41 @@ export function AddCollaboratorDialog({ isOpen, onClose, companyId }: AddCollabo
               value={formData.position}
               onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
             />
-             <p className="text-xs text-gray-500">
-              O colaborador será criado no sistema e precisará definir uma senha no primeiro acesso.
-            </p>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={addCollaboratorMutation.isPending}>
+          <div className="space-y-2">
+            <Label htmlFor="collaborator-phone" className="flex items-center">
+              <Phone className="h-4 w-4 mr-1" /> Telefone (Opcional)
+            </Label>
+            <Input
+              id="collaborator-phone"
+              type="tel"
+              placeholder="Ex: (11) 99999-9999"
+              value={formData.phone}
+              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+            />
+          </div>
+
+          <DialogFooter className="pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={addCollaboratorMutation.isPending}
+            >
               Cancelar
             </Button>
-            <Button 
+            <Button
               type="submit"
-              className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white min-w-[160px]"
+              className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white min-w-[140px]"
               disabled={addCollaboratorMutation.isPending}
             >
               {addCollaboratorMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              {addCollaboratorMutation.isPending ? "Adicionando..." : "Adicionar Colaborador"}
+              {addCollaboratorMutation.isPending ? "Adicionando..." : "Adicionar"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
