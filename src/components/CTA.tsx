@@ -65,40 +65,23 @@ export function CTA() {
             </div>
           </div>
 
-          {/* Secondary CTAs */}
-          <div className="grid md:grid-cols-2 gap-8 mt-12">
-            {/* For Companies */}
-            <div className="bg-white border border-gray-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
+          {/* Secondary CTA - Apenas para empresas */}
+          <div className="mt-12">
+            <div className="bg-white border border-gray-200 rounded-xl p-8 hover:shadow-lg transition-shadow text-center">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                Para empresas
+                Soluções corporativas personalizadas
               </h3>
               <p className="text-gray-600 mb-6">
                 Acelere o desenvolvimento da sua equipe com nossa plataforma completa 
-                de capacitação corporativa.
+                de capacitação corporativa. Relatórios avançados, gestão de equipes 
+                e integração com seus sistemas existentes.
               </p>
               <Button 
-                className="w-full bg-calmon-600 hover:bg-calmon-700"
+                className="bg-calmon-600 hover:bg-calmon-700 text-lg px-8 py-3"
                 onClick={() => navigate('/auth')}
               >
-                Cadastrar empresa
-              </Button>
-            </div>
-
-            {/* For Producers */}
-            <div className="bg-white border border-gray-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                Para produtores
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Compartilhe seu conhecimento e monetize seu conteúdo educacional 
-                com nossa rede de empresas.
-              </p>
-              <Button 
-                variant="outline" 
-                className="w-full border-calmon-600 text-calmon-600 hover:bg-calmon-50"
-                onClick={() => navigate('/login-produtor')}
-              >
-                Tornar-se produtor
+                Cadastrar minha empresa
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </div>
           </div>

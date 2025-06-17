@@ -20,36 +20,41 @@ export function Hero() {
               Plataforma completa de capacitação corporativa que conecta empresas, colaboradores e produtores de conteúdo para acelerar o crescimento profissional.
             </p>
             
-            {/* User Type Links */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button 
-                size="lg" 
-                className="bg-calmon-600 hover:bg-calmon-700 text-white px-8 py-3 text-lg"
-                onClick={() => navigate('/auth')}
-              >
-                Sou Empresa
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="border-calmon-200 text-calmon-700 hover:bg-calmon-50 px-8 py-3 text-lg"
-                onClick={() => navigate('/login-produtor')}
-              >
-                Sou Produtor
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="border-calmon-200 text-calmon-700 hover:bg-calmon-50 px-8 py-3 text-lg"
-                onClick={() => navigate('/auth')}
-              >
-                Sou Colaborador
-              </Button>
+            {/* User Type Selection - Mais destaque */}
+            <div className="bg-white border-2 border-calmon-200 rounded-xl p-6 mb-8 shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+                Escolha seu perfil de acesso:
+              </h3>
+              <div className="grid gap-3">
+                <Button 
+                  size="lg" 
+                  className="bg-calmon-600 hover:bg-calmon-700 text-white px-8 py-4 text-lg w-full"
+                  onClick={() => navigate('/auth')}
+                >
+                  🏢 Sou Empresa
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="border-calmon-600 text-calmon-700 hover:bg-calmon-50 px-8 py-4 text-lg w-full"
+                  onClick={() => navigate('/auth')}
+                >
+                  👤 Sou Colaborador
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="border-calmon-600 text-calmon-700 hover:bg-calmon-50 px-8 py-4 text-lg w-full"
+                  onClick={() => navigate('/login-produtor')}
+                >
+                  🎓 Sou Produtor
+                </Button>
+              </div>
             </div>
 
             {/* Demo Button */}
-            <div className="mb-8">
+            <div className="mb-8 text-center">
               <Button 
                 variant="outline" 
                 size="lg" 
