@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,10 +12,12 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, LogOut, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 export function UserMenu() {
   const { user, signOut, userRole } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   if (!user) {
     return (
@@ -29,8 +32,34 @@ export function UserMenu() {
   }
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    console.log('🚪 Starting logout process...');
+    
+    try {
+      const { error } = await signOut();
+      
+      if (error) {
+        console.error('❌ Logout error:', error);
+        toast({
+          title: "Erro ao sair",
+          description: "Ocorreu um erro ao fazer logout. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log('✅ Logout successful, redirecting to home...');
+      
+      // Force redirect to home page
+      window.location.href = '/';
+      
+    } catch (error) {
+      console.error('💥 Unexpected logout error:', error);
+      toast({
+        title: "Erro ao sair",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleProfileClick = () => {

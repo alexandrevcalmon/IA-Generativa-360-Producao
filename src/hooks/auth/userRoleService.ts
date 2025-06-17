@@ -22,13 +22,13 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       return { role: profile.role, needsPasswordChange: false, companyUserData: null };
     }
     
-    // Check company_users table (student/collaborator) with detailed logging
+    // Check company_users table (student/collaborator) with corrected JOIN
     console.log('🔍 Checking company_users table...');
     const { data: companyUser, error: companyUserError } = await supabase
       .from('company_users')
       .select(`
         *,
-        companies(
+        companies!company_users_company_id_fkey(
           id,
           name,
           official_name
@@ -62,6 +62,12 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
     
     if (companyUserError) {
       console.error('❌ Error fetching company user data:', companyUserError);
+      console.error('Error details:', {
+        message: companyUserError.message,
+        details: companyUserError.details,
+        hint: companyUserError.hint,
+        code: companyUserError.code
+      });
     } else {
       console.log('ℹ️ No company user data found for user');
     }

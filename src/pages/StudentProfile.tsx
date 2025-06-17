@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,45 +25,13 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from '@/hooks/auth';
+import { useToast } from '@/hooks/use-toast';
 
 const StudentProfile = () => {
   const { companyUserData, user, loading: authLoading, refreshUserRole } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-
-  // Comprehensive debug logging
-  useEffect(() => {
-    const debugData = {
-      timestamp: new Date().toISOString(),
-      authLoading,
-      user: {
-        exists: !!user,
-        email: user?.email,
-        id: user?.id
-      },
-      companyUserData: {
-        exists: !!companyUserData,
-        name: companyUserData?.name,
-        email: companyUserData?.email,
-        position: companyUserData?.position,
-        phone: companyUserData?.phone,
-        company: companyUserData?.companies?.name,
-        isActive: companyUserData?.is_active,
-        authUserId: companyUserData?.auth_user_id,
-        fullObject: companyUserData
-      }
-    };
-
-    console.group('👤 StudentProfile Debug Info');
-    console.log('Auth Loading:', authLoading);
-    console.log('User Object:', user);
-    console.log('Company User Data:', companyUserData);
-    console.log('Complete Debug Data:', debugData);
-    console.groupEnd();
-
-    setDebugInfo(debugData);
-  }, [authLoading, user, companyUserData]);
+  const { toast } = useToast();
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -71,8 +40,17 @@ const StudentProfile = () => {
     try {
       await refreshUserRole();
       console.log('✅ User role refresh completed');
+      toast({
+        title: "Dados atualizados",
+        description: "As informações do perfil foram atualizadas com sucesso.",
+      });
     } catch (error) {
       console.error('❌ Error refreshing user role:', error);
+      toast({
+        title: "Erro ao atualizar",
+        description: "Não foi possível atualizar os dados. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsRefreshing(false);
     }
@@ -214,22 +192,6 @@ const StudentProfile = () => {
       {/* Main Content */}
       <div className="flex-1 overflow-auto p-6 bg-gray-50">
         <div className="max-w-6xl mx-auto space-y-6">
-          {/* Debug Information */}
-          {process.env.NODE_ENV === 'development' && debugInfo && (
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardHeader>
-                <CardTitle className="text-sm text-yellow-800">
-                  🔧 Informações de Debug (apenas desenvolvimento)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-xs">
-                <pre className="text-yellow-700 overflow-auto">
-                  {JSON.stringify(debugInfo, null, 2)}
-                </pre>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Data Status Alerts */}
           {!companyUserData && user && (
             <Alert variant="destructive">
@@ -535,7 +497,7 @@ const StudentProfile = () => {
                         <p className="font-medium">Atividade na comunidade</p>
                         <p className="text-sm text-gray-600">Mostrar participação em discussões</p>
                       </div>
-                      <Switch />
+                      <Switch defaultChecked />
                     </div>
                   </CardContent>
                 </Card>

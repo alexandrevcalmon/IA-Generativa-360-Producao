@@ -20,6 +20,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const authService = createAuthService(toast);
 
+  const clearUserState = () => {
+    console.log('🧹 Clearing all user state...');
+    setUser(null);
+    setSession(null);
+    setUserRole(null);
+    setNeedsPasswordChange(false);
+    setCompanyUserData(null);
+  };
+
   const refreshUserRole = async () => {
     if (user) {
       console.log('🔄 Refreshing user role for:', user.email);
@@ -45,24 +54,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         console.log('🔐 Auth state changed:', event, session?.user?.email);
         
+        if (event === 'SIGNED_OUT' || !session?.user) {
+          console.log('🚪 User signed out, clearing state');
+          clearUserState();
+          if (isMounted) {
+            setLoading(false);
+          }
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user && isMounted) {
           console.log('👤 User authenticated, fetching role and data...');
-          // Fetch user data when authenticated
-          const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(session.user.id);
-          if (isMounted) {
-            setUserRole(role);
-            setNeedsPasswordChange(needsChange);
-            setCompanyUserData(userData);
-            console.log('✅ User data set in auth context:', { role, needsChange, hasUserData: !!userData });
+          try {
+            const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(session.user.id);
+            if (isMounted) {
+              setUserRole(role);
+              setNeedsPasswordChange(needsChange);
+              setCompanyUserData(userData);
+              console.log('✅ User data set in auth context:', { role, needsChange, hasUserData: !!userData });
+            }
+          } catch (error) {
+            console.error('❌ Error fetching user data:', error);
           }
-        } else if (isMounted && !session?.user) {
-          console.log('🚪 User logged out, clearing data');
-          setUserRole(null);
-          setNeedsPasswordChange(false);
-          setCompanyUserData(null);
         }
         
         if (isMounted) {
@@ -143,12 +159,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    console.log('🚪 AuthProvider signOut called');
     const result = await authService.signOut();
     
     if (!result.error) {
-      setUserRole(null);
-      setNeedsPasswordChange(false);
-      setCompanyUserData(null);
+      console.log('✅ SignOut successful, clearing state immediately');
+      clearUserState();
+    } else {
+      console.error('❌ SignOut error:', result.error);
     }
     
     return result;
