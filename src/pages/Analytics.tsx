@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
+import { useCourses } from "@/hooks/useCourses";
 import {
   BarChart3,
   TrendingUp,
@@ -16,146 +18,78 @@ import {
   Calendar,
   Download,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Trophy,
+  BookOpen
 } from "lucide-react";
 
 const Analytics = () => {
-  const kpis = [
+  const { user, userRole } = useAuth();
+  const { data: courses = [], isLoading } = useCourses();
+
+  // Calculate real statistics from actual data
+  const publishedCourses = courses.filter(course => course.is_published);
+  const totalCourses = courses.length;
+
+  // Real KPIs for producers
+  const kpis = userRole === 'producer' ? [
     {
-      title: "Horas de Estudo",
-      value: "47.5h",
-      change: "+12%",
-      trend: "up",
-      period: "Este mês"
+      title: "Cursos Criados",
+      value: totalCourses.toString(),
+      change: publishedCourses.length > 0 ? `${publishedCourses.length} publicados` : "Nenhum publicado",
+      trend: publishedCourses.length > 0 ? "up" : "neutral",
+      period: "Total"
     },
     {
-      title: "Cursos Concluídos",
-      value: "12",
-      change: "+3",
-      trend: "up", 
-      period: "Este mês"
+      title: "Empresas Ativas",
+      value: "0",
+      change: "Em breve",
+      trend: "neutral",
+      period: "Aguardando implementação"
+    },
+    {
+      title: "Colaboradores Ativos",
+      value: "0",
+      change: "Em breve",
+      trend: "neutral",
+      period: "Aguardando implementação"
     },
     {
       title: "Taxa de Conclusão",
-      value: "89%",
-      change: "+5%",
-      trend: "up",
-      period: "Média geral"
-    },
-    {
-      title: "Streak Atual",
-      value: "12 dias",
-      change: "Recorde: 15",
+      value: "-%",
+      change: "Sem dados",
       trend: "neutral",
-      period: "Sequência ativa"
+      period: "Aguardando dados"
     }
-  ];
-
-  const weeklyProgress = [
-    { day: "Seg", hours: 2.5, target: 3 },
-    { day: "Ter", hours: 1.8, target: 3 },
-    { day: "Qua", hours: 3.2, target: 3 },
-    { day: "Qui", hours: 2.1, target: 3 },
-    { day: "Sex", hours: 2.8, target: 3 },
-    { day: "Sáb", hours: 1.5, target: 2 },
-    { day: "Dom", hours: 0.8, target: 2 }
-  ];
-
-  const courseProgress = [
+  ] : [
+    // Student KPIs would go here when we have enrollment data
     {
-      course: "Prompt Engineering Avançado",
-      progress: 75,
-      timeSpent: "12h 30min",
-      lastAccessed: "2 horas atrás",
-      category: "IA Generativa"
+      title: "Cursos Matriculados",
+      value: "0",
+      change: "Sem matrículas",
+      trend: "neutral",
+      period: "Aguardando implementação"
     },
     {
-      course: "APIs e Integrações",
-      progress: 45,
-      timeSpent: "8h 15min",
-      lastAccessed: "1 dia atrás",
-      category: "Desenvolvimento"
+      title: "Horas de Estudo",
+      value: "0h",
+      change: "Sem dados",
+      trend: "neutral",
+      period: "Aguardando implementação"
     },
     {
-      course: "Saúde Mental no Trabalho",
-      progress: 30,
-      timeSpent: "4h 45min",
-      lastAccessed: "3 dias atrás",
-      category: "Bem-estar"
+      title: "Cursos Concluídos",
+      value: "0",
+      change: "Sem conclusões",
+      trend: "neutral",
+      period: "Aguardando implementação"
     },
     {
-      course: "Ética em IA",
-      progress: 100,
-      timeSpent: "6h 20min",
-      lastAccessed: "1 semana atrás",
-      category: "Ética"
-    }
-  ];
-
-  const achievements = [
-    {
-      name: "Primeiro Curso",
-      description: "Complete seu primeiro curso",
-      earned: true,
-      earnedDate: "15 dias atrás",
-      icon: "🏆"
-    },
-    {
-      name: "Streak Master",
-      description: "Mantenha um streak de 7 dias",
-      earned: true,
-      earnedDate: "5 dias atrás",
-      icon: "🔥"
-    },
-    {
-      name: "Quiz Expert",
-      description: "Acerte 90% em 5 quizzes seguidos",
-      earned: true,
-      earnedDate: "3 dias atrás",
-      icon: "🧠"
-    },
-    {
-      name: "Community Helper",
-      description: "Ajude 10 pessoas na comunidade",
-      earned: false,
-      progress: 7,
-      target: 10,
-      icon: "💪"
-    },
-    {
-      name: "Speed Learner",
-      description: "Complete 3 cursos em uma semana",
-      earned: false,
-      progress: 1,
-      target: 3,
-      icon: "⚡"
-    }
-  ];
-
-  const learningInsights = [
-    {
-      title: "Melhor Horário",
-      value: "14:00 - 16:00",
-      description: "Você é mais produtivo à tarde",
-      icon: "⏰"
-    },
-    {
-      title: "Tipo Preferido",
-      value: "Vídeos Interativos",
-      description: "85% do seu tempo em conteúdo interativo",
-      icon: "🎯"
-    },
-    {
-      title: "Velocidade Média",
-      value: "1.2x",
-      description: "Velocidade de reprodução preferida",
-      icon: "⚡"
-    },
-    {
-      title: "Foco Total",
-      value: "23 min",
-      description: "Tempo médio de sessão sem pausa",
-      icon: "🎯"
+      title: "Certificados",
+      value: "0",
+      change: "Sem certificados",
+      trend: "neutral",
+      period: "Aguardando implementação"
     }
   ];
 
@@ -172,19 +106,24 @@ const Analytics = () => {
                   <SidebarTrigger />
                   <div>
                     <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-                    <p className="text-gray-600">Acompanhe seu progresso e desempenho</p>
+                    <p className="text-gray-600">
+                      {userRole === 'producer' 
+                        ? "Acompanhe o desempenho dos seus cursos e da plataforma"
+                        : "Acompanhe seu progresso e desempenho nos estudos"
+                      }
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" disabled>
                     <Filter className="h-4 w-4 mr-2" />
                     Filtrar
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" disabled>
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Atualizar
                   </Button>
-                  <Button className="ai-gradient text-white" size="sm">
+                  <Button className="ai-gradient text-white" size="sm" disabled>
                     <Download className="h-4 w-4 mr-2" />
                     Exportar
                   </Button>
@@ -235,49 +174,42 @@ const Analytics = () => {
 
                 {/* Analytics Tabs */}
                 <Tabs defaultValue="overview" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-                    <TabsTrigger value="courses">Cursos</TabsTrigger>
-                    <TabsTrigger value="achievements">Conquistas</TabsTrigger>
+                    <TabsTrigger value="courses">
+                      {userRole === 'producer' ? 'Cursos Criados' : 'Meus Cursos'}
+                    </TabsTrigger>
                     <TabsTrigger value="insights">Insights</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="overview" className="space-y-6">
                     <div className="grid lg:grid-cols-3 gap-6">
-                      {/* Weekly Progress Chart */}
+                      {/* Overview Chart */}
                       <Card className="lg:col-span-2">
                         <CardHeader>
                           <CardTitle className="flex items-center">
                             <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
-                            Progresso Semanal (Horas)
+                            {userRole === 'producer' ? 'Visão Geral da Plataforma' : 'Meu Progresso'}
                           </CardTitle>
                           <CardDescription>
-                            Suas horas de estudo vs meta diária
+                            {userRole === 'producer' 
+                              ? 'Dados sobre cursos e engajamento na plataforma'
+                              : 'Seu progresso de aprendizagem'
+                            }
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div className="space-y-4">
-                            {weeklyProgress.map((day, index) => (
-                              <div key={index} className="flex items-center space-x-4">
-                                <div className="w-12 text-sm font-medium text-gray-600">
-                                  {day.day}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="text-sm text-gray-500">
-                                      {day.hours}h de {day.target}h
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                      {Math.round((day.hours / day.target) * 100)}%
-                                    </span>
-                                  </div>
-                                  <Progress 
-                                    value={(day.hours / day.target) * 100} 
-                                    className="h-2"
-                                  />
-                                </div>
-                              </div>
-                            ))}
+                          <div className="text-center py-8">
+                            <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                              Dados em Desenvolvimento
+                            </h3>
+                            <p className="text-gray-600">
+                              {userRole === 'producer' 
+                                ? 'Os analytics detalhados estarão disponíveis quando houver mais atividade na plataforma.'
+                                : 'Seus dados de progresso aparecerão aqui conforme você avança nos cursos.'
+                              }
+                            </p>
                           </div>
                         </CardContent>
                       </Card>
@@ -288,26 +220,45 @@ const Analytics = () => {
                           <CardTitle>Estatísticas Rápidas</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Tempo Total</span>
-                            <span className="font-semibold">47h 35min</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Média Diária</span>
-                            <span className="font-semibold">2h 15min</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Melhor Dia</span>
-                            <span className="font-semibold">Quarta (3h 12min)</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">XP Ganho</span>
-                            <span className="font-semibold">+2,840 XP</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Ranking</span>
-                            <span className="font-semibold">#7 na empresa</span>
-                          </div>
+                          {userRole === 'producer' ? (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Total de Cursos</span>
+                                <span className="font-semibold">{totalCourses}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Cursos Publicados</span>
+                                <span className="font-semibold">{publishedCourses.length}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Empresas Cadastradas</span>
+                                <span className="font-semibold">0</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Colaboradores Ativos</span>
+                                <span className="font-semibold">0</span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Cursos Disponíveis</span>
+                                <span className="font-semibold">{publishedCourses.length}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Matrículas</span>
+                                <span className="font-semibold">0</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Horas Estudadas</span>
+                                <span className="font-semibold">0h</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Certificados</span>
+                                <span className="font-semibold">0</span>
+                              </div>
+                            </>
+                          )}
                         </CardContent>
                       </Card>
                     </div>
@@ -316,172 +267,98 @@ const Analytics = () => {
                   <TabsContent value="courses" className="space-y-6">
                     <Card>
                       <CardHeader>
-                        <CardTitle>Progresso dos Cursos</CardTitle>
+                        <CardTitle>
+                          {userRole === 'producer' ? 'Meus Cursos' : 'Progresso dos Cursos'}
+                        </CardTitle>
                         <CardDescription>
-                          Acompanhe seu avanço em cada curso
+                          {userRole === 'producer' 
+                            ? 'Cursos que você criou na plataforma'
+                            : 'Acompanhe seu avanço em cada curso'
+                          }
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-6">
-                          {courseProgress.map((course, index) => (
-                            <div key={index} className="border-b pb-6 last:border-b-0 last:pb-0">
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-gray-900 mb-1">
-                                    {course.course}
-                                  </h4>
-                                  <div className="flex items-center space-x-4 text-sm text-gray-600">
-                                    <span>{course.timeSpent}</span>
-                                    <span>•</span>
-                                    <span>{course.lastAccessed}</span>
-                                    <Badge variant="outline" className="text-xs">
-                                      {course.category}
-                                    </Badge>
+                        {isLoading ? (
+                          <div className="text-center py-8">
+                            <div className="text-lg">Carregando...</div>
+                          </div>
+                        ) : courses.length > 0 ? (
+                          <div className="space-y-6">
+                            {courses.map((course, index) => (
+                              <div key={index} className="border-b pb-6 last:border-b-0 last:pb-0">
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-gray-900 mb-1">
+                                      {course.title}
+                                    </h4>
+                                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                      <span>{course.category || 'Sem categoria'}</span>
+                                      <span>•</span>
+                                      <span>{course.difficulty_level || 'Iniciante'}</span>
+                                      <Badge variant="outline" className="text-xs">
+                                        {course.is_published ? 'Publicado' : 'Rascunho'}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    {userRole === 'producer' ? (
+                                      <div className="text-lg font-semibold text-gray-900 mb-1">
+                                        {course.is_published ? 'Ativo' : 'Inativo'}
+                                      </div>
+                                    ) : (
+                                      <div className="text-lg font-semibold text-gray-900 mb-1">
+                                        0%
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="text-right">
-                                  <div className="text-lg font-semibold text-gray-900 mb-1">
-                                    {course.progress}%
-                                  </div>
-                                  {course.progress === 100 && (
-                                    <Badge className="bg-green-100 text-green-700 text-xs">
-                                      Concluído
-                                    </Badge>
-                                  )}
-                                </div>
+                                {userRole !== 'producer' && (
+                                  <Progress value={0} className="h-2" />
+                                )}
                               </div>
-                              <Progress value={course.progress} className="h-2" />
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                              {userRole === 'producer' ? 'Nenhum curso criado' : 'Nenhum curso disponível'}
+                            </h3>
+                            <p className="text-gray-600">
+                              {userRole === 'producer' 
+                                ? 'Comece criando seu primeiro curso na seção Cursos.'
+                                : 'Aguarde novos cursos serem disponibilizados.'
+                              }
+                            </p>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </TabsContent>
 
-                  <TabsContent value="achievements" className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {achievements.map((achievement, index) => (
-                        <Card key={index} className={`${
-                          achievement.earned ? 'border-green-200 bg-green-50' : 'border-gray-200'
-                        }`}>
-                          <CardContent className="p-6">
-                            <div className="flex items-start space-x-4">
-                              <div className="text-3xl">{achievement.icon}</div>
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-gray-900 mb-1">
-                                  {achievement.name}
-                                </h4>
-                                <p className="text-sm text-gray-600 mb-3">
-                                  {achievement.description}
-                                </p>
-                                
-                                {achievement.earned ? (
-                                  <div className="flex items-center space-x-2">
-                                    <Badge className="bg-green-100 text-green-700">
-                                      Conquistado
-                                    </Badge>
-                                    <span className="text-xs text-gray-500">
-                                      {achievement.earnedDate}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                      <span className="text-gray-600">Progresso</span>
-                                      <span className="font-medium">
-                                        {achievement.progress}/{achievement.target}
-                                      </span>
-                                    </div>
-                                    <Progress 
-                                      value={(achievement.progress! / achievement.target!) * 100} 
-                                      className="h-2"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </TabsContent>
-
                   <TabsContent value="insights" className="space-y-6">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {learningInsights.map((insight, index) => (
-                        <Card key={index} className="text-center">
-                          <CardContent className="p-6">
-                            <div className="text-3xl mb-3">{insight.icon}</div>
-                            <h4 className="font-semibold text-gray-900 mb-1">
-                              {insight.title}
-                            </h4>
-                            <p className="text-lg font-bold text-blue-600 mb-2">
-                              {insight.value}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {insight.description}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-
                     <Card>
                       <CardHeader>
-                        <CardTitle>Recomendações Personalizadas</CardTitle>
+                        <CardTitle>Insights e Recomendações</CardTitle>
                         <CardDescription>
-                          Com base no seu padrão de aprendizagem
+                          {userRole === 'producer' 
+                            ? 'Insights baseados na atividade da sua plataforma'
+                            : 'Recomendações baseadas no seu padrão de aprendizagem'
+                          }
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-4">
-                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div className="flex items-start space-x-3">
-                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                <Target className="h-4 w-4 text-white" />
-                              </div>
-                              <div>
-                                <h5 className="font-medium text-blue-900 mb-1">
-                                  Otimize seu horário de estudo
-                                </h5>
-                                <p className="text-sm text-blue-700">
-                                  Você é mais produtivo entre 14:00-16:00. Considere agendar sessões mais longas nesse período.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                            <div className="flex items-start space-x-3">
-                              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                                <Award className="h-4 w-4 text-white" />
-                              </div>
-                              <div>
-                                <h5 className="font-medium text-green-900 mb-1">
-                                  Próxima conquista em vista
-                                </h5>
-                                <p className="text-sm text-green-700">
-                                  Você está a apenas 3 ajudas na comunidade de ganhar o badge "Community Helper"!
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                            <div className="flex items-start space-x-3">
-                              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                                <Users className="h-4 w-4 text-white" />
-                              </div>
-                              <div>
-                                <h5 className="font-medium text-purple-900 mb-1">
-                                  Conecte-se com peers
-                                </h5>
-                                <p className="text-sm text-purple-700">
-                                  Colaboradores com perfil similar estão estudando "Automação com IA". Considere formar um grupo de estudo.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+                        <div className="text-center py-8">
+                          <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Insights em Desenvolvimento
+                          </h3>
+                          <p className="text-gray-600">
+                            {userRole === 'producer' 
+                              ? 'Insights detalhados estarão disponíveis conforme a plataforma cresce e mais dados são coletados.'
+                              : 'Recomendações personalizadas aparecerão aqui conforme você usa a plataforma.'
+                            }
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
