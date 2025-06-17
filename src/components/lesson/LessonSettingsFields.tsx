@@ -3,18 +3,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Control } from "react-hook-form";
-
-interface LessonFormData {
-  title: string;
-  content?: string;
-  video_url?: string;
-  duration_minutes?: number;
-  order_index: number;
-  is_free: boolean;
-  image_url?: string;
-  video_file_url?: string;
-  material_url?: string;
-}
+import { LessonFormData } from "./types";
 
 interface LessonSettingsFieldsProps {
   control: Control<LessonFormData>;

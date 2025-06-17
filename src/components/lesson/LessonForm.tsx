@@ -8,6 +8,7 @@ import { useCreateLesson, useUpdateLesson, Lesson } from "@/hooks/useLessons";
 import { LessonBasicFields } from "./LessonBasicFields";
 import { LessonFileFields } from "./LessonFileFields";
 import { LessonSettingsFields } from "./LessonSettingsFields";
+import { LessonFormData } from "./types";
 
 const lessonSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -20,8 +21,6 @@ const lessonSchema = z.object({
   video_file_url: z.string().optional(),
   material_url: z.string().optional(),
 });
-
-type LessonFormData = z.infer<typeof lessonSchema>;
 
 interface LessonFormProps {
   moduleId: string;
