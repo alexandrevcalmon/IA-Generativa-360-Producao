@@ -1,9 +1,11 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { AuthGuard } from "@/components/AuthGuard";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -21,9 +23,11 @@ import CourseDetails from "./pages/CourseDetails";
 import ProducerCompanies from "./pages/ProducerCompanies";
 import ProducerCompanyDetails from "./pages/ProducerCompanyDetails";
 import ProducerPlans from "./pages/ProducerPlans";
+import ProducerProfile from "./pages/ProducerProfile";
 import LoginProdutor from "./pages/LoginProdutor";
 import CompanyLayout from "./components/CompanyLayout";
 import CompanyDashboard from "./pages/CompanyDashboard";
+import CompanyProfile from "./pages/CompanyProfile";
 import StudentLayout from "./components/StudentLayout";
 import StudentDashboard from "./pages/StudentDashboard";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -67,11 +71,13 @@ const App = () => (
               <Route path="companies" element={<ProducerCompanies />} />
               <Route path="companies/:companyId" element={<ProducerCompanyDetails />} />
               <Route path="plans" element={<ProducerPlans />} />
+              <Route path="profile" element={<ProducerProfile />} />
             </Route>
 
             {/* Company Routes */}
             <Route path="/company" element={<CompanyLayout />}>
               <Route path="dashboard" element={<CompanyDashboard />} />
+              <Route path="profile" element={<CompanyProfile />} />
             </Route>
 
             {/* Student Routes */}
@@ -88,13 +94,20 @@ const App = () => (
               <Route path="calendar" element={<div className="p-6"><h1 className="text-2xl font-bold">Calendário</h1><p>Funcionalidade em desenvolvimento</p></div>} />
             </Route>
 
-            {/* Legacy Routes (for backward compatibility) - wrapped with SidebarProvider */}
+            {/* Legacy Routes (for backward compatibility) - wrapped with SidebarProvider and AuthGuard */}
             <Route path="/dashboard" element={<LegacyLayout><Dashboard /></LegacyLayout>} />
             <Route path="/courses" element={<LegacyLayout><Courses /></LegacyLayout>} />
             <Route path="/learning" element={<LegacyLayout><Learning /></LegacyLayout>} />
             <Route path="/community" element={<LegacyLayout><Community /></LegacyLayout>} />
             <Route path="/analytics" element={<LegacyLayout><Analytics /></LegacyLayout>} />
-            <Route path="/profile" element={<LegacyLayout><Profile /></LegacyLayout>} />
+            <Route 
+              path="/profile" 
+              element={
+                <AuthGuard requiredRole="producer">
+                  <LegacyLayout><Profile /></LegacyLayout>
+                </AuthGuard>
+              } 
+            />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -34,6 +34,26 @@ export function UserMenu() {
     navigate('/');
   };
 
+  const handleProfileClick = () => {
+    console.log('Profile clicked for user role:', userRole);
+    
+    // Route to the correct profile page based on user role
+    switch (userRole) {
+      case 'producer':
+        navigate('/producer/profile');
+        break;
+      case 'company':
+        navigate('/company/profile');
+        break;
+      case 'student':
+        navigate('/student/profile');
+        break;
+      default:
+        console.warn('Unknown user role, defaulting to legacy profile');
+        navigate('/profile');
+    }
+  };
+
   const getRoleDisplay = () => {
     switch (userRole) {
       case 'producer':
@@ -72,7 +92,7 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/profile')}>
+        <DropdownMenuItem onClick={handleProfileClick}>
           <User className="mr-2 h-4 w-4" />
           <span>Perfil</span>
         </DropdownMenuItem>
