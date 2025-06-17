@@ -960,12 +960,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_user_profile_consistency: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          email: string
+          action_taken: string
+        }[]
+      }
       get_current_company_id: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
       get_current_student_id: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_role: {
+        Args: { user_id: string }
         Returns: string
       }
       is_producer: {
