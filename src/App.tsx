@@ -1,40 +1,48 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth";
-import { AuthGuard } from "@/components/AuthGuard";
+
+// Import pages
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
-import StudentCourses from "./pages/StudentCourses";
-import Learning from "./pages/Learning";
-import Community from "./pages/Community";
+import CourseDetails from "./pages/CourseDetails";
 import Analytics from "./pages/Analytics";
+import Community from "./pages/Community";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
-import ProdutorLayout from "./components/ProdutorLayout";
+import LoginProdutor from "./pages/LoginProdutor";
+
+// Producer pages
 import ProducerDashboard from "./pages/ProducerDashboard";
 import ProducerCourses from "./pages/ProducerCourses";
-import CourseDetails from "./pages/CourseDetails";
 import ProducerCompanies from "./pages/ProducerCompanies";
 import ProducerCompanyDetails from "./pages/ProducerCompanyDetails";
 import ProducerPlans from "./pages/ProducerPlans";
 import ProducerProfile from "./pages/ProducerProfile";
-import LoginProdutor from "./pages/LoginProdutor";
-import CompanyLayout from "./components/CompanyLayout";
+
+// Company pages
 import CompanyDashboard from "./pages/CompanyDashboard";
 import CompanyProfile from "./pages/CompanyProfile";
-import StudentLayout from "./components/StudentLayout";
+
+// Student pages
 import StudentDashboard from "./pages/StudentDashboard";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import StudentCourses from "./pages/StudentCourses";
+import StudentCourseDetail from "./pages/StudentCourseDetail";
 import StudentLearning from "./pages/StudentLearning";
 import StudentAnalytics from "./pages/StudentAnalytics";
 import StudentCommunity from "./pages/StudentCommunity";
 import StudentProfile from "./pages/StudentProfile";
+import Learning from "./pages/Learning";
+
+// Layouts
+import ProdutorLayout from "./components/ProdutorLayout";
+import CompanyLayout from "./components/CompanyLayout";
+import StudentLayout from "./components/StudentLayout";
 
 const queryClient = new QueryClient();
 
@@ -84,9 +92,10 @@ const App = () => (
             <Route path="/student" element={<StudentLayout />}>
               <Route path="dashboard" element={<StudentDashboard />} />
               <Route path="courses" element={<StudentCourses />} />
+              <Route path="courses/:courseId" element={<StudentCourseDetail />} />
               <Route path="learning" element={<StudentLearning />} />
-              <Route path="community" element={<StudentCommunity />} />
               <Route path="analytics" element={<StudentAnalytics />} />
+              <Route path="community" element={<StudentCommunity />} />
               <Route path="profile" element={<StudentProfile />} />
               <Route path="gamification" element={<div className="p-6"><h1 className="text-2xl font-bold">Gamificação</h1><p>Funcionalidade em desenvolvimento</p></div>} />
               <Route path="goals" element={<div className="p-6"><h1 className="text-2xl font-bold">Objetivos</h1><p>Funcionalidade em desenvolvimento</p></div>} />

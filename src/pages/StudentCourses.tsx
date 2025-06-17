@@ -25,6 +25,7 @@ import {
   List
 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useStudentCourses } from "@/hooks/useStudentCourses";
 import { useEnrollInCourse } from "@/hooks/useStudentProgress";
 
@@ -100,17 +101,28 @@ const StudentCourses = () => {
               </div>
               
               {course.enrolled_at ? (
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  {course.progress_percentage > 0 ? 'Continuar' : 'Começar'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Link to={`/student/courses/${course.id}`}>
+                      {course.progress_percentage > 0 ? 'Continuar' : 'Começar'}
+                    </Link>
+                  </Button>
+                </div>
               ) : (
-                <Button 
-                  onClick={() => handleEnrollInCourse(course.id)}
-                  disabled={enrollMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  {enrollMutation.isPending ? 'Inscrevendo...' : 'Inscrever-se'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => handleEnrollInCourse(course.id)}
+                    disabled={enrollMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {enrollMutation.isPending ? 'Inscrevendo...' : 'Inscrever-se'}
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <Link to={`/student/courses/${course.id}`}>
+                      Ver Detalhes
+                    </Link>
+                  </Button>
+                </div>
               )}
             </div>
           </div>
