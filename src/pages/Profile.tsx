@@ -30,11 +30,12 @@ import {
   Zap,
   Trophy,
   Target,
-  BookOpen
+  BookOpen,
+  Building
 } from "lucide-react";
 
 const Profile = () => {
-  const { user, userRole } = useAuth();
+  const { user, userRole, companyUserData } = useAuth();
   const { data: courses = [] } = useCourses();
 
   // Calculate real statistics from actual data
@@ -51,6 +52,9 @@ const Profile = () => {
 
   // Get user initials for avatar
   const getUserInitials = () => {
+    if (companyUserData?.name) {
+      return companyUserData.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
+    }
     if (user?.email) {
       const emailPrefix = user.email.split('@')[0];
       return emailPrefix.slice(0, 2).toUpperCase();
@@ -58,8 +62,11 @@ const Profile = () => {
     return 'US';
   };
 
-  // Get display name from email
+  // Get display name from company data or email
   const getDisplayName = () => {
+    if (companyUserData?.name) {
+      return companyUserData.name;
+    }
     if (user?.email) {
       const emailPrefix = user.email.split('@')[0];
       return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
@@ -75,10 +82,18 @@ const Profile = () => {
       case 'company':
         return 'Empresa';
       case 'student':
-        return 'Estudante';
+        return 'Colaborador';
       default:
         return 'Usuário';
     }
+  };
+
+  // Get company name from company data
+  const getCompanyName = () => {
+    if (companyUserData?.companies?.name) {
+      return companyUserData.companies.name;
+    }
+    return 'Não vinculado';
   };
 
   const notificationSettings = [
@@ -175,6 +190,12 @@ const Profile = () => {
                               <Badge variant="outline">
                                 Membro desde {userStats.joinDate}
                               </Badge>
+                              {companyUserData?.companies && (
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                  <Building className="h-3 w-3" />
+                                  {companyUserData.companies.name}
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -261,42 +282,95 @@ const Profile = () => {
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <div>
-                            <Label htmlFor="email">Email</Label>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="name">Nome Completo</Label>
                               <Input 
-                                id="email" 
-                                defaultValue={user?.email || ''} 
+                                id="name" 
+                                value={companyUserData?.name || ''}
+                                disabled
+                                readOnly
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="email">Email</Label>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Input 
+                                  id="email" 
+                                  value={companyUserData?.email || user?.email || ''} 
+                                  className="pl-10"
+                                  disabled
+                                  readOnly
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="phone">Telefone</Label>
+                              <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Input 
+                                  id="phone" 
+                                  value={companyUserData?.phone || ''}
+                                  className="pl-10"
+                                  disabled
+                                  readOnly
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="position">Cargo</Label>
+                              <Input 
+                                id="position" 
+                                value={companyUserData?.position || ''}
+                                disabled
+                                readOnly
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="company">Empresa</Label>
+                            <div className="relative">
+                              <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              <Input 
+                                id="company" 
+                                value={getCompanyName()}
                                 className="pl-10"
                                 disabled
+                                readOnly
                               />
                             </div>
                           </div>
                           
-                          <div>
+                          <div className="space-y-2">
                             <Label htmlFor="role">Tipo de Conta</Label>
                             <Input 
                               id="role" 
-                              defaultValue={getRoleDisplay()} 
+                              value={getRoleDisplay()} 
                               disabled
+                              readOnly
                             />
                           </div>
                           
-                          <div>
+                          <div className="space-y-2">
                             <Label htmlFor="joinDate">Membro desde</Label>
                             <div className="relative">
                               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                               <Input 
                                 id="joinDate" 
-                                defaultValue={userStats.joinDate} 
+                                value={userStats.joinDate} 
                                 className="pl-10"
                                 disabled
+                                readOnly
                               />
                             </div>
                           </div>
                           
-                          <div>
+                          <div className="space-y-2">
                             <Label htmlFor="bio">Biografia</Label>
                             <Textarea 
                               id="bio" 
@@ -354,6 +428,37 @@ const Profile = () => {
                                 <span className="text-sm text-gray-600">Certificados</span>
                                 <span className="font-semibold">0</span>
                               </div>
+
+                              {/* Company Information for Students */}
+                              {companyUserData?.companies && (
+                                <>
+                                  <Separator />
+                                  <div className="pt-2">
+                                    <h4 className="font-medium mb-3 flex items-center">
+                                      <Building className="h-4 w-4 mr-2" />
+                                      Informações da Empresa
+                                    </h4>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-sm text-gray-600">Nome da Empresa</span>
+                                        <span className="font-semibold">{companyUserData.companies.name}</span>
+                                      </div>
+                                      {companyUserData.companies.official_name && (
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-sm text-gray-600">Razão Social</span>
+                                          <span className="font-semibold">{companyUserData.companies.official_name}</span>
+                                        </div>
+                                      )}
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-sm text-gray-600">Status na Empresa</span>
+                                        <Badge variant={companyUserData.is_active ? "default" : "secondary"}>
+                                          {companyUserData.is_active ? "Ativo" : "Inativo"}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
                             </>
                           )}
                           
