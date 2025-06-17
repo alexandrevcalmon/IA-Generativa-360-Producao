@@ -1,34 +1,11 @@
 
-import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { Navigate, Outlet } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { AppSidebar } from './AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const ProdutorLayout = () => {
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setLoading(false);
-    };
-
-    fetchSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
+  const { user, loading, userRole } = useAuth();
 
   if (loading) {
     return (
@@ -38,8 +15,12 @@ const ProdutorLayout = () => {
     );
   }
 
-  if (!session) {
-    return <Navigate to="/login-produtor" />;
+  if (!user) {
+    return <Navigate to="/auth" />;
+  }
+
+  if (userRole !== 'producer') {
+    return <Navigate to="/auth" />;
   }
 
   return (

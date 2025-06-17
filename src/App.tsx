@@ -1,56 +1,112 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import ProducerDashboard from "./pages/ProducerDashboard";
-import CompanyDashboard from "./pages/CompanyDashboard";
-import Courses from "./pages/Courses";
-import Learning from "./pages/Learning";
-import Community from "./pages/Community";
-import Analytics from "./pages/Analytics";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import ProducerCompanies from "./pages/ProducerCompanies";
-import ProducerCompanyDetails from "./pages/ProducerCompanyDetails";
-import ProducerPlans from "./pages/ProducerPlans";
-import ProdutorLayout from "./components/ProdutorLayout";
-import LoginProdutor from "./pages/LoginProdutor";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/hooks/useAuth';
+import { AuthGuard } from '@/components/AuthGuard';
+
+// Pages
+import Index from '@/pages/Index';
+import Auth from '@/pages/Auth';
+import LoginProdutor from '@/pages/LoginProdutor';
+import Dashboard from '@/pages/Dashboard';
+import CompanyDashboard from '@/pages/CompanyDashboard';
+import Learning from '@/pages/Learning';
+import Courses from '@/pages/Courses';
+import Community from '@/pages/Community';
+import Analytics from '@/pages/Analytics';
+import Profile from '@/pages/Profile';
+import NotFound from '@/pages/NotFound';
+
+// Producer pages
+import ProdutorLayout from '@/components/ProdutorLayout';
+import ProducerDashboard from '@/pages/ProducerDashboard';
+import ProducerCompanies from '@/pages/ProducerCompanies';
+import ProducerCompanyDetails from '@/pages/ProducerCompanyDetails';
+import ProducerPlans from '@/pages/ProducerPlans';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <div className="min-h-screen flex w-full">
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login-produtor" element={<LoginProdutor />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/producer" element={<ProdutorLayout />}>
-              <Route index element={<ProducerDashboard />} />
-              <Route path="companies" element={<ProducerCompanies />} />
-              <Route path="companies/:id" element={<ProducerCompanyDetails />} />
-              <Route path="plans" element={<ProducerPlans />} />
-            </Route>
-            <Route path="/company-dashboard" element={<CompanyDashboard />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/learning" element={<Learning />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-background">
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/login-produtor" element={<LoginProdutor />} />
+              
+              {/* Producer routes */}
+              <Route path="/producer/*" element={
+                <AuthGuard requiredRole="producer">
+                  <ProdutorLayout />
+                </AuthGuard>
+              }>
+                <Route index element={<ProducerDashboard />} />
+                <Route path="dashboard" element={<ProducerDashboard />} />
+                <Route path="companies" element={<ProducerCompanies />} />
+                <Route path="companies/:id" element={<ProducerCompanyDetails />} />
+                <Route path="plans" element={<ProducerPlans />} />
+              </Route>
+              
+              {/* Legacy producer routes (redirect) */}
+              <Route path="/producer-dashboard" element={
+                <AuthGuard requiredRole="producer" redirectTo="/producer" />
+              } />
+              
+              {/* Company routes */}
+              <Route path="/company-dashboard" element={
+                <AuthGuard requiredRole="company">
+                  <CompanyDashboard />
+                </AuthGuard>
+              } />
+              
+              {/* Student/Collaborator routes */}
+              <Route path="/learning" element={
+                <AuthGuard requiredRole="student">
+                  <Learning />
+                </AuthGuard>
+              } />
+              <Route path="/courses" element={
+                <AuthGuard requiredRole="student">
+                  <Courses />
+                </AuthGuard>
+              } />
+              <Route path="/community" element={
+                <AuthGuard requiredRole="student">
+                  <Community />
+                </AuthGuard>
+              } />
+              
+              {/* Protected routes for all authenticated users */}
+              <Route path="/dashboard" element={
+                <AuthGuard>
+                  <Dashboard />
+                </AuthGuard>
+              } />
+              <Route path="/analytics" element={
+                <AuthGuard>
+                  <Analytics />
+                </AuthGuard>
+              } />
+              <Route path="/profile" element={
+                <AuthGuard>
+                  <Profile />
+                </AuthGuard>
+              } />
+              
+              {/* 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+          </div>
+        </Router>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

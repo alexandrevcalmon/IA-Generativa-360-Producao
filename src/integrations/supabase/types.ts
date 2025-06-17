@@ -60,6 +60,7 @@ export type Database = {
           address_state: string | null
           address_street: string | null
           address_zip_code: string | null
+          auth_user_id: string | null
           cnpj: string | null
           contact_email: string | null
           contact_name: string | null
@@ -87,6 +88,7 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           address_zip_code?: string | null
+          auth_user_id?: string | null
           cnpj?: string | null
           contact_email?: string | null
           contact_name?: string | null
@@ -114,6 +116,7 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           address_zip_code?: string | null
+          auth_user_id?: string | null
           cnpj?: string | null
           contact_email?: string | null
           contact_name?: string | null
@@ -139,6 +142,57 @@ export type Database = {
             columns: ["subscription_plan_id"]
             isOneToOne: false
             referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_messages: {
+        Row: {
+          body: string
+          company_id: string
+          created_at: string
+          id: string
+          read_at: string | null
+          recipient_scope: string
+          recipient_student_id: string | null
+          sender_auth_user_id: string
+          subject: string
+        }
+        Insert: {
+          body: string
+          company_id: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          recipient_scope?: string
+          recipient_student_id?: string | null
+          sender_auth_user_id: string
+          subject: string
+        }
+        Update: {
+          body?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          recipient_scope?: string
+          recipient_student_id?: string | null
+          sender_auth_user_id?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_messages_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_messages_recipient_student_id_fkey"
+            columns: ["recipient_student_id"]
+            isOneToOne: false
+            referencedRelation: "company_users"
             referencedColumns: ["id"]
           },
         ]
@@ -690,6 +744,27 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quiz_attempts: {
         Row: {
           answers: Json
@@ -867,7 +942,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_company_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_current_student_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      is_producer: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
