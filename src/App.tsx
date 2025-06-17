@@ -54,7 +54,9 @@ function App() {
               
               {/* Legacy producer routes (redirect) */}
               <Route path="/producer-dashboard" element={
-                <AuthGuard requiredRole="producer" redirectTo="/producer" />
+                <AuthGuard requiredRole="producer" redirectTo="/producer">
+                  <div />
+                </AuthGuard>
               } />
               
               {/* Company routes */}
