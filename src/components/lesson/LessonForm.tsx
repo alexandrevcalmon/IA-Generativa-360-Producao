@@ -10,6 +10,7 @@ import { LessonFileFields } from "./LessonFileFields";
 import { LessonSettingsFields } from "./LessonSettingsFields";
 import { LessonFormData } from "./types";
 import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const lessonSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -31,6 +32,7 @@ interface LessonFormProps {
 export const LessonForm = ({ moduleId, lesson, onClose }: LessonFormProps) => {
   const createLessonMutation = useCreateLesson();
   const updateLessonMutation = useUpdateLesson();
+  const { toast } = useToast();
 
   const form = useForm<LessonFormData>({
     resolver: zodResolver(lessonSchema),
@@ -48,6 +50,7 @@ export const LessonForm = ({ moduleId, lesson, onClose }: LessonFormProps) => {
 
   // Reset form values when lesson changes
   useEffect(() => {
+    console.log('Resetting form with lesson:', lesson);
     form.reset({
       title: lesson?.title || "",
       content: lesson?.content || "",
@@ -62,13 +65,15 @@ export const LessonForm = ({ moduleId, lesson, onClose }: LessonFormProps) => {
 
   const onSubmit = async (data: LessonFormData) => {
     try {
+      console.log('Submitting lesson form:', { data, moduleId, lesson });
+      
       const lessonData = {
         module_id: moduleId,
         title: data.title,
         content: data.content || null,
         video_url: data.video_url || null,
         duration_minutes: data.duration_minutes || null,
-        order_index: lesson?.order_index || 0, // Mantém a ordem atual ou 0 para novas aulas
+        order_index: lesson?.order_index || 0,
         is_free: data.is_free,
         resources: null,
         image_url: data.image_url || null,
@@ -76,9 +81,13 @@ export const LessonForm = ({ moduleId, lesson, onClose }: LessonFormProps) => {
         material_url: data.material_url || null,
       };
 
+      console.log('Lesson data to submit:', lessonData);
+
       if (lesson) {
+        console.log('Updating existing lesson:', lesson.id);
         await updateLessonMutation.mutateAsync({ id: lesson.id, ...lessonData });
       } else {
+        console.log('Creating new lesson');
         await createLessonMutation.mutateAsync(lessonData);
       }
       
@@ -86,6 +95,11 @@ export const LessonForm = ({ moduleId, lesson, onClose }: LessonFormProps) => {
       onClose();
     } catch (error) {
       console.error("Erro ao salvar aula:", error);
+      toast({
+        title: "Erro",
+        description: `Erro ao salvar aula: ${error.message}`,
+        variant: "destructive",
+      });
     }
   };
 

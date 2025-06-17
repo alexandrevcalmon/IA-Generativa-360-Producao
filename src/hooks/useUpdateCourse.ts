@@ -20,23 +20,35 @@ export const useUpdateCourse = () => {
       console.log('Update data:', courseData);
       console.log('Current user:', user.id);
 
+      // Ensure required fields are present and properly formatted
+      const updateData = {
+        ...courseData,
+        updated_at: new Date().toISOString(),
+        // Ensure arrays are properly handled
+        tags: courseData.tags || [],
+        // Ensure booleans are properly set
+        is_published: courseData.is_published ?? false,
+      };
+
       const { data, error } = await supabase
         .from('courses')
-        .update({ ...courseData, updated_at: new Date().toISOString() })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
 
       if (error) {
         console.error('Error updating course:', error);
-        throw error;
+        throw new Error(`Failed to update course: ${error.message}`);
       }
       
       console.log('Course updated successfully:', data);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Invalidate multiple query keys to ensure data consistency
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course', data.id] });
       toast({
         title: "Sucesso",
         description: "Curso atualizado com sucesso!",
@@ -46,7 +58,7 @@ export const useUpdateCourse = () => {
       console.error('Update mutation error:', error);
       toast({
         title: "Erro",
-        description: "Erro ao atualizar curso: " + error.message,
+        description: `Erro ao atualizar curso: ${error.message}`,
         variant: "destructive",
       });
     },

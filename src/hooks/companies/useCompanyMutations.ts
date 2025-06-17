@@ -1,26 +1,39 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { CompanyData, UpdateCompanyData } from "./types";
 
 export const useCreateCompany = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (companyData: CompanyData) => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Creating company with user:', user.id);
+      console.log('Company data:', companyData);
+
       const { data, error } = await supabase
         .from('companies')
-        .insert([companyData])
+        .insert([{
+          ...companyData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }])
         .select()
         .single();
 
       if (error) {
         console.error('Error creating company:', error);
-        throw error;
+        throw new Error(`Failed to create company: ${error.message}`);
       }
 
+      console.log('Company created successfully:', data);
       return data;
     },
     onSuccess: () => {
@@ -35,7 +48,7 @@ export const useCreateCompany = () => {
       console.error('Error creating company:', error);
       toast({
         title: "Erro ao criar empresa",
-        description: "Ocorreu um erro ao criar a empresa.",
+        description: `Ocorreu um erro ao criar a empresa: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -45,29 +58,42 @@ export const useCreateCompany = () => {
 export const useUpdateCompany = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (companyData: UpdateCompanyData) => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { id, ...updateData } = companyData;
+
+      console.log('Updating company:', id);
+      console.log('Update data:', updateData);
+      console.log('Current user:', user.id);
 
       const { data, error } = await supabase
         .from('companies')
-        .update(updateData)
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', id)
         .select()
         .single();
 
       if (error) {
         console.error('Error updating company:', error);
-        throw error;
+        throw new Error(`Failed to update company: ${error.message}`);
       }
 
+      console.log('Company updated successfully:', data);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['company'] });
+      queryClient.invalidateQueries({ queryKey: ['company', data.id] });
       toast({
         title: "Empresa atualizada com sucesso!",
         description: "As alterações foram salvas.",
@@ -77,7 +103,7 @@ export const useUpdateCompany = () => {
       console.error('Error updating company:', error);
       toast({
         title: "Erro ao atualizar empresa",
-        description: "Ocorreu um erro ao atualizar a empresa.",
+        description: `Ocorreu um erro ao atualizar a empresa: ${error.message}`,
         variant: "destructive",
       });
     }

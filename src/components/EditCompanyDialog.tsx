@@ -16,6 +16,7 @@ import { CompanyBasicFields } from "@/components/company/CompanyBasicFields";
 import { CompanyAddressFields } from "@/components/company/CompanyAddressFields";
 import { CompanyContactFields } from "@/components/company/CompanyContactFields";
 import { CompanyAdditionalFields } from "@/components/company/CompanyAdditionalFields";
+import { useToast } from "@/hooks/use-toast";
 
 interface EditCompanyDialogProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ interface EditCompanyDialogProps {
 export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialogProps) {
   const { formData, setFormData } = useEditCompanyFormData(company, isOpen);
   const updateCompanyMutation = useUpdateCompany();
+  const { toast } = useToast();
   const {
     data: plans,
     isLoading: plansLoading,
@@ -37,11 +39,17 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
     if (!company) return;
 
     if (!formData.name) {
-        alert("Nome Fantasia é obrigatório.");
+        toast({
+          title: "Erro",
+          description: "Nome Fantasia é obrigatório.",
+          variant: "destructive",
+        });
         return;
     }
 
     try {
+      console.log('Submitting company update:', { id: company.id, formData });
+      
       await updateCompanyMutation.mutateAsync({ 
         id: company.id, 
         ...formData
@@ -49,6 +57,11 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
       onClose();
     } catch (error) {
       console.error("Failed to update company from dialog:", error);
+      toast({
+        title: "Erro",
+        description: `Erro ao atualizar empresa: ${error.message}`,
+        variant: "destructive",
+      });
     }
   };
 
