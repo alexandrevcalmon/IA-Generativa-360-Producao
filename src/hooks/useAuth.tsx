@@ -78,14 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Check for existing session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (isMounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
+    // Check for existing session immediately
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (isMounted && session?.user) {
+          console.log('Found existing session for user:', session.user.email);
+          setSession(session);
+          setUser(session.user);
+          
           const role = await fetchUserRole(session.user.id);
           if (isMounted) {
             setUserRole(role);
@@ -93,11 +94,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
         
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    checkSession();
+    initializeAuth();
 
     return () => {
       isMounted = false;
@@ -107,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -129,6 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('SignIn error:', error);
       return { error };
+    } finally {
+      // Don't set loading to false here, let the auth state change handle it
     }
   };
 

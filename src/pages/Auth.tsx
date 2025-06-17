@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,7 +18,7 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const { signIn, signUp, user, userRole } = useAuth();
+  const { signIn, signUp, user, userRole, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -29,33 +30,30 @@ export default function Auth() {
     }
   }, [searchParams]);
 
-  // Redirect if already authenticated - wait for userRole to be loaded
+  // Redirect if already authenticated
   useEffect(() => {
-    if (user && userRole) {
-      console.log('User authenticated with role:', userRole);
+    if (!authLoading && user && userRole) {
+      console.log('User authenticated with role:', userRole, 'Redirecting...');
       
-      // Use a longer timeout to ensure proper state updates
-      setTimeout(() => {
-        switch (userRole) {
-          case 'producer':
-            console.log('Redirecting to producer dashboard');
-            navigate('/producer/dashboard', { replace: true });
-            break;
-          case 'company':
-            console.log('Redirecting to company dashboard');
-            navigate('/company/dashboard', { replace: true });
-            break;
-          case 'student':
-            console.log('Redirecting to student dashboard');
-            navigate('/dashboard', { replace: true });
-            break;
-          default:
-            console.log('Unknown role, redirecting to default dashboard');
-            navigate('/dashboard', { replace: true });
-        }
-      }, 300);
+      switch (userRole) {
+        case 'producer':
+          console.log('Redirecting to producer dashboard');
+          navigate('/producer/dashboard', { replace: true });
+          break;
+        case 'company':
+          console.log('Redirecting to company dashboard');
+          navigate('/company/dashboard', { replace: true });
+          break;
+        case 'student':
+          console.log('Redirecting to student dashboard');
+          navigate('/dashboard', { replace: true });
+          break;
+        default:
+          console.log('Unknown role, redirecting to default dashboard');
+          navigate('/dashboard', { replace: true });
+      }
     }
-  }, [user, userRole, navigate]);
+  }, [user, userRole, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,8 +63,11 @@ export default function Auth() {
       if (isLogin) {
         console.log('Attempting login for:', email);
         const { error } = await signIn(email, password);
-        if (!error) {
-          console.log('Login successful, waiting for redirect...');
+        if (error) {
+          console.error('Login error:', error);
+        } else {
+          console.log('Login successful');
+          // Don't manually navigate here, let the useEffect handle it
         }
       } else {
         console.log('Attempting signup for:', email, 'with role:', role);
@@ -81,6 +82,15 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100">
+        <div className="text-lg">Verificando autenticação...</div>
+      </div>
+    );
+  }
 
   const getRoleInfo = () => {
     switch (role) {
