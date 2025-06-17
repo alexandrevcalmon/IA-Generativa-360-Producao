@@ -24,7 +24,8 @@ export function EditPlanDialog({ isOpen, onClose, plan }: EditPlanDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    price: 0,
+    semester_price: 0,
+    annual_price: 0,
     max_students: 50,
     features: [""],
     is_active: true
@@ -37,7 +38,8 @@ export function EditPlanDialog({ isOpen, onClose, plan }: EditPlanDialogProps) {
       setFormData({
         name: plan.name,
         description: plan.description || "",
-        price: plan.price,
+        semester_price: plan.semester_price,
+        annual_price: plan.annual_price,
         max_students: plan.max_students,
         features: plan.features.length > 0 ? plan.features : [""],
         is_active: plan.is_active
@@ -122,19 +124,31 @@ export function EditPlanDialog({ isOpen, onClose, plan }: EditPlanDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-price">Preço (R$) *</Label>
+              <Label htmlFor="edit-semester_price">Preço Semestral (R$) *</Label>
               <Input
-                id="edit-price"
+                id="edit-semester_price"
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="99.00"
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                placeholder="299.00"
+                value={formData.semester_price}
+                onChange={(e) => setFormData(prev => ({ ...prev, semester_price: parseFloat(e.target.value) || 0 }))}
                 required
               />
             </div>
-
+            <div className="space-y-2">
+              <Label htmlFor="edit-annual_price">Preço Anual (R$) *</Label>
+              <Input
+                id="edit-annual_price"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="499.00"
+                value={formData.annual_price}
+                onChange={(e) => setFormData(prev => ({ ...prev, annual_price: parseFloat(e.target.value) || 0 }))}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="edit-max_students">Máx. Colaboradores *</Label>
               <Input
@@ -143,7 +157,7 @@ export function EditPlanDialog({ isOpen, onClose, plan }: EditPlanDialogProps) {
                 min="1"
                 placeholder="50"
                 value={formData.max_students}
-                onChange={(e) => setFormData(prev => ({ ...prev, max_students: parseInt(e.target.value) || 50 }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, max_students: parseInt(e.target.value) || 1 }))}
                 required
               />
             </div>

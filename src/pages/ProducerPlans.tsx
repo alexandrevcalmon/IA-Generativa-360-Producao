@@ -67,7 +67,8 @@ const ProducerPlans = () => {
   // Calculate stats from real data
   const totalCompanies = companies.length;
   const totalRevenue = companies.reduce((sum, company) => {
-    return sum + (company.subscription_plan?.price || 0);
+    // Assuming annual_price is the basis for yearly revenue, divide by 12 for a monthly estimate.
+    return sum + ((company.subscription_plan?.annual_price || 0) / 12);
   }, 0);
   
   const planStats = plans.map(plan => ({
@@ -232,9 +233,12 @@ const ProducerPlans = () => {
                       </div>
                       
                       <div className="flex items-baseline justify-center">
-                        <span className="text-4xl font-bold">R$ {plan.price.toFixed(2)}</span>
-                        <span className="text-gray-600 ml-1">/mês</span>
+                        <span className="text-4xl font-bold">R$ {plan.annual_price.toFixed(2)}</span>
+                        <span className="text-gray-600 ml-1">/ano</span>
                       </div>
+                      <p className="text-md text-gray-500 mt-1">
+                        Semestral: R$ {plan.semester_price.toFixed(2)}
+                      </p>
                     </CardHeader>
 
                     <CardContent className="space-y-6">
@@ -303,7 +307,8 @@ const ProducerPlans = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Plano</TableHead>
-                          <TableHead>Preço</TableHead>
+                          <TableHead>Preço Semestral</TableHead>
+                          <TableHead>Preço Anual</TableHead>
                           <TableHead>Colaboradores</TableHead>
                           <TableHead>Empresas</TableHead>
                           <TableHead>Status</TableHead>
@@ -313,7 +318,8 @@ const ProducerPlans = () => {
                         {planStats.map((plan) => (
                           <TableRow key={plan.id}>
                             <TableCell className="font-medium">{plan.name}</TableCell>
-                            <TableCell>R$ {plan.price.toFixed(2)}</TableCell>
+                            <TableCell>R$ {plan.semester_price.toFixed(2)}</TableCell>
+                            <TableCell>R$ {plan.annual_price.toFixed(2)}</TableCell>
                             <TableCell>{plan.max_students}</TableCell>
                             <TableCell>{plan.companies_count}</TableCell>
                             <TableCell>

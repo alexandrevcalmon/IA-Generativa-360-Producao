@@ -18,6 +18,8 @@ import NotFound from "./pages/NotFound";
 import ProducerCompanies from "./pages/ProducerCompanies";
 import ProducerCompanyDetails from "./pages/ProducerCompanyDetails";
 import ProducerPlans from "./pages/ProducerPlans";
+import ProdutorLayout from "../components/ProdutorLayout"; // Adjusted path
+import LoginProdutor from "../pages/LoginProdutor"; // Adjusted path
 
 const queryClient = new QueryClient();
 
@@ -31,11 +33,14 @@ const App = () => (
           <div className="min-h-screen flex w-full">
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/login-produtor" element={<LoginProdutor />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/producer-dashboard" element={<ProducerDashboard />} />
-              <Route path="/producer/companies" element={<ProducerCompanies />} />
-              <Route path="/producer/companies/:id" element={<ProducerCompanyDetails />} />
-              <Route path="/producer/plans" element={<ProducerPlans />} />
+              <Route path="/producer" element={<ProdutorLayout />}>
+                <Route index element={<ProducerDashboard />} />
+                <Route path="companies" element={<ProducerCompanies />} />
+                <Route path="companies/:id" element={<ProducerCompanyDetails />} />
+                <Route path="plans" element={<ProducerPlans />} />
+              </Route>
               <Route path="/company-dashboard" element={<CompanyDashboard />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/learning" element={<Learning />} />

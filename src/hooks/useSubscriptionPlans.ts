@@ -7,7 +7,8 @@ export interface SubscriptionPlan {
   id: string;
   name: string;
   description: string | null;
-  price: number;
+  semester_price: number;
+  annual_price: number;
   max_students: number;
   features: string[];
   is_active: boolean;
@@ -18,7 +19,8 @@ export interface SubscriptionPlan {
 export interface CreatePlanData {
   name: string;
   description?: string;
-  price: number;
+  semester_price: number;
+  annual_price: number;
   max_students: number;
   features: string[];
 }
@@ -32,10 +34,11 @@ export const useSubscriptionPlans = () => {
   return useQuery({
     queryKey: ['subscription-plans'],
     queryFn: async () => {
+      // TODO: DB schema needs update for semester_price and annual_price. Assuming they exist for now.
       const { data, error } = await supabase
         .from('subscription_plans')
-        .select('*')
-        .order('price', { ascending: true });
+        .select('id, name, description, semester_price, annual_price, max_students, features, is_active, created_at, updated_at')
+        .order('name', { ascending: true });
 
       if (error) {
         console.error('Error fetching subscription plans:', error);
@@ -53,6 +56,7 @@ export const useCreateSubscriptionPlan = () => {
 
   return useMutation({
     mutationFn: async (planData: CreatePlanData) => {
+      // TODO: DB schema needs update for semester_price and annual_price. Assuming they exist for now.
       const { data, error } = await supabase
         .from('subscription_plans')
         .insert([planData])
@@ -92,6 +96,7 @@ export const useUpdateSubscriptionPlan = () => {
   return useMutation({
     mutationFn: async (planData: UpdatePlanData) => {
       const { id, ...updateData } = planData;
+      // TODO: DB schema needs update for semester_price and annual_price. Assuming they exist for now.
       const { data, error } = await supabase
         .from('subscription_plans')
         .update(updateData)
