@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,27 +29,31 @@ export default function Auth() {
     }
   }, [searchParams]);
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated - wait for userRole to be loaded
   useEffect(() => {
     if (user && userRole) {
-      console.log('Redirecting user with role:', userRole);
+      console.log('User authenticated with role:', userRole);
       
-      // Use setTimeout to avoid navigation conflicts
+      // Use a longer timeout to ensure proper state updates
       setTimeout(() => {
         switch (userRole) {
           case 'producer':
+            console.log('Redirecting to producer dashboard');
             navigate('/producer/dashboard', { replace: true });
             break;
           case 'company':
-            navigate('/company-dashboard', { replace: true });
+            console.log('Redirecting to company dashboard');
+            navigate('/company/dashboard', { replace: true });
             break;
           case 'student':
-            navigate('/learning', { replace: true });
+            console.log('Redirecting to student dashboard');
+            navigate('/dashboard', { replace: true });
             break;
           default:
+            console.log('Unknown role, redirecting to default dashboard');
             navigate('/dashboard', { replace: true });
         }
-      }, 100);
+      }, 300);
     }
   }, [user, userRole, navigate]);
 
@@ -60,11 +63,13 @@ export default function Auth() {
 
     try {
       if (isLogin) {
+        console.log('Attempting login for:', email);
         const { error } = await signIn(email, password);
         if (!error) {
           console.log('Login successful, waiting for redirect...');
         }
       } else {
+        console.log('Attempting signup for:', email, 'with role:', role);
         const { error } = await signUp(email, password, role);
         if (!error) {
           setIsLogin(true);

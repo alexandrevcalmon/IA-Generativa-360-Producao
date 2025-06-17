@@ -26,6 +26,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const fetchUserRole = async (userId: string): Promise<string | null> => {
+    try {
+      console.log('Fetching role for user:', userId);
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return null;
+      }
+      
+      console.log('User role fetched:', profile?.role);
+      return profile?.role || null;
+    } catch (error) {
+      console.error('Error in fetchUserRole:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -40,29 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user && isMounted) {
-          // Fetch user role with a small delay to avoid race conditions
-          setTimeout(async () => {
-            if (!isMounted) return;
-            
-            try {
-              const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', session.user.id)
-                .single();
-              
-              if (error) {
-                console.error('Error fetching user role:', error);
-                setUserRole(null);
-              } else if (profile && isMounted) {
-                console.log('User role:', profile.role);
-                setUserRole(profile.role);
-              }
-            } catch (error) {
-              console.error('Error fetching user role:', error);
-              if (isMounted) setUserRole(null);
-            }
-          }, 100);
+          // Fetch user role immediately
+          const role = await fetchUserRole(session.user.id);
+          if (isMounted) {
+            setUserRole(role);
+            console.log('User role set to:', role);
+          }
         } else if (isMounted) {
           setUserRole(null);
         }
@@ -74,15 +79,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (isMounted) {
         setSession(session);
         setUser(session?.user ?? null);
-        if (!session) {
-          setLoading(false);
+        
+        if (session?.user) {
+          const role = await fetchUserRole(session.user.id);
+          if (isMounted) {
+            setUserRole(role);
+            console.log('Initial user role set to:', role);
+          }
         }
+        
+        setLoading(false);
       }
-    });
+    };
+
+    checkSession();
 
     return () => {
       isMounted = false;
