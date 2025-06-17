@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
+import StudentCourses from "./pages/StudentCourses";
 import Learning from "./pages/Learning";
 import Community from "./pages/Community";
 import Analytics from "./pages/Analytics";
@@ -72,7 +74,7 @@ const App = () => (
             {/* Student Routes */}
             <Route path="/student" element={<StudentLayout />}>
               <Route path="dashboard" element={<StudentDashboard />} />
-              <Route path="courses" element={<Courses />} />
+              <Route path="courses" element={<StudentCourses />} />
               <Route path="learning" element={<Learning />} />
               <Route path="community" element={<Community />} />
               <Route path="analytics" element={<Analytics />} />
