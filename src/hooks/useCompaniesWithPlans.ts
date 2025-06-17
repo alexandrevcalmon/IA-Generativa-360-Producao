@@ -16,6 +16,7 @@ export interface CompanyWithPlan {
     price: number;
     annual_price: number;
     semester_price: number;
+    max_students: number;
   } | null;
 }
 
@@ -38,7 +39,8 @@ export const useCompaniesWithPlans = () => {
             name,
             price,
             annual_price,
-            semester_price
+            semester_price,
+            max_students
           )
         `)
         .order('created_at', { ascending: false });
