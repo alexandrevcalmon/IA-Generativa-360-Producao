@@ -22,13 +22,29 @@ interface EditCompanyDialogProps {
   company: Company | null;
 }
 
-const initialFormData: Partial<CompanyData> = {
+const initialFormData: CompanyData = {
   name: "",
   official_name: "",
+  cnpj: "",
+  email: "",
+  phone: "",
+  address_street: "",
+  address_number: "",
+  address_complement: "",
+  address_district: "",
+  address_city: "",
+  address_state: "",
+  address_zip_code: "",
+  contact_name: "",
+  contact_email: "",
+  contact_phone: "",
+  notes: "",
+  subscription_plan_id: null,
+  billing_period: undefined,
 };
 
 export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialogProps) {
-  const [formData, setFormData] = useState<Partial<CompanyData>>(initialFormData);
+  const [formData, setFormData] = useState<CompanyData>(initialFormData);
   const updateCompanyMutation = useUpdateCompany();
   const {
     data: plans,
@@ -56,7 +72,7 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
         contact_phone: company.contact_phone || "",
         notes: company.notes || "",
         subscription_plan_id: company.subscription_plan_id || null,
-        billing_period: company.billing_period || null,
+        billing_period: company.billing_period || undefined,
       });
     } else if (!isOpen) {
       setFormData(initialFormData);
@@ -73,7 +89,10 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
     }
 
     try {
-      await updateCompanyMutation.mutateAsync({ id: company.id, ...formData });
+      await updateCompanyMutation.mutateAsync({ 
+        id: company.id, 
+        ...formData
+      });
       onClose();
     } catch (error) {
       console.error("Failed to update company from dialog:", error);
