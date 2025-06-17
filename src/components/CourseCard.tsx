@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Edit, Trash2, Eye, MoreVertical, Users, Clock } from "lucide-react";
+import { Edit, Trash2, Eye, MoreVertical, Users, Clock, BookOpen } from "lucide-react";
 import { Course } from "@/hooks/useCourses";
+import { useNavigate } from "react-router-dom";
 
 interface CourseCardProps {
   course: Course;
@@ -14,6 +15,8 @@ interface CourseCardProps {
 }
 
 export const CourseCard = ({ course, onEdit, onDelete, onView }: CourseCardProps) => {
+  const navigate = useNavigate();
+
   const getDifficultyColor = (difficulty: string | null) => {
     switch (difficulty) {
       case 'beginner':
@@ -38,6 +41,10 @@ export const CourseCard = ({ course, onEdit, onDelete, onView }: CourseCardProps
       default:
         return 'Não definido';
     }
+  };
+
+  const handleManageContent = () => {
+    navigate(`/producer/courses/${course.id}`);
   };
 
   return (
@@ -67,6 +74,10 @@ export const CourseCard = ({ course, onEdit, onDelete, onView }: CourseCardProps
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleManageContent}>
+                <BookOpen className="mr-2 h-4 w-4" />
+                Gerenciar Conteúdo
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onView(course.id)}>
                 <Eye className="mr-2 h-4 w-4" />
                 Visualizar
@@ -140,13 +151,13 @@ export const CourseCard = ({ course, onEdit, onDelete, onView }: CourseCardProps
 
         <div className="flex gap-2 pt-2">
           <Button 
-            variant="outline" 
+            variant="default" 
             size="sm" 
-            onClick={() => onView(course.id)}
-            className="flex-1"
+            onClick={handleManageContent}
+            className="flex-1 bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800"
           >
-            <Eye className="h-4 w-4 mr-2" />
-            Visualizar
+            <BookOpen className="h-4 w-4 mr-2" />
+            Gerenciar
           </Button>
           <Button 
             variant="outline" 
