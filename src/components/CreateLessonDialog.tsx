@@ -58,9 +58,9 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
       duration_minutes: lesson?.duration_minutes || undefined,
       order_index: lesson?.order_index || 0,
       is_free: lesson?.is_free || false,
-      image_url: (lesson as any)?.image_url || "",
-      video_file_url: (lesson as any)?.video_file_url || "",
-      material_url: (lesson as any)?.material_url || "",
+      image_url: lesson?.image_url || "",
+      video_file_url: lesson?.video_file_url || "",
+      material_url: lesson?.material_url || "",
     },
   });
 
@@ -109,7 +109,7 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="title"
@@ -142,7 +142,9 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Arquivos da Aula</h3>
+              
               <FormField
                 control={form.control}
                 name="image_url"
@@ -150,7 +152,8 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
                   <FormItem>
                     <FormControl>
                       <FileUploadField
-                        label="Imagem da Aula (1920x1080px)"
+                        label="Thumbnail da Aula"
+                        description="Recomendado: 1920x1080px (formato 16:9)"
                         value={field.value || ""}
                         onChange={(url) => field.onChange(url || "")}
                         uploadOptions={{
@@ -174,7 +177,8 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
                   <FormItem>
                     <FormControl>
                       <FileUploadField
-                        label="Arquivo de Vídeo (16:9)"
+                        label="Arquivo de Vídeo"
+                        description="Formato recomendado: MP4, máximo 100MB"
                         value={field.value || ""}
                         onChange={(url) => field.onChange(url || "")}
                         uploadOptions={{
@@ -190,52 +194,56 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="video_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL do Vídeo (Opcional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="https://youtube.com/watch?v=... ou https://vimeo.com/..."
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-sm text-muted-foreground">
+                      Use este campo para vídeos do YouTube, Vimeo ou outras plataformas
+                    </p>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="material_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <FileUploadField
+                        label="Material de Apoio"
+                        description="Formatos aceitos: PDF, Excel, Word, CSV (máximo 10MB)"
+                        value={field.value || ""}
+                        onChange={(url) => field.onChange(url || "")}
+                        uploadOptions={{
+                          bucket: 'lesson-materials',
+                          maxSize: 10 * 1024 * 1024, // 10MB
+                          allowedTypes: [
+                            'application/pdf',
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                            'text/csv'
+                          ],
+                        }}
+                        accept=".pdf,.xlsx,.docx,.csv"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-
-            <FormField
-              control={form.control}
-              name="video_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL do Vídeo (YouTube, Vimeo, etc.)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://youtube.com/watch?v=..."
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="material_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <FileUploadField
-                      label="Material da Aula (.pdf, .xlsx, .docx, .csv)"
-                      value={field.value || ""}
-                      onChange={(url) => field.onChange(url || "")}
-                      uploadOptions={{
-                        bucket: 'lesson-materials',
-                        maxSize: 10 * 1024 * 1024, // 10MB
-                        allowedTypes: [
-                          'application/pdf',
-                          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                          'text/csv'
-                        ],
-                      }}
-                      accept=".pdf,.xlsx,.docx,.csv"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

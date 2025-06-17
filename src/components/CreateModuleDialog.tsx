@@ -52,7 +52,7 @@ export const CreateModuleDialog = ({ isOpen, onClose, courseId, module }: Create
       description: module?.description || "",
       order_index: module?.order_index || 0,
       is_published: module?.is_published || false,
-      image_url: (module as any)?.image_url || "",
+      image_url: module?.image_url || "",
     },
   });
 
@@ -136,7 +136,8 @@ export const CreateModuleDialog = ({ isOpen, onClose, courseId, module }: Create
                 <FormItem>
                   <FormControl>
                     <FileUploadField
-                      label="Imagem do Módulo (720x1280px recomendado)"
+                      label="Imagem do Módulo"
+                      description="Recomendado: 720x1280px (formato 9:16)"
                       value={field.value || ""}
                       onChange={(url) => field.onChange(url || "")}
                       uploadOptions={{
