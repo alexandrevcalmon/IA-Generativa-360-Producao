@@ -9,6 +9,7 @@ export interface Collaborator {
   company_id: string; // UUID
   name: string;
   email: string;
+  phone?: string | null; // Added phone field
   position: string | null; // Cargo
   is_active: boolean;
   created_at: string;
@@ -20,12 +21,14 @@ export interface CreateCollaboratorData {
   company_id: string;
   name: string;
   email: string;
+  phone?: string | null; // Added phone field
   position?: string | null;
 }
 
 export interface UpdateCollaboratorData {
   name?: string;
   email?: string;
+  phone?: string | null; // Added phone field
   position?: string | null;
   is_active?: boolean;
   needs_password_change?: boolean;
@@ -59,13 +62,9 @@ export const useAddCompanyCollaborator = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // TODO: DB schema for company_users needs 'needs_password_change' field.
-  // TODO: Securely manage default password and inform user. 'ia360graus' is a placeholder from docs.
-  // TODO: Handle existing auth.users more gracefully (e.g., invitation flow or admin linking). Current logic primarily supports new user creation in auth.
-
   return useMutation({
     mutationFn: async (collaboratorData: CreateCollaboratorData) => {
-      const { company_id, name, email, position } = collaboratorData;
+      const { company_id, name, email, phone, position } = collaboratorData;
       const defaultPassword = "ia360graus"; // Placeholder default password
 
       // 1. Attempt to sign up the user in auth.users
@@ -95,10 +94,6 @@ export const useAddCompanyCollaborator = () => {
 
       const auth_user_id = signUpData.user.id;
 
-      // If auth user has name in user_metadata and you want to sync it to your public users table or profile
-      // You might do it here, or rely on triggers/functions in Supabase.
-      // For now, we use the name provided in CreateCollaboratorData for the company_users table.
-
       // 2. Insert into company_users table
       const { data: companyUserData, error: companyUserError } = await supabase
         .from("company_users")
@@ -107,7 +102,8 @@ export const useAddCompanyCollaborator = () => {
             auth_user_id: auth_user_id,
             company_id: company_id,
             name: name,
-            email: email, // Denormalizing email here, ensure it's consistent with auth.users.email
+            email: email,
+            phone: phone, // Added phone field
             position: position,
             is_active: true,
             needs_password_change: true,
@@ -118,9 +114,6 @@ export const useAddCompanyCollaborator = () => {
 
       if (companyUserError) {
         console.error("Error inserting into company_users:", companyUserError);
-        // Potentially try to clean up the auth.users entry if company_users insert fails
-        // This is complex and might require admin privileges or specific handling.
-        // await supabase.auth.admin.deleteUser(auth_user_id); // Requires admin client
         throw new Error(`Erro ao adicionar colaborador à empresa: ${companyUserError.message}`);
       }
 

@@ -210,6 +210,7 @@ export type Database = {
           is_active: boolean
           name: string
           needs_password_change: boolean
+          phone: string | null
           position: string | null
         }
         Insert: {
@@ -221,6 +222,7 @@ export type Database = {
           is_active?: boolean
           name: string
           needs_password_change?: boolean
+          phone?: string | null
           position?: string | null
         }
         Update: {
@@ -232,6 +234,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           needs_password_change?: boolean
+          phone?: string | null
           position?: string | null
         }
         Relationships: [
