@@ -15,6 +15,9 @@ import Community from "./pages/Community";
 import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import ProducerCompanies from "./pages/ProducerCompanies";
+import ProducerCompanyDetails from "./pages/ProducerCompanyDetails";
+import ProducerPlans from "./pages/ProducerPlans";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +33,9 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/producer-dashboard" element={<ProducerDashboard />} />
+              <Route path="/producer/companies" element={<ProducerCompanies />} />
+              <Route path="/producer/companies/:id" element={<ProducerCompanyDetails />} />
+              <Route path="/producer/plans" element={<ProducerPlans />} />
               <Route path="/company-dashboard" element={<CompanyDashboard />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/learning" element={<Learning />} />
