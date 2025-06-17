@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Search, Filter, BookOpen, Users, Clock, TrendingUp } from "lucide-react";
 import { useCourses, useDeleteCourse, Course } from "@/hooks/useCourses";
+import { useProducerAuth } from "@/hooks/useProducerAuth";
 import { CreateCourseDialog } from "@/components/CreateCourseDialog";
 import { CourseCard } from "@/components/CourseCard";
 
@@ -18,8 +18,12 @@ const ProducerCourses = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
+  const { data: producerAuth, isLoading: authLoading } = useProducerAuth();
   const { data: courses = [], isLoading } = useCourses();
   const deleteCourse = useDeleteCourse();
+
+  console.log('Producer auth:', producerAuth);
+  console.log('Courses data:', courses);
 
   const handleEditCourse = (course: Course) => {
     setEditingCourse(course);
@@ -36,6 +40,63 @@ const ProducerCourses = () => {
     // Implementar navegação para página de detalhes do curso
     console.log("Visualizar curso:", courseId);
   };
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex flex-col h-full">
+        <header className="border-b bg-white px-6 py-4">
+          <div className="flex items-center space-x-4">
+            <SidebarTrigger />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Gerenciar Cursos</h1>
+              <p className="text-gray-600">Verificando permissões...</p>
+            </div>
+          </div>
+        </header>
+        <div className="flex-1 overflow-auto p-6 bg-gray-50">
+          <div className="animate-pulse space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1,2,3,4].map((i) => (
+                <div key={i} className="bg-gray-200 h-24 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied if user is not a producer
+  if (!producerAuth?.isProducer) {
+    return (
+      <div className="flex flex-col h-full">
+        <header className="border-b bg-white px-6 py-4">
+          <div className="flex items-center space-x-4">
+            <SidebarTrigger />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Acesso Negado</h1>
+              <p className="text-gray-600">Você não tem permissão para acessar esta área.</p>
+            </div>
+          </div>
+        </header>
+        <div className="flex-1 overflow-auto p-6 bg-gray-50">
+          <Card>
+            <CardContent className="p-12 text-center">
+              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">Acesso Restrito</h3>
+              <p className="text-muted-foreground mb-4">
+                Esta área é exclusiva para produtores de conteúdo.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Seu perfil atual: {producerAuth?.role || 'Não definido'}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   const filteredCourses = courses.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

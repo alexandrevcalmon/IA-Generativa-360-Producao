@@ -1,6 +1,8 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface Course {
   id: string;
@@ -18,33 +20,56 @@ export interface Course {
 }
 
 export const useCourses = () => {
+  const { user } = useAuth();
+
   return useQuery({
     queryKey: ['courses'],
     queryFn: async () => {
+      console.log('Fetching courses for user:', user?.id);
+      
       const { data, error } = await supabase
         .from('courses')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching courses:', error);
+        throw error;
+      }
+      
+      console.log('Courses fetched successfully:', data?.length);
       return data as Course[];
     },
+    enabled: !!user,
   });
 };
 
 export const useCreateCourse = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (courseData: Omit<Course, 'id' | 'created_at' | 'updated_at'>) => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Creating course with data:', courseData);
+      console.log('Current user:', user.id);
+
       const { data, error } = await supabase
         .from('courses')
         .insert([courseData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating course:', error);
+        throw error;
+      }
+      
+      console.log('Course created successfully:', data);
       return data;
     },
     onSuccess: () => {
@@ -55,6 +80,7 @@ export const useCreateCourse = () => {
       });
     },
     onError: (error) => {
+      console.error('Mutation error:', error);
       toast({
         title: "Erro",
         description: "Erro ao criar curso: " + error.message,
@@ -67,9 +93,18 @@ export const useCreateCourse = () => {
 export const useUpdateCourse = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...courseData }: Partial<Course> & { id: string }) => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Updating course:', id);
+      console.log('Update data:', courseData);
+      console.log('Current user:', user.id);
+
       const { data, error } = await supabase
         .from('courses')
         .update({ ...courseData, updated_at: new Date().toISOString() })
@@ -77,7 +112,12 @@ export const useUpdateCourse = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating course:', error);
+        throw error;
+      }
+      
+      console.log('Course updated successfully:', data);
       return data;
     },
     onSuccess: () => {
@@ -88,6 +128,7 @@ export const useUpdateCourse = () => {
       });
     },
     onError: (error) => {
+      console.error('Update mutation error:', error);
       toast({
         title: "Erro",
         description: "Erro ao atualizar curso: " + error.message,
@@ -100,15 +141,26 @@ export const useUpdateCourse = () => {
 export const useDeleteCourse = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (courseId: string) => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Deleting course:', courseId);
+      console.log('Current user:', user.id);
+
       const { error } = await supabase
         .from('courses')
         .delete()
         .eq('id', courseId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting course:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
@@ -118,6 +170,7 @@ export const useDeleteCourse = () => {
       });
     },
     onError: (error) => {
+      console.error('Delete mutation error:', error);
       toast({
         title: "Erro",
         description: "Erro ao excluir curso: " + error.message,
@@ -128,18 +181,27 @@ export const useDeleteCourse = () => {
 };
 
 export const useCourse = (courseId: string) => {
+  const { user } = useAuth();
+
   return useQuery({
     queryKey: ['course', courseId],
     queryFn: async () => {
+      console.log('Fetching single course:', courseId);
+      
       const { data, error } = await supabase
         .from('courses')
         .select('*')
         .eq('id', courseId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching course:', error);
+        throw error;
+      }
+      
+      console.log('Course fetched successfully:', data);
       return data as Course;
     },
-    enabled: !!courseId,
+    enabled: !!courseId && !!user,
   });
 };
