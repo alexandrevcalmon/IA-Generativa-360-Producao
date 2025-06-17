@@ -46,7 +46,10 @@ export function CompanyCollaboratorsDialog({
 
   const activeCollaborators = collaborators.filter(c => c.is_active);
   const inactiveCollaborators = collaborators.filter(c => !c.is_active);
-  const canAddMore = activeCollaborators.length < 5;
+  
+  // Get the max collaborators from the company's subscription plan
+  const maxCollaborators = company.subscription_plan?.max_students || 5;
+  const canAddMore = activeCollaborators.length < maxCollaborators;
 
   const handleToggleStatus = async (collaborator: Collaborator) => {
     await toggleStatusMutation.mutateAsync({
@@ -66,7 +69,7 @@ export function CompanyCollaboratorsDialog({
               Colaboradores - {company.name}
             </DialogTitle>
             <DialogDescription>
-              Gerencie os colaboradores desta empresa. Máximo de 5 colaboradores ativos.
+              Gerencie os colaboradores desta empresa. Máximo de {maxCollaborators} colaboradores ativos conforme o plano {company.subscription_plan?.name || 'contratado'}.
             </DialogDescription>
           </DialogHeader>
 
@@ -76,12 +79,17 @@ export function CompanyCollaboratorsDialog({
               <div className="flex items-center gap-4">
                 <div className="text-sm text-gray-600">
                   <span className="font-semibold text-lg">
-                    {activeCollaborators.length}/5
+                    {activeCollaborators.length}/{maxCollaborators}
                   </span> colaboradores ativos
                 </div>
                 {!canAddMore && (
                   <Badge variant="secondary" className="text-amber-600 bg-amber-50">
-                    Limite atingido
+                    Limite do plano atingido
+                  </Badge>
+                )}
+                {company.subscription_plan && (
+                  <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+                    Plano {company.subscription_plan.name}
                   </Badge>
                 )}
               </div>

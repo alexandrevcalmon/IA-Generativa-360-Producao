@@ -31,6 +31,7 @@ export function CompanyListItem({
   const isDeleting = deletingCompanyId === company.id;
   const planName = company.subscription_plan?.name;
   const activeCollaborators = collaborators.filter(c => c.is_active).length;
+  const maxCollaborators = company.subscription_plan?.max_students || 5;
 
   return (
     <>
@@ -56,7 +57,7 @@ export function CompanyListItem({
                 className="flex items-center gap-1 hover:text-calmon-600 transition-colors cursor-pointer"
               >
                 <Users className="w-4 h-4" />
-                <span>{activeCollaborators}/5 colaboradores</span>
+                <span>{activeCollaborators}/{maxCollaborators} colaboradores</span>
               </button>
               
               {planName && (
