@@ -19,7 +19,7 @@ export function CTA() {
           size="lg"
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg"
         >
-          Comece Agora Gratuitamente
+          Comece Agora
         </Button>
       </div>
     </section>
