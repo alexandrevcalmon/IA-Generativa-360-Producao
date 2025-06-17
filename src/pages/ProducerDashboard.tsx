@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   BookOpen,
   Users,
@@ -14,17 +13,18 @@ import {
   Clock,
   Brain,
   Play,
-  Calendar,
   MessageCircle,
   Target,
-  Zap,
   Trophy,
   Plus,
   Eye,
   Edit,
   BarChart3,
   Upload,
-  FileText
+  FileText,
+  Building2,
+  CreditCard,
+  UserCheck
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -58,22 +58,28 @@ const ProducerDashboard = () => {
 
   const recentActivity = [
     {
-      action: "Novo aluno matriculado",
-      course: "Prompt Engineering Avançado",
-      time: "2 min atrás",
-      type: "enrollment"
+      action: "Nova empresa cadastrada",
+      course: "TechCorp Solutions",
+      time: "5 min atrás",
+      type: "company"
+    },
+    {
+      action: "Novo colaborador adicionado",
+      course: "Inovação Digital Ltda",
+      time: "15 min atrás",
+      type: "user"
     },
     {
       action: "Curso finalizado por aluno",
       course: "ChatGPT para Produtividade",
-      time: "15 min atrás",
+      time: "1 hora atrás",
       type: "completion"
     },
     {
-      action: "Nova avaliação recebida",
-      course: "Prompt Engineering Avançado",
-      time: "1 hora atrás",
-      type: "review"
+      action: "Plano atualizado",
+      course: "Empresa ABC - Plano Premium",
+      time: "2 horas atrás",
+      type: "plan"
     }
   ];
 
@@ -89,14 +95,14 @@ const ProducerDashboard = () => {
                 <SidebarTrigger />
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Painel do Produtor</h1>
-                  <p className="text-gray-600">Bem-vindo de volta, Prof. Silva!</p>
+                  <p className="text-gray-600">Bem-vindo de volta! Gerencie seus cursos e empresas clientes.</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
                 <Badge className="bg-green-100 text-green-700">
                   Status: Ativo
                 </Badge>
-                <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700">
+                <Button className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Novo Curso
                 </Button>
@@ -127,7 +133,22 @@ const ProducerDashboard = () => {
                 <Card className="hover-lift">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      Total de Alunos
+                      Empresas Clientes
+                    </CardTitle>
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">28</div>
+                    <p className="text-xs text-muted-foreground">
+                      +4 esta semana
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover-lift">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Total de Colaboradores
                     </CardTitle>
                     <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
@@ -147,24 +168,9 @@ const ProducerDashboard = () => {
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">R$ 21.370</div>
+                    <div className="text-2xl font-bold">R$ 85.640</div>
                     <p className="text-xs text-muted-foreground">
-                      +R$ 3.240 este mês
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="hover-lift">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Taxa de Conclusão
-                    </CardTitle>
-                    <Target className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">84%</div>
-                    <p className="text-xs text-muted-foreground">
-                      +5% vs mês anterior
+                      +R$ 12.380 este mês
                     </p>
                   </CardContent>
                 </Card>
@@ -179,12 +185,14 @@ const ProducerDashboard = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <Brain className="h-5 w-5 mr-2 text-green-600" />
+                          <Brain className="h-5 w-5 mr-2 text-calmon-600" />
                           Meus Cursos
                         </div>
-                        <Button variant="outline" size="sm">
-                          Ver Todos
-                        </Button>
+                        <Link to="/producer/courses">
+                          <Button variant="outline" size="sm">
+                            Ver Todos
+                          </Button>
+                        </Link>
                       </CardTitle>
                       <CardDescription>
                         Gerencie e acompanhe o desempenho dos seus cursos
@@ -194,7 +202,7 @@ const ProducerDashboard = () => {
                       <div className="space-y-4">
                         {myCourses.map((course, index) => (
                           <div key={index} className="flex items-center space-x-4 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <div className="w-20 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded flex items-center justify-center">
+                            <div className="w-20 h-12 bg-gradient-to-r from-calmon-500 to-calmon-700 rounded flex items-center justify-center">
                               <Play className="h-6 w-6 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -217,7 +225,7 @@ const ProducerDashboard = () => {
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-sm font-medium text-green-600">
+                              <div className="text-sm font-medium text-calmon-600">
                                 {course.revenue}
                               </div>
                               <div className="flex space-x-2 mt-2">
@@ -275,10 +283,22 @@ const ProducerDashboard = () => {
                       <CardTitle>Ações Rápidas</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <Button className="w-full justify-start bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white">
+                      <Button className="w-full justify-start bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white">
                         <Plus className="h-4 w-4 mr-2" />
                         Criar Novo Curso
                       </Button>
+                      <Link to="/producer/companies" className="block">
+                        <Button className="w-full justify-start" variant="outline">
+                          <Building2 className="h-4 w-4 mr-2" />
+                          Gerenciar Empresas
+                        </Button>
+                      </Link>
+                      <Link to="/producer/plans" className="block">
+                        <Button className="w-full justify-start" variant="outline">
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Gerenciar Planos
+                        </Button>
+                      </Link>
                       <Button className="w-full justify-start" variant="outline">
                         <Upload className="h-4 w-4 mr-2" />
                         Upload de Conteúdo
@@ -307,8 +327,9 @@ const ProducerDashboard = () => {
                         {recentActivity.map((activity, index) => (
                           <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
                             <div className={`w-2 h-2 rounded-full mt-2 ${
-                              activity.type === 'enrollment' ? 'bg-green-500' :
-                              activity.type === 'completion' ? 'bg-blue-500' : 'bg-yellow-500'
+                              activity.type === 'company' ? 'bg-blue-500' :
+                              activity.type === 'user' ? 'bg-green-500' :
+                              activity.type === 'completion' ? 'bg-purple-500' : 'bg-yellow-500'
                             }`} />
                             <div className="flex-1 min-w-0">
                               <h4 className="text-sm font-medium text-gray-900">
@@ -335,7 +356,7 @@ const ProducerDashboard = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center">
                         <Trophy className="h-5 w-5 mr-2 text-yellow-600" />
-                        Desempenho
+                        Desempenho da Plataforma
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -345,17 +366,21 @@ const ProducerDashboard = () => {
                           <span className="font-medium">8</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm">Em Desenvolvimento</span>
-                          <span className="font-medium">4</span>
+                          <span className="text-sm">Empresas Ativas</span>
+                          <span className="font-medium">28</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm">Aprovações Pendentes</span>
-                          <span className="font-medium">2</span>
+                          <span className="text-sm">Colaboradores Ativos</span>
+                          <span className="font-medium">1,247</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Taxa de Conclusão</span>
+                          <span className="font-medium text-green-600">84%</span>
                         </div>
                         <div className="pt-2 border-t">
                           <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium">Ranking Geral</span>
-                            <Badge className="bg-yellow-100 text-yellow-700">#12</Badge>
+                            <span className="text-sm font-medium">Avaliação Geral</span>
+                            <Badge className="bg-yellow-100 text-yellow-700">4.8/5.0</Badge>
                           </div>
                         </div>
                       </div>

@@ -11,9 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   LayoutDashboard,
   BookOpen,
@@ -24,14 +22,18 @@ import {
   Settings,
   User,
   Brain,
-  Calendar
+  Calendar,
+  Building2,
+  CreditCard
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const navigation = {
   main: [
-    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-    { title: "Meus Cursos", url: "/courses", icon: BookOpen },
+    { title: "Dashboard", url: "/producer-dashboard", icon: LayoutDashboard },
+    { title: "Meus Cursos", url: "/producer/courses", icon: BookOpen },
+    { title: "Empresas", url: "/producer/companies", icon: Building2 },
+    { title: "Planos", url: "/producer/plans", icon: CreditCard },
     { title: "Trilha de Aprendizagem", url: "/learning", icon: Brain },
     { title: "Comunidade", url: "/community", icon: MessageCircle },
     { title: "Mentorias", url: "/mentorship", icon: Calendar },
@@ -53,52 +55,21 @@ export function AppSidebar() {
     <Sidebar className="border-r-0 bg-sidebar">
       <SidebarHeader className="p-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 ai-gradient rounded-lg flex items-center justify-center">
-            <Brain className="h-6 w-6 text-white" />
+          <div className="w-10 h-10">
+            <img 
+              src="/logo-calmon-academy.png" 
+              alt="Calmon Academy" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
-            <h2 className="font-bold text-lg text-sidebar-foreground">IA Generativa</h2>
-            <p className="text-sm text-sidebar-foreground/70">360º Platform</p>
+            <h2 className="font-bold text-lg text-sidebar-foreground">Calmon Academy</h2>
+            <p className="text-sm text-sidebar-foreground/70">Painel do Produtor</p>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent className="px-3">
-        {/* User Profile Card */}
-        <div className="mb-6 p-4 rounded-lg bg-sidebar-accent">
-          <div className="flex items-center space-x-3 mb-4">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src="/placeholder-user.jpg" />
-              <AvatarFallback className="ai-gradient text-white font-semibold">
-                JD
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sidebar-foreground truncate">
-                João Desenvolver
-              </p>
-              <p className="text-sm text-sidebar-foreground/70">
-                Desenvolvedor Full Stack
-              </p>
-              <Badge variant="outline" className="mt-1 text-xs">
-                Starter 50
-              </Badge>
-            </div>
-          </div>
-          
-          {/* XP Progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-sidebar-foreground/70">Nível 12</span>
-              <span className="text-sidebar-foreground/70">2,840 XP</span>
-            </div>
-            <Progress value={75} className="h-2" />
-            <p className="text-xs text-sidebar-foreground/60">
-              160 XP para próximo nível
-            </p>
-          </div>
-        </div>
-
         {/* Navigation Menu */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/70 uppercase text-xs font-semibold tracking-wider">
@@ -177,7 +148,7 @@ export function AppSidebar() {
         <div className="flex items-center justify-between text-xs text-sidebar-foreground/60">
           <span>v1.1.0</span>
           <Badge variant="outline" className="text-xs">
-            PRO
+            PRODUCER
           </Badge>
         </div>
       </SidebarFooter>
