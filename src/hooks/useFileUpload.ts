@@ -22,9 +22,14 @@ export const useFileUpload = () => {
 
       // Validate file size
       if (options.maxSize && file.size > options.maxSize) {
+        const maxSizeInMB = options.maxSize / 1024 / 1024;
+        const maxSizeDisplay = maxSizeInMB >= 1024 
+          ? `${Math.round(maxSizeInMB / 1024 * 10) / 10}GB`
+          : `${Math.round(maxSizeInMB)}MB`;
+        
         toast({
           title: "Erro",
-          description: `Arquivo muito grande. Tamanho máximo: ${Math.round(options.maxSize / 1024 / 1024)}MB`,
+          description: `Arquivo muito grande. Tamanho máximo: ${maxSizeDisplay}`,
           variant: "destructive",
         });
         return null;

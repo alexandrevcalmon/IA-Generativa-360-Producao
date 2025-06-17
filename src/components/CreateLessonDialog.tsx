@@ -178,12 +178,12 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
                     <FormControl>
                       <FileUploadField
                         label="Arquivo de Vídeo"
-                        description="Formato recomendado: MP4, máximo 100MB"
+                        description="Formato recomendado: MP4, máximo 2GB"
                         value={field.value || ""}
                         onChange={(url) => field.onChange(url || "")}
                         uploadOptions={{
                           bucket: 'lesson-videos',
-                          maxSize: 100 * 1024 * 1024, // 100MB
+                          maxSize: 2 * 1024 * 1024 * 1024, // 2GB
                           allowedTypes: ['video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov'],
                         }}
                         accept="video/*"
