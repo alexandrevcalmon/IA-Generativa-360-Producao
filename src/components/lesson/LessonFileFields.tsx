@@ -44,12 +44,12 @@ export const LessonFileFields = ({ control }: LessonFileFieldsProps) => {
             <FormControl>
               <FileUploadField
                 label="Vídeo da Aula"
-                description="Tamanho máximo: 2GB. Formatos aceitos: MP4, WebM, OGG, AVI, MOV"
+                description="Tamanho máximo: 512MB. Formatos aceitos: MP4, WebM, OGG, AVI, MOV"
                 value={field.value || ""}
                 onChange={(url) => field.onChange(url || "")}
                 uploadOptions={{
                   bucket: 'lesson-videos',
-                  maxSize: 2 * 1024 * 1024 * 1024, // 2GB
+                  maxSize: 512 * 1024 * 1024, // 512MB
                   allowedTypes: ['video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov'],
                 }}
                 accept="video/*"
