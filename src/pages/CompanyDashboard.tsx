@@ -1,5 +1,5 @@
 
-import { AppSidebar } from "@/components/AppSidebar";
+import { CompanySidebar } from "@/components/CompanySidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,25 +9,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   BookOpen,
   Users,
-  Award,
-  TrendingUp,
   Clock,
-  Brain,
-  Play,
+  TrendingUp,
   Calendar,
-  MessageCircle,
   Target,
-  Zap,
-  Trophy,
-  Plus,
+  CheckCircle,
   Eye,
-  Edit,
-  BarChart3,
-  UserPlus,
-  Settings,
   Building2,
-  DollarSign,
-  CheckCircle
+  CreditCard,
+  ArrowUpRight
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -86,24 +76,30 @@ const CompanyDashboard = () => {
     }
   ];
 
-  const upcomingTrainings = [
+  const upcomingMentorships = [
     {
-      title: "Workshop: IA para Líderes",
+      title: "Mentoria: Liderança em IA",
       date: "15 Dez, 14:00",
       participants: 12,
-      instructor: "Dr. Ana Silva"
+      mentor: "Dr. Ana Silva"
     },
     {
-      title: "Treinamento: Prompt Engineering",
+      title: "Mentoria: Desenvolvimento Ágil",
       date: "18 Dez, 10:00",
-      participants: 25,
-      instructor: "Prof. Carlos Santos"
+      participants: 8,
+      mentor: "Prof. Carlos Santos"
+    },
+    {
+      title: "Mentoria: Gestão de Produtos",
+      date: "20 Dez, 16:00",
+      participants: 15,
+      mentor: "Marina Costa"
     }
   ];
 
   return (
     <>
-      <AppSidebar />
+      <CompanySidebar />
       <main className="flex-1 overflow-hidden">
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -120,10 +116,6 @@ const CompanyDashboard = () => {
                 <Badge className="ai-gradient text-white border-0">
                   Plano: Enterprise
                 </Badge>
-                <Button className="ai-gradient hover:scale-105 transition-all duration-200 text-white">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Adicionar Colaborador
-                </Button>
               </div>
             </div>
           </header>
@@ -195,12 +187,6 @@ const CompanyDashboard = () => {
                                 <span className="text-xs font-medium">{member.progress}%</span>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <Button size="sm" variant="outline">
-                                <MessageCircle className="h-3 w-3 mr-1" />
-                                Contatar
-                              </Button>
-                            </div>
                           </div>
                         ))}
                       </div>
@@ -211,7 +197,7 @@ const CompanyDashboard = () => {
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center">
-                        <BarChart3 className="h-5 w-5 mr-2 text-purple-600" />
+                        <Target className="h-5 w-5 mr-2 text-purple-600" />
                         Analytics da Empresa
                       </CardTitle>
                       <CardDescription>
@@ -272,54 +258,65 @@ const CompanyDashboard = () => {
                       <CardTitle>Ações Rápidas</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <Button className="w-full justify-start ai-gradient hover:scale-105 transition-all duration-200 text-white">
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Adicionar Colaborador
-                      </Button>
-                      <Button className="w-full justify-start" variant="outline">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Agendar Treinamento
-                      </Button>
-                      <Button className="w-full justify-start" variant="outline">
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        Relatórios Avançados
-                      </Button>
-                      <Button className="w-full justify-start" variant="outline">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Configurações
-                      </Button>
+                      <Link to="/company/courses">
+                        <Button className="w-full justify-start" variant="outline">
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          Ver Cursos Ativos
+                        </Button>
+                      </Link>
+                      <Link to="/company/mentorships">
+                        <Button className="w-full justify-start" variant="outline">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Calendário de Mentorias
+                        </Button>
+                      </Link>
+                      <Link to="/company/profile">
+                        <Button className="w-full justify-start" variant="outline">
+                          <Building2 className="h-4 w-4 mr-2" />
+                          Perfil da Empresa
+                        </Button>
+                      </Link>
+                      <Link to="/company/plan">
+                        <Button className="w-full justify-start ai-gradient hover:scale-105 transition-all duration-200 text-white">
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Gerenciar Plano
+                        </Button>
+                      </Link>
                     </CardContent>
                   </Card>
 
-                  {/* Upcoming Trainings */}
+                  {/* Upcoming Online Mentorships */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center text-lg">
                         <Calendar className="h-5 w-5 mr-2 text-green-600" />
-                        Próximos Treinamentos
+                        Próximas Mentorias Online
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {upcomingTrainings.map((training, index) => (
+                        {upcomingMentorships.map((mentorship, index) => (
                           <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
                             <div className="w-2 h-2 bg-green-500 rounded-full mt-2" />
                             <div className="flex-1 min-w-0">
                               <h4 className="text-sm font-medium text-gray-900">
-                                {training.title}
+                                {mentorship.title}
                               </h4>
                               <p className="text-sm text-gray-600">
-                                {training.instructor}
+                                {mentorship.mentor}
                               </p>
                               <p className="text-xs text-gray-500 mt-1">
-                                {training.date} • {training.participants} participantes
+                                {mentorship.date} • {mentorship.participants} participantes
                               </p>
                             </div>
                           </div>
                         ))}
-                        <Button variant="outline" className="w-full" size="sm">
-                          Ver Calendário Completo
-                        </Button>
+                        <Link to="/company/mentorships">
+                          <Button variant="outline" className="w-full" size="sm">
+                            <ArrowUpRight className="h-3 w-3 mr-1" />
+                            Ver Calendário Completo
+                          </Button>
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>
@@ -350,9 +347,12 @@ const CompanyDashboard = () => {
                           <span className="text-sm text-gray-500">15 Jan 2025</span>
                         </div>
                         
-                        <Button variant="outline" className="w-full" size="sm">
-                          Gerenciar Plano
-                        </Button>
+                        <Link to="/company/plan">
+                          <Button variant="outline" className="w-full" size="sm">
+                            <ArrowUpRight className="h-3 w-3 mr-1" />
+                            Fazer Upgrade
+                          </Button>
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>
