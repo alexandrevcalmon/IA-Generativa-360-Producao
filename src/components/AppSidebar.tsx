@@ -11,6 +11,7 @@ import {
   Home, 
   Building2, 
   CreditCard, 
+  BookOpen,
   BarChart3, 
   User,
   LogOut 
@@ -42,6 +43,11 @@ export function AppSidebar() {
       title: 'Planos',
       icon: CreditCard,
       href: '/producer/plans'
+    },
+    {
+      title: 'Cursos',
+      icon: BookOpen,
+      href: '/producer/courses'
     },
     {
       title: 'Analytics',

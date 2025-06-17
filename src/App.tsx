@@ -24,6 +24,7 @@ import ProducerDashboard from '@/pages/ProducerDashboard';
 import ProducerCompanies from '@/pages/ProducerCompanies';
 import ProducerCompanyDetails from '@/pages/ProducerCompanyDetails';
 import ProducerPlans from '@/pages/ProducerPlans';
+import ProducerCourses from '@/pages/ProducerCourses';
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ function App() {
                 <Route path="companies" element={<ProducerCompanies />} />
                 <Route path="companies/:id" element={<ProducerCompanyDetails />} />
                 <Route path="plans" element={<ProducerPlans />} />
+                <Route path="courses" element={<ProducerCourses />} />
               </Route>
               
               {/* Company routes */}
