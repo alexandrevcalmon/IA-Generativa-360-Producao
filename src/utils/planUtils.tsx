@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Crown, Star } from "lucide-react";
 
 export const getPlanBadgeColor = (planName?: string | null) => {
@@ -18,9 +19,9 @@ export const getPlanBadgeColor = (planName?: string | null) => {
 export const getPlanIcon = (planName?: string | null) => {
   switch (planName?.toLowerCase()) {
     case "premium":
-      return <Crown className="h-3 w-3" />;
+      return React.createElement(Crown, { className: "h-3 w-3" });
     case "business":
-      return <Star className="h-3 w-3" />;
+      return React.createElement(Star, { className: "h-3 w-3" });
     default:
       return null;
   }
