@@ -32,6 +32,13 @@ export interface UpdatePlanData extends CreatePlanData {
   is_active?: boolean;
 }
 
+// New interface for plan selection with billing period
+export interface PlanSelection {
+  plan_id: string;
+  billing_period: 'semester' | 'annual';
+  price: number;
+}
+
 export const useSubscriptionPlans = () => {
   return useQuery({
     queryKey: ['subscription-plans'],

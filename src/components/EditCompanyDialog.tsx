@@ -4,23 +4,17 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter, // Added for buttons
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { Building2, Loader2, Upload } from "lucide-react"; // Added Upload for consistency, though not used
+import { Building2, Loader2, Upload } from "lucide-react";
 import { Company, CompanyData, useUpdateCompany } from "@/hooks/useCompanies";
-import { useSubscriptionPlans, SubscriptionPlan } from "@/hooks/useSubscriptionPlans";
+import { useSubscriptionPlans } from "@/hooks/useSubscriptionPlans";
+import { PlanSelectionField } from "@/components/PlanSelectionField";
 
 interface EditCompanyDialogProps {
   isOpen: boolean;
@@ -31,7 +25,6 @@ interface EditCompanyDialogProps {
 const initialFormData: Partial<CompanyData> = {
   name: "",
   official_name: "",
-  // Add other fields as needed for the form
 };
 
 export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialogProps) {
@@ -45,7 +38,6 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
 
   useEffect(() => {
     if (company && isOpen) {
-      // Ensure all fields from CompanyData are populated, including subscription_plan_id
       setFormData({
         name: company.name || "",
         official_name: company.official_name || "",
@@ -63,13 +55,11 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
         contact_email: company.contact_email || "",
         contact_phone: company.contact_phone || "",
         notes: company.notes || "",
-        // subscription_plan_id should come from company.subscription_plan_id directly
-        // as per the Company interface which has subscription_plan_id from the companies table
-        // and a nested subscription_plan object from the join.
         subscription_plan_id: company.subscription_plan_id || null,
+        billing_period: company.billing_period || null,
       });
     } else if (!isOpen) {
-      setFormData(initialFormData); // Reset form when dialog is closed
+      setFormData(initialFormData);
     }
   }, [company, isOpen]);
 
@@ -77,8 +67,6 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
     e.preventDefault();
     if (!company) return;
 
-    // TODO: Complete form fields and enhance submit logic
-    // Basic validation example
     if (!formData.name) {
         alert("Nome Fantasia é obrigatório.");
         return;
@@ -88,9 +76,16 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
       await updateCompanyMutation.mutateAsync({ id: company.id, ...formData });
       onClose();
     } catch (error) {
-      // Error is handled by the hook's onError
       console.error("Failed to update company from dialog:", error);
     }
+  };
+
+  const handlePlanChange = (planId: string, billingPeriod: 'semester' | 'annual') => {
+    setFormData(prev => ({ 
+      ...prev, 
+      subscription_plan_id: planId,
+      billing_period: billingPeriod
+    }));
   };
 
   return (
@@ -107,8 +102,6 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 py-4">
-          {/* TODO: Complete form fields and enhance submit logic */}
-          {/* For now, only a few fields for testing pre-fill */}
           <fieldset className="border p-4 rounded-md">
             <legend className="text-lg font-medium text-gray-700 px-1">Dados da Empresa</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
@@ -162,7 +155,6 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
             </div>
           </fieldset>
 
-          {/* Endereço */}
           <fieldset className="border p-4 rounded-md">
             <legend className="text-lg font-medium text-gray-700 px-1">Endereço</legend>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
@@ -234,7 +226,6 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
             </div>
           </fieldset>
 
-          {/* Contato Principal */}
           <fieldset className="border p-4 rounded-md">
             <legend className="text-lg font-medium text-gray-700 px-1">Contato Principal</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
@@ -269,28 +260,15 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
             </div>
           </fieldset>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-plan">Plano de Assinatura</Label>
-            <Select
-              value={formData.subscription_plan_id || ""}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, subscription_plan_id: value }))}
-              // required // A company must have a plan, but it might be unassigned temporarily?
-            >
-              <SelectTrigger disabled={plansLoading || !!plansError}>
-                <SelectValue placeholder={plansLoading ? "Carregando planos..." : (plansError ? "Erro ao carregar planos" : "Selecione um plano")} />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {plans && plans.filter(p => p.is_active || p.id === company?.subscription_plan_id).map(plan => (
-                  <SelectItem key={plan.id} value={plan.id}>
-                    {plan.name} (Sem: R${plan.semester_price.toFixed(2)} / Ano: R${plan.annual_price.toFixed(2)}) - Máx: {plan.max_students} alunos
-                    {!plan.is_active && company?.subscription_plan_id === plan.id && " (Plano atual inativo)"}
-                  </SelectItem>
-                ))}
-                 {plansError && <SelectItem value="error" disabled>Não foi possível carregar os planos.</SelectItem>}
-              </SelectContent>
-            </Select>
-            {plansError && <p className="text-xs text-red-500">Erro ao carregar planos. Tente novamente.</p>}
-          </div>
+          <PlanSelectionField
+            plans={plans || []}
+            selectedPlanId={formData.subscription_plan_id}
+            selectedBillingPeriod={formData.billing_period || null}
+            onPlanChange={handlePlanChange}
+            isLoading={plansLoading}
+            error={plansError}
+            required={false}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="edit-notes">Observações</Label>
@@ -303,7 +281,6 @@ export function EditCompanyDialog({ isOpen, onClose, company }: EditCompanyDialo
             />
           </div>
 
-          {/* TODO: Implement logo upload functionality */}
           <div className="space-y-2">
             <Label htmlFor="edit-logo">Logo da Empresa (Opcional - Funcionalidade pendente)</Label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-not-allowed bg-gray-50">

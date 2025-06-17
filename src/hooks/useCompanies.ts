@@ -1,53 +1,97 @@
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query"; // Corrected: useQuery added here
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-// TODO: DB schema needs update for new fields if they don't exist.
-// Assuming fields like official_name, cnpj, address details, contact details, notes might be new.
-export interface CompanyData {
-  name: string; // Nome Fantasia
-  official_name?: string | null; // Razão Social
-  cnpj?: string | null;
-  email?: string | null; // Email da Empresa
-  phone?: string | null; // Telefone da Empresa
-
-  // Endereço
-  address_street?: string | null;
-  address_number?: string | null;
-  address_complement?: string | null;
-  address_district?: string | null;
-  address_city?: string | null;
-  address_state?: string | null;
-  address_zip_code?: string | null;
-
-  // Contato Principal
-  contact_name?: string | null;
-  contact_email?: string | null;
-  contact_phone?: string | null;
-
-  notes?: string | null; // Observações
-  subscription_plan_id: string | null; // FK to subscription_plans table
-
-  // Fields like logo_url, current_students, max_students, is_active are typically handled separately
-  // or derived. logo_url would be an upload, students/active status might be managed by other processes
-  // or backend logic based on subscription.
-}
-
-export interface Company extends CompanyData {
+export interface Company {
   id: string;
-  created_at: string;
+  name: string;
+  official_name?: string;
+  cnpj?: string;
+  email?: string;
+  phone?: string;
+  logo_url?: string;
+  address_street?: string;
+  address_number?: string;
+  address_complement?: string;
+  address_district?: string;
+  address_city?: string;
+  address_state?: string;
+  address_zip_code?: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  notes?: string;
+  max_students: number;
+  current_students: number;
   is_active: boolean;
-  current_students: number; // Added missing property
-  max_students: number; // Added missing property
-  logo_url?: string | null; // Added missing property
-  subscription_plan: { // Renamed from subscription_plan:subscription_plans
+  created_at: string;
+  updated_at: string;
+  subscription_plan_id: string | null;
+  billing_period?: 'semester' | 'annual'; // New field for billing period
+  subscription_plan?: {
     id: string;
     name: string;
-    semester_price: number;
+    price: number;
     annual_price: number;
+    semester_price: number;
     max_students: number;
-  } | null;
+  };
 }
+
+export interface CompanyData {
+  name: string;
+  official_name?: string;
+  cnpj?: string;
+  email?: string;
+  phone?: string;
+  address_street?: string;
+  address_number?: string;
+  address_complement?: string;
+  address_district?: string;
+  address_city?: string;
+  address_state?: string;
+  address_zip_code?: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  notes?: string;
+  subscription_plan_id: string | null;
+  billing_period?: 'semester' | 'annual'; // New field for billing period
+}
+
+export interface UpdateCompanyData extends CompanyData {
+  id: string;
+}
+
+export const useCompanies = () => {
+  return useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select(`
+          *,
+          subscription_plan:subscription_plan_id (
+            id,
+            name,
+            price,
+            annual_price,
+            semester_price,
+            max_students
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching companies:', error);
+        throw error;
+      }
+
+      return data as Company[];
+    }
+  });
+};
 
 export const useCreateCompany = () => {
   const queryClient = useQueryClient();
@@ -56,178 +100,33 @@ export const useCreateCompany = () => {
   return useMutation({
     mutationFn: async (companyData: CompanyData) => {
       const { data, error } = await supabase
-        .from("companies")
+        .from('companies')
         .insert([companyData])
         .select()
         .single();
 
       if (error) {
-        console.error("Error creating company:", error);
+        console.error('Error creating company:', error);
         throw error;
       }
+
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companies-with-plans"] });
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
       toast({
         title: "Empresa criada com sucesso!",
-        description: "A nova empresa foi adicionada à sua lista.",
+        description: "A nova empresa foi adicionada à plataforma.",
       });
     },
-    onError: (error: Error) => {
-      console.error("Error creating company:", error);
+    onError: (error) => {
+      console.error('Error creating company:', error);
       toast({
         title: "Erro ao criar empresa",
-        description: error.message || "Ocorreu um erro ao tentar criar a empresa.",
+        description: "Ocorreu um erro ao criar a empresa.",
         variant: "destructive",
       });
-    },
-  });
-};
-
-// TODO: Consider implications for related data (company_users, enrollments, etc.) upon company deletion.
-// Cascade or cleanup might be needed via database setup or additional logic here.
-export const useDeleteCompany = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (companyId: string) => {
-      const { error } = await supabase
-        .from("companies")
-        .delete()
-        .eq("id", companyId);
-
-      if (error) {
-        console.error(`Error deleting company ${companyId}:`, error);
-        throw error;
-      }
-      // No data returned on delete by default, unless using .select().single() if needed
-    },
-    onSuccess: (data, companyId) => {
-      queryClient.invalidateQueries({ queryKey: ["companies-with-plans"] });
-      // If the user is on the deleted company's details page, they might need to be navigated away.
-      // This can be handled in the component calling the mutation.
-      // queryClient.removeQueries({ queryKey: ["company", companyId] }); // Optionally remove specific company query
-      toast({
-        title: "Empresa excluída com sucesso!",
-        description: "A empresa foi removida da sua lista.",
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error deleting company:", error);
-      toast({
-        title: "Erro ao excluir empresa",
-        description: error.message || "Ocorreu um erro ao tentar excluir a empresa.",
-        variant: "destructive",
-      });
-    },
-  });
-};
-
-export const useToggleCompanyStatus = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async ({ id, currentStatus }: { id: string; currentStatus: boolean }) => {
-      const { data, error } = await supabase
-        .from("companies")
-        .update({ is_active: !currentStatus })
-        .eq("id", id)
-        .select("id, name, is_active") // Select only what's needed for the toast or immediate feedback
-        .single();
-
-      if (error) {
-        console.error(`Error toggling status for company ${id}:`, error);
-        throw error;
-      }
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["companies-with-plans"] });
-      queryClient.invalidateQueries({ queryKey: ["company", data.id] });
-      toast({
-        title: "Status da empresa atualizado!",
-        description: `A empresa "${data.name}" foi ${data.is_active ? "desbloqueada (ativa)" : "bloqueada (inativa)"}.`,
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error toggling company status:", error);
-      toast({
-        title: "Erro ao alterar status",
-        description: error.message || "Ocorreu um erro ao tentar alterar o status da empresa.",
-        variant: "destructive",
-      });
-    },
-  });
-};
-
-export const useCompanyById = (id?: string | null) => {
-  return useQuery<Company, Error>({
-    queryKey: ["company", id],
-    queryFn: async () => {
-      if (!id) throw new Error("Company ID is required");
-
-      const { data, error } = await supabase
-        .from("companies")
-        .select(`
-          id,
-          name,
-          official_name,
-          cnpj,
-          email,
-          phone,
-          address_street,
-          address_number,
-          address_complement,
-          address_district,
-          address_city,
-          address_state,
-          address_zip_code,
-          contact_name,
-          contact_email,
-          contact_phone,
-          notes,
-          is_active,
-          created_at,
-          current_students,
-          max_students,
-          logo_url,
-          subscription_plan_id,
-          subscription_plan:subscription_plans (id, name, semester_price, annual_price, max_students)
-        `)
-        .eq("id", id)
-        .single();
-
-      if (error) {
-        console.error(`Error fetching company ${id}:`, error);
-        if (error.code === 'PGRST116') {
-          throw new Error("Empresa não encontrada.");
-        }
-        throw error;
-      }
-      if (!data) {
-        throw new Error("Empresa não encontrada.");
-      }
-      // Manually handle the aliased subscription_plan if it's an array with one item
-      // This can happen if Supabase client doesn't automatically resolve the single joined item from an array
-      // when `single()` is used with a one-to-one join that could technically be one-to-many.
-      // However, the select `subscription_plan:subscription_plans(...)` should ideally handle this.
-      // This is more of a safeguard or for cases where the join is not strictly one-to-one by DB constraint.
-      // For simple foreign key joins where `subscription_plan_id` points to `subscription_plans.id`,
-      // Supabase usually handles this correctly with `.single()`.
-      // The issue might be if `subscription_plans` itself is an array due to how the join is perceived.
-      // Given the select syntax `subscription_plan:subscription_plans(...)`, it should be aliased correctly.
-      // Let's assume the direct data structure is as expected by `Company` interface.
-      return data as Company;
-    },
-    enabled: !!id,
-    retry: (failureCount, error) => {
-      if (error.message === "Empresa não encontrada.") {
-        return false;
-      }
-      return failureCount < 3;
     }
   });
 };
@@ -237,35 +136,73 @@ export const useUpdateCompany = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, ...updateData }: { id: string } & Partial<CompanyData>) => {
+    mutationFn: async (companyData: UpdateCompanyData) => {
+      const { id, ...updateData } = companyData;
+
       const { data, error } = await supabase
-        .from("companies")
+        .from('companies')
         .update(updateData)
-        .eq("id", id)
+        .eq('id', id)
         .select()
         .single();
 
       if (error) {
-        console.error(`Error updating company ${id}:`, error);
+        console.error('Error updating company:', error);
         throw error;
       }
+
       return data;
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["companies-with-plans"] });
-      queryClient.invalidateQueries({ queryKey: ["company", variables.id] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
       toast({
         title: "Empresa atualizada com sucesso!",
-        description: "As informações da empresa foram salvas.",
+        description: "As alterações foram salvas.",
       });
     },
-    onError: (error: Error) => {
-      console.error("Error updating company:", error);
+    onError: (error) => {
+      console.error('Error updating company:', error);
       toast({
         title: "Erro ao atualizar empresa",
-        description: error.message || "Ocorreu um erro ao tentar atualizar a empresa.",
+        description: "Ocorreu um erro ao atualizar a empresa.",
         variant: "destructive",
       });
+    }
+  });
+};
+
+export const useDeleteCompany = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (companyId: string) => {
+      const { error } = await supabase
+        .from('companies')
+        .update({ is_active: false })
+        .eq('id', companyId);
+
+      if (error) {
+        console.error('Error deactivating company:', error);
+        throw error;
+      }
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
+      toast({
+        title: "Empresa desativada com sucesso!",
+        description: "A empresa foi desativada.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error deactivating company:', error);
+      toast({
+        title: "Erro ao desativar empresa",
+        description: "Ocorreu um erro ao desativar a empresa.",
+        variant: "destructive",
+      });
+    }
   });
 };

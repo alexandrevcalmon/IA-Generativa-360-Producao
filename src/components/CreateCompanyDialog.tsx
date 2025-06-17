@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -9,18 +8,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea"; // Added for notes
-import { useState, useEffect } from "react"; // Added useEffect
-import { Building2, Upload, Loader2 } from "lucide-react"; // Added Loader2
-import { useCreateCompany, CompanyData } from "@/hooks/useCompanies"; // New hook
-import { useSubscriptionPlans } from "@/hooks/useSubscriptionPlans"; // For plans
+import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect } from "react";
+import { Building2, Upload, Loader2 } from "lucide-react";
+import { useCreateCompany, CompanyData } from "@/hooks/useCompanies";
+import { useSubscriptionPlans } from "@/hooks/useSubscriptionPlans";
+import { PlanSelectionField } from "@/components/PlanSelectionField";
 
 interface CreateCompanyDialogProps {
   isOpen: boolean;
@@ -28,11 +21,11 @@ interface CreateCompanyDialogProps {
 }
 
 const initialFormData: CompanyData = {
-  name: "", // Nome Fantasia
-  official_name: "", // Razão Social
+  name: "",
+  official_name: "",
   cnpj: "",
-  email: "", // Email da Empresa
-  phone: "", // Telefone da Empresa
+  email: "",
+  phone: "",
   address_street: "",
   address_number: "",
   address_complement: "",
@@ -40,11 +33,12 @@ const initialFormData: CompanyData = {
   address_city: "",
   address_state: "",
   address_zip_code: "",
-  contact_name: "", // Nome do Contato Principal
-  contact_email: "", // Email do Contato Principal
-  contact_phone: "", // Telefone do Contato Principal
-  notes: "", // Observações
+  contact_name: "",
+  contact_email: "",
+  contact_phone: "",
+  notes: "",
   subscription_plan_id: null,
+  billing_period: undefined,
 };
 
 export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProps) {
@@ -54,26 +48,29 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement logo upload
-    // For now, logo_url is not part of CompanyData or this form directly.
 
-    if (!formData.subscription_plan_id) {
-      // Basic validation example, ideally use a form library
-      alert("Por favor, selecione um plano de assinatura.");
+    if (!formData.subscription_plan_id || !formData.billing_period) {
+      alert("Por favor, selecione um plano de assinatura e período de cobrança.");
       return;
     }
 
     try {
       await createCompanyMutation.mutateAsync(formData);
       onClose();
-      setFormData(initialFormData); // Reset form
+      setFormData(initialFormData);
     } catch (error) {
-      // Error is handled by the hook's onError, but you could add specific UI updates here if needed
       console.error("Failed to create company from dialog:", error);
     }
   };
 
-  // Effect to reset form when dialog is closed/reopened
+  const handlePlanChange = (planId: string, billingPeriod: 'semester' | 'annual') => {
+    setFormData(prev => ({ 
+      ...prev, 
+      subscription_plan_id: planId,
+      billing_period: billingPeriod
+    }));
+  };
+
   useEffect(() => {
     if (isOpen) {
       setFormData(initialFormData);
@@ -94,7 +91,6 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-
           {/* Dados da Empresa */}
           <fieldset className="border p-4 rounded-md">
             <legend className="text-lg font-medium text-gray-700 px-1">Dados da Empresa</legend>
@@ -256,27 +252,15 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
             </div>
           </fieldset>
 
-          <div className="space-y-2">
-            <Label htmlFor="plan">Plano de Assinatura *</Label>
-            <Select
-              onValueChange={(value) => setFormData(prev => ({ ...prev, subscription_plan_id: value }))}
-              required
-              value={formData.subscription_plan_id || ""}
-            >
-              <SelectTrigger disabled={plansLoading || !!plansError}>
-                <SelectValue placeholder={plansLoading ? "Carregando planos..." : (plansError ? "Erro ao carregar planos" : "Selecione um plano")} />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {plans && plans.filter(p => p.is_active).map(plan => (
-                  <SelectItem key={plan.id} value={plan.id}>
-                    {plan.name} (Sem: R${plan.semester_price.toFixed(2)} / Ano: R${plan.annual_price.toFixed(2)}) - Máx: {plan.max_students} alunos
-                  </SelectItem>
-                ))}
-                {plansError && <SelectItem value="error" disabled>Não foi possível carregar os planos.</SelectItem>}
-              </SelectContent>
-            </Select>
-            {plansError && <p className="text-xs text-red-500">Erro ao carregar planos. Tente novamente.</p>}
-          </div>
+          <PlanSelectionField
+            plans={plans || []}
+            selectedPlanId={formData.subscription_plan_id}
+            selectedBillingPeriod={formData.billing_period || null}
+            onPlanChange={handlePlanChange}
+            isLoading={plansLoading}
+            error={plansError}
+            required={true}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="notes">Observações</Label>
