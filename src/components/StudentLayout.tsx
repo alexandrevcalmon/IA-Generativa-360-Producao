@@ -1,5 +1,4 @@
-
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { Navigate, Outlet } from 'react-router-dom';
 import { StudentSidebar } from './StudentSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
