@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,6 +27,10 @@ import CompanyDashboard from "./pages/CompanyDashboard";
 import StudentLayout from "./components/StudentLayout";
 import StudentDashboard from "./pages/StudentDashboard";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import StudentLearning from "./pages/StudentLearning";
+import StudentAnalytics from "./pages/StudentAnalytics";
+import StudentCommunity from "./pages/StudentCommunity";
+import StudentProfile from "./pages/StudentProfile";
 
 const queryClient = new QueryClient();
 
@@ -75,10 +78,10 @@ const App = () => (
             <Route path="/student" element={<StudentLayout />}>
               <Route path="dashboard" element={<StudentDashboard />} />
               <Route path="courses" element={<StudentCourses />} />
-              <Route path="learning" element={<Learning />} />
-              <Route path="community" element={<Community />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="profile" element={<Profile />} />
+              <Route path="learning" element={<StudentLearning />} />
+              <Route path="community" element={<StudentCommunity />} />
+              <Route path="analytics" element={<StudentAnalytics />} />
+              <Route path="profile" element={<StudentProfile />} />
               <Route path="gamification" element={<div className="p-6"><h1 className="text-2xl font-bold">Gamificação</h1><p>Funcionalidade em desenvolvimento</p></div>} />
               <Route path="goals" element={<div className="p-6"><h1 className="text-2xl font-bold">Objetivos</h1><p>Funcionalidade em desenvolvimento</p></div>} />
               <Route path="mentorship" element={<div className="p-6"><h1 className="text-2xl font-bold">Mentoria</h1><p>Funcionalidade em desenvolvimento</p></div>} />
