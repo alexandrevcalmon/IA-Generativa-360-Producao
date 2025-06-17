@@ -32,6 +32,10 @@ const StudentCourseDetail = () => {
     }
   };
 
+  const handleWatchLesson = (lessonId: string) => {
+    navigate(`/student/courses/${courseId}/lessons/${lessonId}`);
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
@@ -236,7 +240,11 @@ const StudentCourseDetail = () => {
                                   Marcar como Concluída
                                 </Button>
                               )}
-                              <Button size="sm" variant="ghost">
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                onClick={() => handleWatchLesson(lesson.id)}
+                              >
                                 <Play className="h-3 w-3 mr-1" />
                                 {lesson.completed ? 'Revisar' : 'Assistir'}
                               </Button>

@@ -38,11 +38,29 @@ const StudentCourses = () => {
   const inProgressCourses = courses?.filter(c => c.progress_percentage > 0 && c.progress_percentage < 100) || [];
   const completedCourses = courses?.filter(c => c.progress_percentage === 100) || [];
 
-  const CourseCard = ({ course, isListView = false }: { course: any, isListView?: boolean }) => (
+  // Placeholder images for courses
+  const placeholderImages = [
+    "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=400&h=300&fit=crop"
+  ];
+
+  const getPlaceholderImage = (index: number) => {
+    return placeholderImages[index % placeholderImages.length];
+  };
+
+  const CourseCard = ({ course, isListView = false, index }: { course: any, isListView?: boolean, index: number }) => (
     <Card className={`hover-lift transition-all duration-200 ${isListView ? 'flex flex-row' : ''}`}>
       <div className={`${isListView ? 'w-48 flex-shrink-0' : 'w-full'}`}>
-        <div className={`relative ${isListView ? 'h-32' : 'h-48'} bg-gradient-to-r from-blue-500 to-purple-500 rounded-t-lg ${isListView ? 'rounded-l-lg rounded-tr-none' : ''} flex items-center justify-center`}>
-          <Play className="h-12 w-12 text-white" />
+        <div className={`relative ${isListView ? 'h-32' : 'h-48'} overflow-hidden ${isListView ? 'rounded-l-lg rounded-tr-none' : 'rounded-t-lg'}`}>
+          <img 
+            src={course.thumbnail_url || getPlaceholderImage(index)}
+            alt={course.title}
+            className="w-full h-full object-cover"
+          />
           {course.progress_percentage > 0 && (
             <Badge className="absolute top-2 right-2 bg-green-500">
               {course.progress_percentage === 100 ? 'Concluído' : `${Math.round(course.progress_percentage)}%`}
@@ -239,8 +257,8 @@ const StudentCourses = () => {
 
               {courses && courses.length > 0 ? (
                 <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-                  {courses.map(course => (
-                    <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} />
+                  {courses.map((course, index) => (
+                    <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
                   ))}
                 </div>
               ) : (
@@ -264,8 +282,8 @@ const StudentCourses = () => {
               </div>
 
               <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-                {inProgressCourses.map(course => (
-                  <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} />
+                {inProgressCourses.map((course, index) => (
+                  <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
                 ))}
               </div>
             </TabsContent>
@@ -278,8 +296,8 @@ const StudentCourses = () => {
               </div>
 
               <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-                {completedCourses.map(course => (
-                  <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} />
+                {completedCourses.map((course, index) => (
+                  <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
                 ))}
               </div>
             </TabsContent>
