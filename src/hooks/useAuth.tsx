@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,7 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserRole = async (userId: string): Promise<{ role: string | null; needsPasswordChange: boolean; companyUserData: any }> => {
     try {
-      console.log('Fetching role for user:', userId);
+      console.group('🔍 Fetching user role and data');
+      console.log('User ID:', userId);
       
       // First check profiles table (producer/company)
       const { data: profile, error: profileError } = await supabase
@@ -43,41 +43,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId)
         .maybeSingle();
       
+      console.log('Profile query result:', { profile, profileError });
+      
       if (!profileError && profile?.role) {
-        console.log('User role from profiles:', profile.role);
+        console.log('✅ User role from profiles:', profile.role);
+        console.groupEnd();
         return { role: profile.role, needsPasswordChange: false, companyUserData: null };
       }
       
-      // Check company_users table (student/collaborator)
+      // Check company_users table (student/collaborator) with detailed logging
+      console.log('🔍 Checking company_users table...');
       const { data: companyUser, error: companyUserError } = await supabase
         .from('company_users')
-        .select('*, companies(name)')
+        .select(`
+          *,
+          companies(
+            id,
+            name,
+            official_name
+          )
+        `)
         .eq('auth_user_id', userId)
         .maybeSingle();
       
+      console.log('Company user query result:', {
+        companyUser,
+        companyUserError,
+        hasData: !!companyUser,
+        companyUserFields: companyUser ? Object.keys(companyUser) : 'no data'
+      });
+      
       if (!companyUserError && companyUser) {
-        console.log('User found in company_users:', companyUser);
+        console.log('✅ User found in company_users:');
+        console.log('- Name:', companyUser.name);
+        console.log('- Email:', companyUser.email);
+        console.log('- Position:', companyUser.position);
+        console.log('- Phone:', companyUser.phone);
+        console.log('- Company:', companyUser.companies?.name);
+        console.log('- Is Active:', companyUser.is_active);
+        console.log('- Needs Password Change:', companyUser.needs_password_change);
+        
         const needsChange = companyUser.needs_password_change || false;
-        console.log('needs_password_change flag:', needsChange);
+        console.log('🔐 Password change required:', needsChange);
+        console.groupEnd();
         return { role: 'student', needsPasswordChange: needsChange, companyUserData: companyUser };
       }
       
-      console.log('User role not found, defaulting to student');
+      if (companyUserError) {
+        console.error('❌ Error fetching company user data:', companyUserError);
+      } else {
+        console.log('ℹ️ No company user data found for user');
+      }
+      
+      console.log('🎓 Defaulting to student role without company data');
+      console.groupEnd();
       return { role: 'student', needsPasswordChange: false, companyUserData: null };
     } catch (error) {
-      console.error('Error in fetchUserRole:', error);
+      console.error('💥 Error in fetchUserRole:', error);
+      console.groupEnd();
       return { role: 'student', needsPasswordChange: false, companyUserData: null };
     }
   };
 
   const refreshUserRole = async () => {
     if (user) {
-      console.log('Refreshing user role for:', user.email);
-      const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(user.id);
-      setUserRole(role);
-      setNeedsPasswordChange(needsChange);
-      setCompanyUserData(userData);
-      console.log('User role refreshed:', { role, needsChange, userData });
+      console.log('🔄 Refreshing user role for:', user.email);
+      try {
+        const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(user.id);
+        setUserRole(role);
+        setNeedsPasswordChange(needsChange);
+        setCompanyUserData(userData);
+        console.log('✅ User role refreshed:', { role, needsChange, hasUserData: !!userData });
+      } catch (error) {
+        console.error('❌ Error refreshing user role:', error);
+      }
     }
   };
 
@@ -89,21 +128,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, session) => {
         if (!isMounted) return;
 
-        console.log('Auth state changed:', event, session?.user?.email);
+        console.log('🔐 Auth state changed:', event, session?.user?.email);
         
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user && isMounted) {
+          console.log('👤 User authenticated, fetching role and data...');
           // Fetch user data when authenticated
           const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(session.user.id);
           if (isMounted) {
             setUserRole(role);
             setNeedsPasswordChange(needsChange);
             setCompanyUserData(userData);
-            console.log('User role set:', { role, needsChange, userData });
+            console.log('✅ User data set in auth context:', { role, needsChange, hasUserData: !!userData });
           }
         } else if (isMounted && !session?.user) {
+          console.log('🚪 User logged out, clearing data');
           setUserRole(null);
           setNeedsPasswordChange(false);
           setCompanyUserData(null);
@@ -118,9 +159,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for existing session
     const initializeAuth = async () => {
       try {
+        console.log('🚀 Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
         if (isMounted && session?.user) {
-          console.log('Found existing session for user:', session.user.email);
+          console.log('✅ Found existing session for user:', session.user.email);
           setSession(session);
           setUser(session.user);
           
@@ -129,15 +171,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUserRole(role);
             setNeedsPasswordChange(needsChange);
             setCompanyUserData(userData);
-            console.log('Initial user role set:', { role, needsChange, userData });
+            console.log('✅ Initial user data set:', { role, needsChange, hasUserData: !!userData });
           }
+        } else {
+          console.log('ℹ️ No existing session found');
         }
         
         if (isMounted) {
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('💥 Error initializing auth:', error);
         if (isMounted) {
           setLoading(false);
         }

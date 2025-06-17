@@ -18,7 +18,10 @@ import {
   Edit,
   Save,
   AlertCircle,
-  Loader2
+  Loader2,
+  RefreshCw,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from '@/hooks/useAuth';
@@ -27,24 +30,50 @@ const StudentProfile = () => {
   const { companyUserData, user, loading: authLoading, refreshUserRole } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
-  // Debug logging
+  // Comprehensive debug logging
   useEffect(() => {
-    console.log('StudentProfile render:', {
+    const debugData = {
+      timestamp: new Date().toISOString(),
       authLoading,
-      user: user?.email,
-      companyUserData,
-      hasCompanyUserData: !!companyUserData
-    });
+      user: {
+        exists: !!user,
+        email: user?.email,
+        id: user?.id
+      },
+      companyUserData: {
+        exists: !!companyUserData,
+        name: companyUserData?.name,
+        email: companyUserData?.email,
+        position: companyUserData?.position,
+        phone: companyUserData?.phone,
+        company: companyUserData?.companies?.name,
+        isActive: companyUserData?.is_active,
+        authUserId: companyUserData?.auth_user_id,
+        fullObject: companyUserData
+      }
+    };
+
+    console.group('👤 StudentProfile Debug Info');
+    console.log('Auth Loading:', authLoading);
+    console.log('User Object:', user);
+    console.log('Company User Data:', companyUserData);
+    console.log('Complete Debug Data:', debugData);
+    console.groupEnd();
+
+    setDebugInfo(debugData);
   }, [authLoading, user, companyUserData]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    console.log('Manually refreshing user role...');
+    console.log('🔄 Manually refreshing user role and data...');
+    
     try {
       await refreshUserRole();
+      console.log('✅ User role refresh completed');
     } catch (error) {
-      console.error('Error refreshing user role:', error);
+      console.error('❌ Error refreshing user role:', error);
     } finally {
       setIsRefreshing(false);
     }
@@ -58,6 +87,20 @@ const StudentProfile = () => {
       return user.email.charAt(0).toUpperCase();
     }
     return 'U';
+  };
+
+  const getProfileCompleteness = () => {
+    if (!companyUserData) return 0;
+    
+    const fields = [
+      companyUserData.name,
+      companyUserData.email,
+      companyUserData.position,
+      companyUserData.phone
+    ];
+    
+    const completedFields = fields.filter(field => field && field.trim() !== '').length;
+    return Math.round((completedFields / fields.length) * 100);
   };
 
   // Show loading state
@@ -106,6 +149,8 @@ const StudentProfile = () => {
     );
   }
 
+  const profileCompleteness = getProfileCompleteness();
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -114,6 +159,20 @@ const StudentProfile = () => {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Meu Perfil</h1>
             <p className="text-gray-600">Gerencie suas informações pessoais e preferências</p>
+            {companyUserData && (
+              <div className="flex items-center mt-2 space-x-2">
+                <div className="flex items-center space-x-1">
+                  {profileCompleteness === 100 ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-orange-500" />
+                  )}
+                  <span className="text-sm text-gray-500">
+                    Perfil {profileCompleteness}% completo
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex space-x-2">
             <Button 
@@ -127,7 +186,10 @@ const StudentProfile = () => {
                   Atualizando...
                 </>
               ) : (
-                'Atualizar'
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Atualizar
+                </>
               )}
             </Button>
             <Button 
@@ -153,13 +215,47 @@ const StudentProfile = () => {
       {/* Main Content */}
       <div className="flex-1 overflow-auto p-6 bg-gray-50">
         <div className="max-w-6xl mx-auto space-y-6">
-          {/* Show warning if no company data */}
-          {!companyUserData && (
+          {/* Debug Information */}
+          {process.env.NODE_ENV === 'development' && debugInfo && (
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardHeader>
+                <CardTitle className="text-sm text-yellow-800">
+                  🔧 Informações de Debug (apenas desenvolvimento)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs">
+                <pre className="text-yellow-700 overflow-auto">
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Data Status Alerts */}
+          {!companyUserData && user && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Dados do colaborador não encontrados:</strong> Suas informações não foram carregadas corretamente. 
+                Tente atualizar os dados ou entre em contato com sua empresa.
+                <Button 
+                  onClick={handleRefresh} 
+                  variant="outline" 
+                  size="sm" 
+                  className="ml-2"
+                  disabled={isRefreshing}
+                >
+                  {isRefreshing ? 'Atualizando...' : 'Tentar Novamente'}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {companyUserData && !companyUserData.name && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Algumas informações do perfil podem não estar disponíveis. 
-                Entre em contato com sua empresa se necessário.
+                Algumas informações do seu perfil estão incompletas. Entre em contato com sua empresa para atualizar seus dados.
               </AlertDescription>
             </Alert>
           )}
@@ -209,6 +305,11 @@ const StudentProfile = () => {
                         <Badge variant="outline" className="bg-red-100 text-red-700">Inativo</Badge>
                       )
                     )}
+                    {profileCompleteness < 100 && (
+                      <Badge variant="outline" className="bg-orange-100 text-orange-700">
+                        Perfil Incompleto
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
@@ -232,6 +333,11 @@ const StudentProfile = () => {
                   </CardTitle>
                   <CardDescription>
                     Suas informações pessoais e de contato
+                    {!companyUserData && (
+                      <span className="text-red-600 ml-2">
+                        (Dados não carregados - tente atualizar)
+                      </span>
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -243,14 +349,18 @@ const StudentProfile = () => {
                         value={companyUserData?.name || ''}
                         disabled={!isEditing}
                         readOnly
+                        placeholder={!companyUserData ? "Dados não carregados" : "Nome não informado"}
                       />
+                      {!companyUserData?.name && companyUserData && (
+                        <p className="text-sm text-orange-600">Nome não informado no sistema</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
                       <Input 
                         id="email" 
                         type="email" 
-                        value={user.email || ''}
+                        value={companyUserData?.email || user.email || ''}
                         disabled={!isEditing}
                         readOnly
                       />
@@ -263,7 +373,11 @@ const StudentProfile = () => {
                         value={companyUserData?.phone || ''}
                         disabled={!isEditing}
                         readOnly
+                        placeholder={!companyUserData ? "Dados não carregados" : "Telefone não informado"}
                       />
+                      {!companyUserData?.phone && companyUserData && (
+                        <p className="text-sm text-gray-500">Telefone não informado</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="position">Cargo</Label>
@@ -272,7 +386,11 @@ const StudentProfile = () => {
                         value={companyUserData?.position || ''}
                         disabled={!isEditing}
                         readOnly
+                        placeholder={!companyUserData ? "Dados não carregados" : "Cargo não informado"}
                       />
+                      {!companyUserData?.position && companyUserData && (
+                        <p className="text-sm text-gray-500">Cargo não informado</p>
+                      )}
                     </div>
                   </div>
                   {companyUserData?.companies && (
@@ -286,6 +404,45 @@ const StudentProfile = () => {
                       />
                     </div>
                   )}
+                  
+                  {/* Data Status Summary */}
+                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium mb-2">Status dos Dados</h4>
+                    <div className="grid md:grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center space-x-2">
+                        {companyUserData?.name ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        <span>Nome: {companyUserData?.name ? 'Informado' : 'Não informado'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {companyUserData?.position ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-orange-500" />
+                        )}
+                        <span>Cargo: {companyUserData?.position ? 'Informado' : 'Não informado'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {companyUserData?.phone ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-orange-500" />
+                        )}
+                        <span>Telefone: {companyUserData?.phone ? 'Informado' : 'Não informado'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {companyUserData?.companies ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        <span>Empresa: {companyUserData?.companies ? 'Vinculado' : 'Não vinculado'}</span>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
