@@ -30,10 +30,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
   const [companyUserData, setCompanyUserData] = useState<any>(null);
   const [sessionProtected, setSessionProtected] = useState(false);
+  const [fetchingRole, setFetchingRole] = useState(false);
   const { toast } = useToast();
 
   const fetchUserRole = async (userId: string): Promise<string | null> => {
+    // Prevent multiple simultaneous requests
+    if (fetchingRole) {
+      console.log('Role fetch already in progress, skipping...');
+      return null;
+    }
+
     try {
+      setFetchingRole(true);
       console.log('Fetching role for user:', userId);
       
       // First check if user is in profiles table (producer/company)
@@ -66,16 +74,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return 'student';
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
-      return null;
+      return 'student'; // Safe fallback
+    } finally {
+      setFetchingRole(false);
     }
   };
 
   const refreshUserRole = async () => {
-    if (user) {
+    if (user && !fetchingRole) {
       console.log('Refreshing user role...');
       const role = await fetchUserRole(user.id);
-      setUserRole(role);
-      console.log('User role refreshed to:', role);
+      if (role) {
+        setUserRole(role);
+        console.log('User role refreshed to:', role);
+      }
     }
   };
 
@@ -95,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    let debounceTimer: NodeJS.Timeout;
 
     // Set up auth state listener with session protection
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -120,21 +133,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Check if this is an unwanted session change (user creation interfering with producer session)
         if (user && userRole === 'producer' && session?.user && session.user.id !== user.id) {
           console.warn('Detected session interference - restoring producer session');
-          
-          // Don't update the session state, keep the current producer session
           return;
         }
         
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Debounce role fetching to prevent multiple simultaneous requests
         if (session?.user && isMounted) {
-          // Fetch user role and additional data
-          const role = await fetchUserRole(session.user.id);
-          if (isMounted) {
-            setUserRole(role);
-            console.log('User role set to:', role);
+          // Clear any existing timer
+          if (debounceTimer) {
+            clearTimeout(debounceTimer);
           }
+          
+          // Set a new timer to fetch role after a short delay
+          debounceTimer = setTimeout(async () => {
+            if (isMounted && !fetchingRole) {
+              const role = await fetchUserRole(session.user.id);
+              if (isMounted && role) {
+                setUserRole(role);
+                console.log('User role set to:', role);
+              }
+            }
+          }, 300); // 300ms debounce
         } else if (isMounted) {
           setUserRole(null);
           setNeedsPasswordChange(false);
@@ -156,11 +177,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(session);
           setUser(session.user);
           
-          const role = await fetchUserRole(session.user.id);
-          if (isMounted) {
-            setUserRole(role);
-            console.log('Initial user role set to:', role);
-          }
+          // Use debounce for initial role fetch too
+          debounceTimer = setTimeout(async () => {
+            if (isMounted && !fetchingRole) {
+              const role = await fetchUserRole(session.user.id);
+              if (isMounted && role) {
+                setUserRole(role);
+                console.log('Initial user role set to:', role);
+              }
+            }
+          }, 300);
         }
         
         if (isMounted) {
@@ -178,9 +204,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       isMounted = false;
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
       subscription.unsubscribe();
     };
-  }, [user, userRole, sessionProtected]);
+  }, []); // Remove dependencies to prevent re-running
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -290,6 +319,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setNeedsPasswordChange(false);
         setCompanyUserData(null);
         setSessionProtected(false);
+        setFetchingRole(false);
         toast({
           title: "Logout realizado com sucesso!",
           description: "Até mais!",
