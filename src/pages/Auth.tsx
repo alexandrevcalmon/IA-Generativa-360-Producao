@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, EyeOff, Building2, GraduationCap, Briefcase } from 'lucide-react';
+import { Eye, EyeOff, Building2, GraduationCap, Briefcase, Loader2 } from 'lucide-react';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -46,11 +46,7 @@ export default function Auth() {
       needsPasswordChange
     });
 
-    // Only redirect if:
-    // 1. Not loading
-    // 2. User is authenticated
-    // 3. User role is determined
-    // 4. User doesn't need password change
+    // Only redirect if all conditions are met
     if (!authLoading && user && userRole && !needsPasswordChange) {
       console.log('Redirecting authenticated user. Role:', userRole);
       
@@ -85,10 +81,8 @@ export default function Auth() {
         
         if (error) {
           console.error('Login error:', error);
-          // Error handling is done in the useAuth hook with toast
         } else {
           console.log('Login successful');
-          // Redirect will be handled by useEffect above based on needsPasswordChange
         }
       } else {
         console.log('Attempting signup for:', email, 'with role:', role);
@@ -108,7 +102,10 @@ export default function Auth() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100">
-        <div className="text-lg">Verificando autenticação...</div>
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <div className="text-lg">Verificando autenticação...</div>
+        </div>
       </div>
     );
   }
@@ -221,7 +218,14 @@ export default function Auth() {
                   className="w-full bg-emerald-600 hover:bg-emerald-700"
                   disabled={loading}
                 >
-                  {loading ? 'Entrando...' : 'Entrar'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Entrando...
+                    </>
+                  ) : (
+                    'Entrar'
+                  )}
                 </Button>
               </form>
             </TabsContent>
@@ -287,7 +291,14 @@ export default function Auth() {
                   className="w-full bg-emerald-600 hover:bg-emerald-700"
                   disabled={loading}
                 >
-                  {loading ? 'Criando conta...' : 'Criar Conta'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Criando conta...
+                    </>
+                  ) : (
+                    'Criar Conta'
+                  )}
                 </Button>
               </form>
             </TabsContent>

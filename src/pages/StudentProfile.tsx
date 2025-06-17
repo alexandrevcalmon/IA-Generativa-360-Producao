@@ -4,40 +4,107 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   User,
   Settings,
   Bell,
   Shield,
   Camera,
-  Mail,
-  Phone,
-  MapPin,
   Calendar,
-  Briefcase,
   Edit,
   Save,
-  Award,
-  BookOpen,
-  Trophy
+  AlertCircle,
+  Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from '@/hooks/useAuth';
 
 const StudentProfile = () => {
-  const { companyUserData } = useAuth();
+  const { companyUserData, user, loading: authLoading, refreshUserRole } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('StudentProfile render:', {
+      authLoading,
+      user: user?.email,
+      companyUserData,
+      hasCompanyUserData: !!companyUserData
+    });
+  }, [authLoading, user, companyUserData]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    console.log('Manually refreshing user role...');
+    try {
+      await refreshUserRole();
+    } catch (error) {
+      console.error('Error refreshing user role:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const getUserInitials = () => {
     if (companyUserData?.name) {
       return companyUserData.name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
     return 'U';
   };
+
+  // Show loading state
+  if (authLoading) {
+    return (
+      <div className="flex flex-col h-full">
+        <header className="border-b bg-white px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Meu Perfil</h1>
+              <p className="text-gray-600">Carregando informações...</p>
+            </div>
+          </div>
+        </header>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Carregando seu perfil...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if no user
+  if (!user) {
+    return (
+      <div className="flex flex-col h-full">
+        <header className="border-b bg-white px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Meu Perfil</h1>
+              <p className="text-gray-600">Erro ao carregar perfil</p>
+            </div>
+          </div>
+        </header>
+        <div className="flex-1 flex items-center justify-center">
+          <Alert className="max-w-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Não foi possível carregar as informações do usuário. Faça login novamente.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -48,28 +115,55 @@ const StudentProfile = () => {
             <h1 className="text-2xl font-bold text-gray-900">Meu Perfil</h1>
             <p className="text-gray-600">Gerencie suas informações pessoais e preferências</p>
           </div>
-          <Button 
-            onClick={() => setIsEditing(!isEditing)}
-            variant={isEditing ? "default" : "outline"}
-          >
-            {isEditing ? (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Salvar
-              </>
-            ) : (
-              <>
-                <Edit className="h-4 w-4 mr-2" />
-                Editar Perfil
-              </>
-            )}
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={handleRefresh}
+              variant="outline"
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Atualizando...
+                </>
+              ) : (
+                'Atualizar'
+              )}
+            </Button>
+            <Button 
+              onClick={() => setIsEditing(!isEditing)}
+              variant={isEditing ? "default" : "outline"}
+            >
+              {isEditing ? (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar
+                </>
+              ) : (
+                <>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar Perfil
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto p-6 bg-gray-50">
         <div className="max-w-6xl mx-auto space-y-6">
+          {/* Show warning if no company data */}
+          {!companyUserData && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Algumas informações do perfil podem não estar disponíveis. 
+                Entre em contato com sua empresa se necessário.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Profile Overview */}
           <Card>
             <CardContent className="p-6">
@@ -93,9 +187,9 @@ const StudentProfile = () => {
                 
                 <div className="flex-1 text-center md:text-left">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {companyUserData?.name || 'Carregando...'}
+                    {companyUserData?.name || user.email || 'Usuário'}
                   </h2>
-                  <p className="text-gray-600">{companyUserData?.email || 'email@exemplo.com'}</p>
+                  <p className="text-gray-600">{user.email}</p>
                   {companyUserData?.companies && (
                     <p className="text-sm text-blue-600 mt-1">
                       {companyUserData.companies.name}
@@ -108,10 +202,12 @@ const StudentProfile = () => {
                   )}
                   <div className="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
                     <Badge variant="secondary">Colaborador</Badge>
-                    {companyUserData?.is_active ? (
-                      <Badge variant="outline" className="bg-green-100 text-green-700">Ativo</Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-red-100 text-red-700">Inativo</Badge>
+                    {companyUserData?.is_active !== undefined && (
+                      companyUserData.is_active ? (
+                        <Badge variant="outline" className="bg-green-100 text-green-700">Ativo</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-100 text-red-700">Inativo</Badge>
+                      )
                     )}
                   </div>
                 </div>
@@ -154,7 +250,7 @@ const StudentProfile = () => {
                       <Input 
                         id="email" 
                         type="email" 
-                        value={companyUserData?.email || ''}
+                        value={user.email || ''}
                         disabled={!isEditing}
                         readOnly
                       />
