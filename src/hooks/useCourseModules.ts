@@ -27,7 +27,7 @@ export const useCourseModules = (courseId: string) => {
         .from('course_modules')
         .select('*')
         .eq('course_id', courseId)
-        .order('created_at', { ascending: true }); // Ordenar por data de criação
+        .order('order_index', { ascending: true }); // Mudança aqui: ordenar por order_index
 
       if (error) {
         console.error('Error fetching modules:', error);

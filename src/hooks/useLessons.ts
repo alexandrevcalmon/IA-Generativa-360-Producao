@@ -32,7 +32,7 @@ export const useLessons = (moduleId: string) => {
         .from('lessons')
         .select('*')
         .eq('module_id', moduleId)
-        .order('created_at', { ascending: true }); // Ordenar por data de criação
+        .order('order_index', { ascending: true }); // Mudança aqui: ordenar por order_index
 
       if (error) {
         console.error('Error fetching lessons:', error);
