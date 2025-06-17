@@ -12,6 +12,7 @@ export interface Collaborator {
   position: string | null; // Cargo
   is_active: boolean;
   created_at: string;
+  updated_at?: string; // Added missing property
   needs_password_change?: boolean; // Optional, as it might not always be present or relevant after first login
 }
 

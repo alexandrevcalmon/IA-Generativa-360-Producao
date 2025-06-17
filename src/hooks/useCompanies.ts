@@ -37,6 +37,9 @@ export interface Company extends CompanyData {
   id: string;
   created_at: string;
   is_active: boolean;
+  current_students: number; // Added missing property
+  max_students: number; // Added missing property
+  logo_url?: string | null; // Added missing property
   subscription_plan: { // Renamed from subscription_plan:subscription_plans
     id: string;
     name: string;
@@ -188,6 +191,9 @@ export const useCompanyById = (id?: string | null) => {
           notes,
           is_active,
           created_at,
+          current_students,
+          max_students,
+          logo_url,
           subscription_plan_id,
           subscription_plan:subscription_plans (id, name, semester_price, annual_price, max_students)
         `)
