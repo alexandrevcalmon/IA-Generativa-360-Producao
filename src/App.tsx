@@ -1,4 +1,5 @@
 
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,8 +19,8 @@ import NotFound from "./pages/NotFound";
 import ProducerCompanies from "./pages/ProducerCompanies";
 import ProducerCompanyDetails from "./pages/ProducerCompanyDetails";
 import ProducerPlans from "./pages/ProducerPlans";
-import ProdutorLayout from "../components/ProdutorLayout"; // Adjusted path
-import LoginProdutor from "../pages/LoginProdutor"; // Adjusted path
+import ProdutorLayout from "./components/ProdutorLayout"; // Fixed path
+import LoginProdutor from "./pages/LoginProdutor"; // Fixed path
 
 const queryClient = new QueryClient();
 
@@ -58,3 +59,4 @@ const App = () => (
 );
 
 export default App;
+
