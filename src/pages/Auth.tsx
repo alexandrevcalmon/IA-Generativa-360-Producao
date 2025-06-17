@@ -51,11 +51,11 @@ export default function Auth() {
           break;
         case 'student':
           console.log('Redirecting to student dashboard');
-          navigate('/dashboard', { replace: true });
+          navigate('/student/dashboard', { replace: true });
           break;
         default:
-          console.log('Unknown role, redirecting to default dashboard');
-          navigate('/dashboard', { replace: true });
+          console.log('Unknown role, redirecting to student dashboard');
+          navigate('/student/dashboard', { replace: true });
       }
     }
   }, [user, userRole, authLoading, needsPasswordChange, navigate]);

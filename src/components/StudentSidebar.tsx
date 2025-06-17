@@ -20,7 +20,10 @@ import {
   BarChart3, 
   MessageCircle, 
   Settings,
-  Target
+  Target,
+  Calendar,
+  GraduationCap,
+  Users
 } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 
@@ -36,8 +39,13 @@ const studentMenuItems = [
     icon: BookOpen,
   },
   {
+    title: 'Trilhas de Aprendizado',
+    url: '/student/learning',
+    icon: GraduationCap,
+  },
+  {
     title: 'Progresso',
-    url: '/student/progress',
+    url: '/student/analytics',
     icon: BarChart3,
   },
   {
@@ -56,8 +64,18 @@ const studentMenuItems = [
     icon: MessageCircle,
   },
   {
-    title: 'Configurações',
-    url: '/student/settings',
+    title: 'Mentoria',
+    url: '/student/mentorship',
+    icon: Users,
+  },
+  {
+    title: 'Calendário',
+    url: '/student/calendar',
+    icon: Calendar,
+  },
+  {
+    title: 'Perfil',
+    url: '/student/profile',
     icon: Settings,
   },
 ];

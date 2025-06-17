@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -78,6 +77,10 @@ const App = () => (
               <Route path="community" element={<Community />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="gamification" element={<div className="p-6"><h1 className="text-2xl font-bold">Gamificação</h1><p>Funcionalidade em desenvolvimento</p></div>} />
+              <Route path="goals" element={<div className="p-6"><h1 className="text-2xl font-bold">Objetivos</h1><p>Funcionalidade em desenvolvimento</p></div>} />
+              <Route path="mentorship" element={<div className="p-6"><h1 className="text-2xl font-bold">Mentoria</h1><p>Funcionalidade em desenvolvimento</p></div>} />
+              <Route path="calendar" element={<div className="p-6"><h1 className="text-2xl font-bold">Calendário</h1><p>Funcionalidade em desenvolvimento</p></div>} />
             </Route>
 
             {/* Legacy Routes (for backward compatibility) - wrapped with SidebarProvider */}

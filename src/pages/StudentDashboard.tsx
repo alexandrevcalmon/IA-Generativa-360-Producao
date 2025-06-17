@@ -3,6 +3,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { useStudentCourses } from '@/hooks/useStudentCourses';
+import { useEnrollInCourse } from '@/hooks/useStudentProgress';
+import { Link } from 'react-router-dom';
 import { 
   BookOpen, 
   Trophy, 
@@ -11,34 +15,47 @@ import {
   Award,
   TrendingUp,
   Calendar,
-  Star
+  Star,
+  Play,
+  CheckCircle
 } from 'lucide-react';
 
 const StudentDashboard = () => {
   const { companyUserData } = useAuth();
+  const { data: courses, isLoading: coursesLoading } = useStudentCourses();
+  const enrollMutation = useEnrollInCourse();
 
-  // Mock data - em um caso real, esses dados viriam de APIs específicas
+  console.log('Student courses data:', courses);
+
+  // Calculate stats from real data
   const studentStats = {
-    coursesInProgress: 3,
-    completedCourses: 12,
-    totalPoints: 850,
-    currentStreak: 7,
-    averageGrade: 8.5,
-    hoursStudied: 45,
-    certificatesEarned: 8,
+    coursesInProgress: courses?.filter(c => c.enrolled_at && c.progress_percentage < 100).length || 0,
+    completedCourses: courses?.filter(c => c.progress_percentage === 100).length || 0,
+    totalPoints: courses?.reduce((total, course) => {
+      return total + Math.floor(course.progress_percentage * 10); // 10 points per percentage
+    }, 0) || 0,
+    currentStreak: 7, // This would need to be calculated from lesson completion dates
+    averageGrade: 8.5, // This would come from quiz results
+    hoursStudied: courses?.reduce((total, course) => {
+      return total + (course.estimated_hours * (course.progress_percentage / 100));
+    }, 0) || 0,
+    certificatesEarned: courses?.filter(c => c.progress_percentage === 100).length || 0,
     nextGoalProgress: 75
   };
 
+  const enrolledCourses = courses?.filter(c => c.enrolled_at) || [];
+  const availableCourses = courses?.filter(c => !c.enrolled_at) || [];
+
   const recentActivities = [
     {
-      type: 'course_completed',
-      title: 'JavaScript Avançado',
+      type: 'course_progress',
+      title: 'Progresso no curso atualizado',
       time: '2 horas atrás',
-      points: 100
+      points: 25
     },
     {
-      type: 'quiz_passed',
-      title: 'Quiz React Hooks',
+      type: 'lesson_completed',
+      title: 'Lição completada',
       time: '1 dia atrás',
       points: 50
     },
@@ -50,29 +67,34 @@ const StudentDashboard = () => {
     }
   ];
 
-  const currentCourses = [
-    {
-      id: 1,
-      title: 'Python para Data Science',
-      progress: 65,
-      nextLesson: 'Manipulação de DataFrames',
-      timeRemaining: '2h 30min'
-    },
-    {
-      id: 2,
-      title: 'Design Thinking',
-      progress: 30,
-      nextLesson: 'Prototipagem Rápida',
-      timeRemaining: '4h 15min'
-    },
-    {
-      id: 3,
-      title: 'Liderança e Gestão',
-      progress: 80,
-      nextLesson: 'Feedback Efetivo',
-      timeRemaining: '1h 45min'
+  const handleEnrollInCourse = async (courseId: string) => {
+    try {
+      await enrollMutation.mutateAsync(courseId);
+    } catch (error) {
+      console.error('Failed to enroll:', error);
     }
-  ];
+  };
+
+  if (coursesLoading) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="bg-white border-b p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Carregando...
+              </h1>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto p-6 bg-gray-50">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg text-gray-600">Carregando dashboard...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -134,7 +156,7 @@ const StudentDashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Horas Estudadas</p>
-                    <p className="text-2xl font-bold text-gray-900">{studentStats.hoursStudied}h</p>
+                    <p className="text-2xl font-bold text-gray-900">{Math.round(studentStats.hoursStudied)}h</p>
                   </div>
                   <Clock className="h-8 w-8 text-purple-600" />
                 </div>
@@ -145,8 +167,8 @@ const StudentDashboard = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Média de Notas</p>
-                    <p className="text-2xl font-bold text-gray-900">{studentStats.averageGrade}</p>
+                    <p className="text-sm text-gray-600">Total de Pontos</p>
+                    <p className="text-2xl font-bold text-gray-900">{studentStats.totalPoints}</p>
                   </div>
                   <Star className="h-8 w-8 text-yellow-600" />
                 </div>
@@ -158,50 +180,96 @@ const StudentDashboard = () => {
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Current Courses - 2/3 width */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Enrolled Courses */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-blue-600" />
-                    Cursos em Andamento
+                    Meus Cursos
                   </CardTitle>
                   <CardDescription>
                     Continue de onde parou
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {currentCourses.map((course) => (
-                    <div key={course.id} className="p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium text-gray-900">{course.title}</h3>
-                        <Badge variant="outline">{course.progress}%</Badge>
+                  {enrolledCourses.length > 0 ? (
+                    enrolledCourses.map((course) => (
+                      <div key={course.id} className="p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-medium text-gray-900">{course.title}</h3>
+                          <Badge variant="outline">{Math.round(course.progress_percentage)}%</Badge>
+                        </div>
+                        <Progress value={course.progress_percentage} className="mb-3" />
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">
+                            {course.modules.length} módulos • {course.modules.reduce((total, module) => total + module.lessons.length, 0)} lições
+                          </span>
+                          <div className="flex gap-2">
+                            <Button size="sm" asChild>
+                              <Link to={`/student/courses/${course.id}`}>
+                                <Play className="w-3 h-3 mr-1" />
+                                Continuar
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <Progress value={course.progress} className="mb-3" />
-                      <div className="flex items-center justify-between text-sm text-gray-600">
-                        <span>Próxima: {course.nextLesson}</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {course.timeRemaining}
-                        </span>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500 mb-4">Você ainda não está inscrito em nenhum curso.</p>
+                      <p className="text-sm text-gray-400">Explore os cursos disponíveis abaixo para começar.</p>
                     </div>
-                  ))}
+                  )}
                 </CardContent>
               </Card>
 
-              {/* Progress Chart Placeholder */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                    Progresso Semanal
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-500">Gráfico de progresso semanal</p>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Available Courses */}
+              {availableCourses.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5 text-green-600" />
+                      Cursos Disponíveis
+                    </CardTitle>
+                    <CardDescription>
+                      Novos cursos para expandir seus conhecimentos
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {availableCourses.slice(0, 3).map((course) => (
+                      <div key={course.id} className="p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-medium text-gray-900">{course.title}</h3>
+                          <Badge variant="secondary">{course.difficulty_level}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">{course.description}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500">
+                            {course.estimated_hours}h • {course.category}
+                          </span>
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleEnrollInCourse(course.id)}
+                            disabled={enrollMutation.isPending}
+                          >
+                            {enrollMutation.isPending ? 'Inscrevendo...' : 'Inscrever-se'}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {availableCourses.length > 3 && (
+                      <div className="text-center pt-2">
+                        <Button variant="outline" asChild>
+                          <Link to="/student/courses">
+                            Ver todos os cursos
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Right Column - 1/3 width */}
@@ -268,15 +336,15 @@ const StudentDashboard = () => {
                     </div>
                     <div className="p-3 bg-blue-50 rounded-lg text-center">
                       <BookOpen className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-                      <p className="text-xs font-medium">10 Cursos</p>
+                      <p className="text-xs font-medium">{studentStats.coursesInProgress} Cursos</p>
                     </div>
                     <div className="p-3 bg-green-50 rounded-lg text-center">
-                      <Target className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                      <p className="text-xs font-medium">Meta Mensal</p>
+                      <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-1" />
+                      <p className="text-xs font-medium">{studentStats.completedCourses} Concluídos</p>
                     </div>
                     <div className="p-3 bg-purple-50 rounded-lg text-center">
                       <Star className="h-6 w-6 text-purple-600 mx-auto mb-1" />
-                      <p className="text-xs font-medium">Nota Máxima</p>
+                      <p className="text-xs font-medium">{studentStats.totalPoints} Pontos</p>
                     </div>
                   </div>
                 </CardContent>
