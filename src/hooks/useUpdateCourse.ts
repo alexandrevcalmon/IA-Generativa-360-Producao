@@ -1,0 +1,54 @@
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { Course } from '@/hooks/useCoursesQuery';
+
+export const useUpdateCourse = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, ...courseData }: Partial<Course> & { id: string }) => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Updating course:', id);
+      console.log('Update data:', courseData);
+      console.log('Current user:', user.id);
+
+      const { data, error } = await supabase
+        .from('courses')
+        .update({ ...courseData, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating course:', error);
+        throw error;
+      }
+      
+      console.log('Course updated successfully:', data);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      toast({
+        title: "Sucesso",
+        description: "Curso atualizado com sucesso!",
+      });
+    },
+    onError: (error) => {
+      console.error('Update mutation error:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar curso: " + error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
