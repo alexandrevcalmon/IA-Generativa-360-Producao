@@ -11,7 +11,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: AuthGuardProps) {
-  const { user, loading, userRole, needsPasswordChange } = useAuth();
+  const { user, loading, userRole, needsPasswordChange, refreshUserRole } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,6 +19,13 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
       navigate(redirectTo);
     }
   }, [user, loading, navigate, redirectTo]);
+
+  // Refresh user role when component mounts or user changes
+  useEffect(() => {
+    if (user && !loading) {
+      refreshUserRole();
+    }
+  }, [user, loading, refreshUserRole]);
 
   if (loading) {
     return (

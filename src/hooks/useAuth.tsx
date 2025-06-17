@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +17,7 @@ interface AuthContextType {
   isStudent: boolean;
   needsPasswordChange: boolean;
   companyUserData: any;
+  refreshUserRole: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,6 +66,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
       return null;
+    }
+  };
+
+  const refreshUserRole = async () => {
+    if (user) {
+      console.log('Refreshing user role...');
+      const role = await fetchUserRole(user.id);
+      setUserRole(role);
+      console.log('User role refreshed to:', role);
     }
   };
 
@@ -274,6 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isStudent,
     needsPasswordChange,
     companyUserData,
+    refreshUserRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
