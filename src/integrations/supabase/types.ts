@@ -61,6 +61,7 @@ export type Database = {
           address_street: string | null
           address_zip_code: string | null
           auth_user_id: string | null
+          billing_period: string | null
           cnpj: string | null
           contact_email: string | null
           contact_name: string | null
@@ -89,6 +90,7 @@ export type Database = {
           address_street?: string | null
           address_zip_code?: string | null
           auth_user_id?: string | null
+          billing_period?: string | null
           cnpj?: string | null
           contact_email?: string | null
           contact_name?: string | null
@@ -117,6 +119,7 @@ export type Database = {
           address_street?: string | null
           address_zip_code?: string | null
           auth_user_id?: string | null
+          billing_period?: string | null
           cnpj?: string | null
           contact_email?: string | null
           contact_name?: string | null

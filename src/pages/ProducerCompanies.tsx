@@ -1,4 +1,3 @@
-
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,13 +26,15 @@ import {
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { CreateCompanyDialog } from "@/components/CreateCompanyDialog";
+import { EditCompanyDialog } from "@/components/EditCompanyDialog";
 import { useCompaniesWithPlans } from "@/hooks/useCompaniesWithPlans";
-import { useDeleteCompany } from "@/hooks/useCompanies";
+import { useDeleteCompany, Company } from "@/hooks/useCompanies";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ProducerCompanies = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
 
   const { data: companies = [], isLoading, error } = useCompaniesWithPlans();
   const deleteCompanyMutation = useDeleteCompany();
@@ -285,9 +286,7 @@ const ProducerCompanies = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-white">
                           <DropdownMenuItem
-                            onClick={() => {
-                              alert(`Editar ${company.name} - Funcionalidade a ser conectada ao EditCompanyDialog ou removida se não aplicável aqui.`);
-                            }}
+                            onClick={() => setEditingCompany(company)}
                           >
                             <Edit className="h-3 w-3 mr-2" />
                             Editar
@@ -326,6 +325,12 @@ const ProducerCompanies = () => {
       <CreateCompanyDialog 
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
+      />
+
+      <EditCompanyDialog
+        isOpen={!!editingCompany}
+        onClose={() => setEditingCompany(null)}
+        company={editingCompany}
       />
     </div>
   );
