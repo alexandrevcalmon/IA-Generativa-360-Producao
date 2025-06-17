@@ -33,6 +33,7 @@ import StudentLearning from "./pages/StudentLearning";
 import StudentCommunity from "./pages/StudentCommunity";
 import NotFound from "./pages/NotFound";
 import { AuthGuard } from "@/components/AuthGuard";
+import StudentLayout from "@/components/StudentLayout";
 
 const queryClient = new QueryClient();
 
@@ -73,17 +74,20 @@ function App() {
                 <Route path="community" element={<Community />} />
               </Route>
 
-              {/* Student routes */}
-              <Route path="/student" element={<AuthGuard />}>
+              {/* Student routes with StudentLayout */}
+              <Route path="/student" element={<AuthGuard requiredRole="student" />}>
                 <Route index element={<Navigate to="/student/dashboard" replace />} />
-                <Route path="dashboard" element={<StudentDashboard />} />
-                <Route path="profile" element={<StudentProfile />} />
-                <Route path="courses" element={<StudentCourses />} />
-                <Route path="courses/:courseId" element={<StudentCourseDetail />} />
+                <Route element={<StudentLayout />}>
+                  <Route path="dashboard" element={<StudentDashboard />} />
+                  <Route path="profile" element={<StudentProfile />} />
+                  <Route path="courses" element={<StudentCourses />} />
+                  <Route path="courses/:courseId" element={<StudentCourseDetail />} />
+                  <Route path="analytics" element={<StudentAnalytics />} />
+                  <Route path="learning" element={<StudentLearning />} />
+                  <Route path="community" element={<StudentCommunity />} />
+                </Route>
+                {/* Lesson view without sidebar for better video viewing */}
                 <Route path="courses/:courseId/lessons/:lessonId" element={<StudentLessonView />} />
-                <Route path="analytics" element={<StudentAnalytics />} />
-                <Route path="learning" element={<StudentLearning />} />
-                <Route path="community" element={<StudentCommunity />} />
               </Route>
 
               {/* Fallback routes for backward compatibility */}
