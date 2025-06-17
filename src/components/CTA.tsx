@@ -6,7 +6,7 @@ export function CTA() {
   const navigate = useNavigate();
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-calmon-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
           Pronto para começar sua jornada?
@@ -17,7 +17,7 @@ export function CTA() {
         <Button 
           onClick={() => navigate('/auth')}
           size="lg"
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg"
+          className="bg-calmon-600 hover:bg-calmon-700 text-white px-8 py-3 text-lg"
         >
           Comece Agora
         </Button>

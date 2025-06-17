@@ -13,28 +13,31 @@ export function Header() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600"></div>
-            <span className="font-bold text-xl text-gray-900">Calmon Academy</span>
+          <Link to="/" className="flex items-center space-x-3">
+            <img 
+              src="/lovable-uploads/4e37cba3-373f-4630-ac8b-6fdea4e6d0e8.png" 
+              alt="Calmon Academy" 
+              className="h-10 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link 
               to="/courses" 
-              className="text-gray-600 hover:text-emerald-600 transition-colors"
+              className="text-gray-600 hover:text-calmon-600 transition-colors"
             >
               Cursos
             </Link>
             <Link 
               to="/community" 
-              className="text-gray-600 hover:text-emerald-600 transition-colors"
+              className="text-gray-600 hover:text-calmon-600 transition-colors"
             >
               Comunidade
             </Link>
             <Link 
               to="/about" 
-              className="text-gray-600 hover:text-emerald-600 transition-colors"
+              className="text-gray-600 hover:text-calmon-600 transition-colors"
             >
               Sobre
             </Link>
@@ -63,21 +66,21 @@ export function Header() {
             <nav className="flex flex-col space-y-4">
               <Link 
                 to="/courses" 
-                className="text-gray-600 hover:text-emerald-600 transition-colors"
+                className="text-gray-600 hover:text-calmon-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Cursos
               </Link>
               <Link 
                 to="/community" 
-                className="text-gray-600 hover:text-emerald-600 transition-colors"
+                className="text-gray-600 hover:text-calmon-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Comunidade
               </Link>
               <Link 
                 to="/about" 
-                className="text-gray-600 hover:text-emerald-600 transition-colors"
+                className="text-gray-600 hover:text-calmon-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Sobre

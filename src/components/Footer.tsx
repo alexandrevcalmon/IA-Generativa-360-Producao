@@ -7,9 +7,12 @@ export function Footer() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600"></div>
-              <span className="font-bold text-xl">Calmon Academy</span>
+            <div className="flex items-center space-x-3 mb-4">
+              <img 
+                src="/lovable-uploads/4e37cba3-373f-4630-ac8b-6fdea4e6d0e8.png" 
+                alt="Calmon Academy" 
+                className="h-8 w-auto"
+              />
             </div>
             <p className="text-gray-400">
               Transformando carreiras através da educação corporativa.
@@ -19,27 +22,27 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Produto</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><Link to="/courses" className="hover:text-white transition-colors">Cursos</Link></li>
-              <li><Link to="/community" className="hover:text-white transition-colors">Comunidade</Link></li>
-              <li><Link to="/analytics" className="hover:text-white transition-colors">Analytics</Link></li>
+              <li><Link to="/courses" className="hover:text-calmon-400 transition-colors">Cursos</Link></li>
+              <li><Link to="/community" className="hover:text-calmon-400 transition-colors">Comunidade</Link></li>
+              <li><Link to="/analytics" className="hover:text-calmon-400 transition-colors">Analytics</Link></li>
             </ul>
           </div>
           
           <div>
             <h3 className="font-semibold mb-4">Empresa</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Sobre nós</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Carreiras</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Contato</a></li>
+              <li><a href="#" className="hover:text-calmon-400 transition-colors">Sobre nós</a></li>
+              <li><a href="#" className="hover:text-calmon-400 transition-colors">Carreiras</a></li>
+              <li><a href="#" className="hover:text-calmon-400 transition-colors">Contato</a></li>
             </ul>
           </div>
           
           <div>
             <h3 className="font-semibold mb-4">Suporte</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Central de Ajuda</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Documentação</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Status</a></li>
+              <li><a href="#" className="hover:text-calmon-400 transition-colors">Central de Ajuda</a></li>
+              <li><a href="#" className="hover:text-calmon-400 transition-colors">Documentação</a></li>
+              <li><a href="#" className="hover:text-calmon-400 transition-colors">Status</a></li>
             </ul>
           </div>
         </div>

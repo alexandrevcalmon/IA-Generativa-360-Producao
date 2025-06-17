@@ -32,8 +32,8 @@ export function Features() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Produtor */}
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-8 text-center hover:shadow-lg transition-shadow border border-emerald-200">
-            <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-gradient-to-br from-calmon-50 to-calmon-100 rounded-2xl p-8 text-center hover:shadow-lg transition-shadow border border-calmon-200">
+            <div className="w-16 h-16 bg-calmon-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <Briefcase className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Sou Produtor</h3>
@@ -48,15 +48,15 @@ export function Features() {
             </ul>
             <Button 
               onClick={handleProducerClick}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full bg-calmon-600 hover:bg-calmon-700 text-white"
             >
               Acessar Painel do Produtor →
             </Button>
           </div>
 
           {/* Empresa */}
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 text-center hover:shadow-lg transition-shadow border border-orange-200">
-            <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-gradient-to-br from-calmon-100 to-calmon-200 rounded-2xl p-8 text-center hover:shadow-lg transition-shadow border border-calmon-300">
+            <div className="w-16 h-16 bg-calmon-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <Building2 className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Sou Empresa</h3>
@@ -71,15 +71,15 @@ export function Features() {
             </ul>
             <Button 
               onClick={handleCompanyClick}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+              className="w-full bg-calmon-700 hover:bg-calmon-800 text-white"
             >
               Acessar Painel da Empresa →
             </Button>
           </div>
 
           {/* Aluno */}
-          <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-8 text-center hover:shadow-lg transition-shadow border border-yellow-200">
-            <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-gradient-to-br from-calmon-200 to-calmon-300 rounded-2xl p-8 text-center hover:shadow-lg transition-shadow border border-calmon-400">
+            <div className="w-16 h-16 bg-calmon-700 rounded-full flex items-center justify-center mx-auto mb-6">
               <GraduationCap className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Sou Aluno</h3>
@@ -94,7 +94,7 @@ export function Features() {
             </ul>
             <Button 
               onClick={handleStudentClick}
-              className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+              className="w-full bg-calmon-800 hover:bg-calmon-900 text-white"
             >
               Acessar Área do Aluno →
             </Button>
