@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthGuard } from "@/components/AuthGuard";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import ProdutorLayout from "@/components/ProdutorLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -72,37 +73,19 @@ const App = () => (
                 </AuthGuard>
               } />
               
-              {/* Protected Producer Routes */}
-              <Route path="/producer/dashboard" element={
+              {/* Protected Producer Routes with Layout */}
+              <Route path="/producer/*" element={
                 <AuthGuard>
-                  <ProducerDashboard />
+                  <ProdutorLayout />
                 </AuthGuard>
-              } />
-              <Route path="/producer/courses" element={
-                <AuthGuard>
-                  <ProducerCourses />
-                </AuthGuard>
-              } />
-              <Route path="/producer/courses/:courseId" element={
-                <AuthGuard>
-                  <CourseDetails />
-                </AuthGuard>
-              } />
-              <Route path="/producer/companies" element={
-                <AuthGuard>
-                  <ProducerCompanies />
-                </AuthGuard>
-              } />
-              <Route path="/producer/companies/:companyId" element={
-                <AuthGuard>
-                  <ProducerCompanyDetails />
-                </AuthGuard>
-              } />
-              <Route path="/producer/plans" element={
-                <AuthGuard>
-                  <ProducerPlans />
-                </AuthGuard>
-              } />
+              }>
+                <Route path="dashboard" element={<ProducerDashboard />} />
+                <Route path="courses" element={<ProducerCourses />} />
+                <Route path="courses/:courseId" element={<CourseDetails />} />
+                <Route path="companies" element={<ProducerCompanies />} />
+                <Route path="companies/:companyId" element={<ProducerCompanyDetails />} />
+                <Route path="plans" element={<ProducerPlans />} />
+              </Route>
               
               {/* Protected Company Routes */}
               <Route path="/company/dashboard" element={

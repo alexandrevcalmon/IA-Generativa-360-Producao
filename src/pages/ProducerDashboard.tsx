@@ -1,5 +1,4 @@
 
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,12 +32,9 @@ const ProducerDashboard = () => {
       {/* Header */}
       <header className="border-b bg-white px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <SidebarTrigger />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Painel do Produtor</h1>
-              <p className="text-gray-600">Bem-vindo de volta! Gerencie seus cursos e empresas clientes.</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Painel do Produtor</h1>
+            <p className="text-gray-600">Bem-vindo de volta! Gerencie seus cursos e empresas clientes.</p>
           </div>
           <div className="flex items-center space-x-4">
             <Badge className="bg-green-100 text-green-700">
