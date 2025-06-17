@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,7 +48,6 @@ export function UserMenu() {
       
       console.log('✅ Logout successful, redirecting to home...');
       
-      // Force redirect to home page
       window.location.href = '/';
       
     } catch (error) {
@@ -65,7 +63,6 @@ export function UserMenu() {
   const handleProfileClick = () => {
     console.log('Profile clicked for user role:', userRole);
     
-    // Route to the correct profile page based on user role
     switch (userRole) {
       case 'producer':
         navigate('/producer/profile');

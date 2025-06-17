@@ -1,7 +1,6 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { PasswordChangeDialog } from '@/components/PasswordChangeDialog';
 
 interface AuthGuardProps {
@@ -21,7 +20,6 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
     }
   }, [user, loading, navigate, redirectTo]);
 
-  // Refresh user role when component mounts or user changes
   useEffect(() => {
     if (user && !loading) {
       refreshUserRole().then(() => {
@@ -30,14 +28,11 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
     }
   }, [user, loading, refreshUserRole]);
 
-  // Additional protection: verify role consistency
   useEffect(() => {
     if (user && userRole && roleValidated) {
-      // If we expect a producer but got a different role, something went wrong
       if (requiredRole === 'producer' && userRole !== 'producer') {
         console.warn('Role mismatch detected - expected producer but got:', userRole);
         
-        // Force re-verification of user role
         refreshUserRole();
       }
     }
@@ -55,7 +50,6 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
     return null;
   }
 
-  // Show password change dialog if needed
   if (needsPasswordChange) {
     return <PasswordChangeDialog />;
   }
