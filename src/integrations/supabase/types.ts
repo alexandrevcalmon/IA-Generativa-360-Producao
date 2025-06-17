@@ -61,6 +61,7 @@ export type Database = {
           max_students: number | null
           name: string
           subscription_plan: string | null
+          subscription_plan_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -72,6 +73,7 @@ export type Database = {
           max_students?: number | null
           name: string
           subscription_plan?: string | null
+          subscription_plan_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -83,9 +85,18 @@ export type Database = {
           max_students?: number | null
           name?: string
           subscription_plan?: string | null
+          subscription_plan_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_subscription_plan_id_fkey"
+            columns: ["subscription_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       course_modules: {
         Row: {
@@ -496,6 +507,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          max_students: number
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_students: number
+          name: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_students?: number
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {

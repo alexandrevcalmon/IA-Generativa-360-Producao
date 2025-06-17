@@ -1,0 +1,162 @@
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  max_students: number;
+  features: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePlanData {
+  name: string;
+  description?: string;
+  price: number;
+  max_students: number;
+  features: string[];
+}
+
+export interface UpdatePlanData extends CreatePlanData {
+  id: string;
+  is_active?: boolean;
+}
+
+export const useSubscriptionPlans = () => {
+  return useQuery({
+    queryKey: ['subscription-plans'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .order('price', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching subscription plans:', error);
+        throw error;
+      }
+
+      return data as SubscriptionPlan[];
+    }
+  });
+};
+
+export const useCreateSubscriptionPlan = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (planData: CreatePlanData) => {
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .insert([planData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating subscription plan:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      toast({
+        title: "Plano criado com sucesso!",
+        description: "O novo plano de assinatura foi adicionado.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating plan:', error);
+      toast({
+        title: "Erro ao criar plano",
+        description: "Ocorreu um erro ao criar o plano de assinatura.",
+        variant: "destructive",
+      });
+    }
+  });
+};
+
+export const useUpdateSubscriptionPlan = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (planData: UpdatePlanData) => {
+      const { id, ...updateData } = planData;
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating subscription plan:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      toast({
+        title: "Plano atualizado com sucesso!",
+        description: "As alterações foram salvas.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating plan:', error);
+      toast({
+        title: "Erro ao atualizar plano",
+        description: "Ocorreu um erro ao atualizar o plano de assinatura.",
+        variant: "destructive",
+      });
+    }
+  });
+};
+
+export const useDeleteSubscriptionPlan = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (planId: string) => {
+      // Instead of deleting, we'll mark as inactive
+      const { error } = await supabase
+        .from('subscription_plans')
+        .update({ is_active: false })
+        .eq('id', planId);
+
+      if (error) {
+        console.error('Error deactivating subscription plan:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      toast({
+        title: "Plano desativado com sucesso!",
+        description: "O plano foi desativado e não aparecerá mais para novas assinaturas.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error deactivating plan:', error);
+      toast({
+        title: "Erro ao desativar plano",
+        description: "Ocorreu um erro ao desativar o plano.",
+        variant: "destructive",
+      });
+    }
+  });
+};
