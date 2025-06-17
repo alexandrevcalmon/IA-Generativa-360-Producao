@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { PasswordChangeDialog } from '@/components/PasswordChangeDialog';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -10,7 +11,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: AuthGuardProps) {
-  const { user, loading, userRole } = useAuth();
+  const { user, loading, userRole, needsPasswordChange } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,6 +30,11 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
 
   if (!user) {
     return null;
+  }
+
+  // Show password change dialog if needed
+  if (needsPasswordChange) {
+    return <PasswordChangeDialog />;
   }
 
   if (requiredRole && userRole !== requiredRole) {

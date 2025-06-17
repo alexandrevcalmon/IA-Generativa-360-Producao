@@ -8,6 +8,7 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ProdutorLayout from "@/components/ProdutorLayout";
+import StudentLayout from "@/components/StudentLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -25,6 +26,7 @@ import ProducerCompanies from "./pages/ProducerCompanies";
 import ProducerCompanyDetails from "./pages/ProducerCompanyDetails";
 import ProducerPlans from "./pages/ProducerPlans";
 import CompanyDashboard from "./pages/CompanyDashboard";
+import StudentDashboard from "./pages/StudentDashboard";
 
 const queryClient = new QueryClient();
 
@@ -41,7 +43,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/login-produtor" element={<LoginProdutor />} />
               
-              {/* Protected Student Routes */}
+              {/* Protected Student Routes - Legacy */}
               <Route path="/dashboard" element={
                 <AuthGuard>
                   <Dashboard />
@@ -73,9 +75,24 @@ const App = () => (
                 </AuthGuard>
               } />
               
+              {/* Protected Student Routes with Layout */}
+              <Route path="/student/*" element={
+                <AuthGuard requiredRole="student">
+                  <StudentLayout />
+                </AuthGuard>
+              }>
+                <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="courses" element={<Courses />} />
+                <Route path="progress" element={<Analytics />} />
+                <Route path="gamification" element={<div className="p-6">Gamificação em desenvolvimento</div>} />
+                <Route path="goals" element={<div className="p-6">Objetivos em desenvolvimento</div>} />
+                <Route path="community" element={<Community />} />
+                <Route path="settings" element={<Profile />} />
+              </Route>
+              
               {/* Protected Producer Routes with Layout */}
               <Route path="/producer/*" element={
-                <AuthGuard>
+                <AuthGuard requiredRole="producer">
                   <ProdutorLayout />
                 </AuthGuard>
               }>
@@ -89,7 +106,7 @@ const App = () => (
               
               {/* Protected Company Routes */}
               <Route path="/company/dashboard" element={
-                <AuthGuard>
+                <AuthGuard requiredRole="company">
                   <CompanyDashboard />
                 </AuthGuard>
               } />

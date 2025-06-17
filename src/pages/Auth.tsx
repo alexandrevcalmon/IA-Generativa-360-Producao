@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { PasswordChangeDialog } from '@/components/PasswordChangeDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,7 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const { signIn, signUp, user, userRole, loading: authLoading } = useAuth();
+  const { signIn, signUp, user, userRole, needsPasswordChange, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -30,9 +30,14 @@ export default function Auth() {
     }
   }, [searchParams]);
 
-  // Redirect if already authenticated
+  // Show password change dialog if needed
+  if (!authLoading && user && needsPasswordChange) {
+    return <PasswordChangeDialog />;
+  }
+
+  // Redirect if already authenticated and doesn't need password change
   useEffect(() => {
-    if (!authLoading && user && userRole) {
+    if (!authLoading && user && userRole && !needsPasswordChange) {
       console.log('User authenticated with role:', userRole, 'Redirecting...');
       
       switch (userRole) {
@@ -53,7 +58,7 @@ export default function Auth() {
           navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, userRole, authLoading, navigate]);
+  }, [user, userRole, authLoading, needsPasswordChange, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

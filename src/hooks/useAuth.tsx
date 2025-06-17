@@ -11,10 +11,13 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, role?: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
+  changePassword: (newPassword: string) => Promise<{ error: any }>;
   userRole: string | null;
   isProducer: boolean;
   isCompany: boolean;
   isStudent: boolean;
+  needsPasswordChange: boolean;
+  companyUserData: any;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,24 +27,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
+  const [companyUserData, setCompanyUserData] = useState<any>(null);
   const { toast } = useToast();
 
   const fetchUserRole = async (userId: string): Promise<string | null> => {
     try {
       console.log('Fetching role for user:', userId);
-      const { data: profile, error } = await supabase
+      
+      // First check if user is in profiles table (producer/company)
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .single();
       
-      if (error) {
-        console.error('Error fetching user role:', error);
-        return null;
+      if (!profileError && profile?.role) {
+        console.log('User role from profiles:', profile.role);
+        return profile.role;
       }
       
-      console.log('User role fetched:', profile?.role);
-      return profile?.role || null;
+      // If not found in profiles, check company_users table (student/collaborator)
+      const { data: companyUser, error: companyUserError } = await supabase
+        .from('company_users')
+        .select('*, companies(name)')
+        .eq('auth_user_id', userId)
+        .single();
+      
+      if (!companyUserError && companyUser) {
+        console.log('User found in company_users:', companyUser);
+        setCompanyUserData(companyUser);
+        setNeedsPasswordChange(companyUser.needs_password_change || false);
+        return 'student';
+      }
+      
+      console.log('User role not found, defaulting to student');
+      return 'student';
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
       return null;
@@ -62,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user && isMounted) {
-          // Fetch user role immediately
+          // Fetch user role and additional data
           const role = await fetchUserRole(session.user.id);
           if (isMounted) {
             setUserRole(role);
@@ -70,6 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } else if (isMounted) {
           setUserRole(null);
+          setNeedsPasswordChange(false);
+          setCompanyUserData(null);
         }
         
         if (isMounted) {
@@ -178,6 +201,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const changePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (!error && companyUserData) {
+        // Update the needs_password_change flag
+        await supabase
+          .from('company_users')
+          .update({ needs_password_change: false })
+          .eq('auth_user_id', user?.id);
+        
+        setNeedsPasswordChange(false);
+        
+        toast({
+          title: "Senha alterada com sucesso!",
+          description: "Sua nova senha foi definida.",
+        });
+      }
+
+      return { error };
+    } catch (error) {
+      console.error('Change password error:', error);
+      return { error };
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -190,6 +241,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       } else {
         setUserRole(null);
+        setNeedsPasswordChange(false);
+        setCompanyUserData(null);
         toast({
           title: "Logout realizado com sucesso!",
           description: "Até mais!",
@@ -214,10 +267,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
+    changePassword,
     userRole,
     isProducer,
     isCompany,
     isStudent,
+    needsPasswordChange,
+    companyUserData,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
