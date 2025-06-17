@@ -1,34 +1,34 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
 import { PasswordChangeDialog } from '@/components/PasswordChangeDialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, EyeOff, Building2, GraduationCap, Briefcase, Loader2 } from 'lucide-react';
+import { AuthTabs } from '@/components/auth/AuthTabs';
+import { RoleIndicator } from '@/components/auth/RoleIndicator';
+import { AuthLoadingScreen } from '@/components/auth/AuthLoadingScreen';
+import { useAuthRedirects } from '@/hooks/auth/useAuthRedirects';
+import { useAuthForm } from '@/hooks/auth/useAuthForm';
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('student');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  
-  const { signIn, signUp, user, userRole, needsPasswordChange, loading: authLoading } = useAuth();
+  const { user, userRole, needsPasswordChange, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  
+  const {
+    isLogin,
+    setIsLogin,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    role,
+    setRole,
+    loading,
+    handleSubmit
+  } = useAuthForm();
 
-  // Set role from URL parameter
-  useEffect(() => {
-    const roleParam = searchParams.get('role');
-    if (roleParam && ['student', 'company', 'producer'].includes(roleParam)) {
-      setRole(roleParam);
-    }
-  }, [searchParams]);
+  // Handle redirects for authenticated users
+  useAuthRedirects({ user, userRole, authLoading, needsPasswordChange });
 
   // Priority 1: Show password change dialog if user needs to change password
   if (!authLoading && user && needsPasswordChange) {
@@ -36,103 +36,10 @@ export default function Auth() {
     return <PasswordChangeDialog />;
   }
 
-  // Priority 2: Handle redirects for authenticated users who don't need password change
-  useEffect(() => {
-    console.log('Auth redirect check:', {
-      authLoading,
-      user: user?.email,
-      userRole,
-      needsPasswordChange
-    });
-
-    // Only redirect if all conditions are met
-    if (!authLoading && user && userRole && !needsPasswordChange) {
-      console.log('Redirecting authenticated user. Role:', userRole);
-      
-      switch (userRole) {
-        case 'producer':
-          console.log('Redirecting to producer dashboard');
-          navigate('/producer/dashboard', { replace: true });
-          break;
-        case 'company':
-          console.log('Redirecting to company dashboard');
-          navigate('/company/dashboard', { replace: true });
-          break;
-        case 'student':
-          console.log('Redirecting to student dashboard');
-          navigate('/student/dashboard', { replace: true });
-          break;
-        default:
-          console.log('Unknown role, redirecting to student dashboard');
-          navigate('/student/dashboard', { replace: true });
-      }
-    }
-  }, [user, userRole, authLoading, needsPasswordChange, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (isLogin) {
-        console.log('Attempting login for:', email);
-        const { error } = await signIn(email, password);
-        
-        if (error) {
-          console.error('Login error:', error);
-        } else {
-          console.log('Login successful');
-        }
-      } else {
-        console.log('Attempting signup for:', email, 'with role:', role);
-        const { error } = await signUp(email, password, role);
-        if (!error) {
-          setIsLogin(true);
-        }
-      }
-    } catch (error) {
-      console.error('Auth error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Show loading state while checking authentication
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <div className="text-lg">Verificando autenticação...</div>
-        </div>
-      </div>
-    );
+    return <AuthLoadingScreen />;
   }
-
-  const getRoleInfo = () => {
-    switch (role) {
-      case 'producer':
-        return {
-          icon: <Briefcase className="h-5 w-5" />,
-          title: 'Produtor de Conteúdo',
-          description: 'Crie e gerencie conteúdos educacionais'
-        };
-      case 'company':
-        return {
-          icon: <Building2 className="h-5 w-5" />,
-          title: 'Empresa',
-          description: 'Gerencie equipes e acompanhe o desenvolvimento'
-        };
-      default:
-        return {
-          icon: <GraduationCap className="h-5 w-5" />,
-          title: 'Colaborador/Estudante',
-          description: 'Acesse cursos e desenvolva suas habilidades'
-        };
-    }
-  };
-
-  const roleInfo = getRoleInfo();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
@@ -145,163 +52,21 @@ export default function Auth() {
             {isLogin ? 'Entre em sua conta' : 'Crie sua conta'}
           </CardDescription>
           
-          {/* Role indicator */}
-          <div className="flex items-center justify-center space-x-2 mt-4 p-3 bg-gray-50 rounded-lg">
-            {roleInfo.icon}
-            <div className="text-left">
-              <div className="font-semibold text-sm text-gray-900">{roleInfo.title}</div>
-              <div className="text-xs text-gray-600">{roleInfo.description}</div>
-            </div>
-          </div>
+          <RoleIndicator role={role} />
         </CardHeader>
         <CardContent>
-          <Tabs value={isLogin ? 'login' : 'register'} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger 
-                value="login" 
-                onClick={() => setIsLogin(true)}
-              >
-                Entrar
-              </TabsTrigger>
-              <TabsTrigger 
-                value="register" 
-                onClick={() => setIsLogin(false)}
-              >
-                Cadastrar
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Entrando...
-                    </>
-                  ) : (
-                    'Entrar'
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="register">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                      minLength={6}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="role">Tipo de Conta</Label>
-                  <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo de conta" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">Colaborador/Estudante</SelectItem>
-                      <SelectItem value="company">Empresa</SelectItem>
-                      <SelectItem value="producer">Produtor de Conteúdo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Criando conta...
-                    </>
-                  ) : (
-                    'Criar Conta'
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+          <AuthTabs
+            isLogin={isLogin}
+            setIsLogin={setIsLogin}
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            role={role}
+            setRole={setRole}
+            loading={loading}
+            onSubmit={handleSubmit}
+          />
 
           <div className="mt-6 text-center">
             <Button 
