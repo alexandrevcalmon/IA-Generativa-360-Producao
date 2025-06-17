@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -69,8 +68,17 @@ export const CreateCourseDialog = ({ isOpen, onClose, course }: CreateCourseDial
 
   const onSubmit = async (data: CourseFormData) => {
     try {
+      // Ensure title is present (it's required by the schema)
       const courseData = {
-        ...data,
+        title: data.title, // This is guaranteed to be string due to schema validation
+        description: data.description || null,
+        category: data.category || null,
+        difficulty_level: data.difficulty_level || null,
+        estimated_hours: data.estimated_hours || null,
+        price: data.price || null,
+        thumbnail_url: data.thumbnail_url || null,
+        is_published: data.is_published,
+        tags: data.tags,
         instructor_id: null, // Por enquanto, não temos sistema de instrutores
       };
 
