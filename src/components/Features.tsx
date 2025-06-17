@@ -7,7 +7,7 @@ export function Features() {
   const navigate = useNavigate();
 
   const handleProducerClick = () => {
-    navigate('/login-produtor');
+    navigate('/auth?role=producer');
   };
 
   const handleCompanyClick = () => {
