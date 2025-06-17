@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function Hero() {
@@ -51,18 +51,6 @@ export function Hero() {
                   🎓 Sou Produtor
                 </Button>
               </div>
-            </div>
-
-            {/* Demo Button */}
-            <div className="mb-8 text-center">
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="border-calmon-200 text-calmon-700 hover:bg-calmon-50 px-8 py-3 text-lg"
-              >
-                <Play className="mr-2 h-5 w-5" />
-                Ver demonstração
-              </Button>
             </div>
 
             {/* Stats */}

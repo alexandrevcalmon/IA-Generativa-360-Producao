@@ -7,7 +7,7 @@ export function CTA() {
   const navigate = useNavigate();
 
   const benefits = [
-    "Setup gratuito e rápido",
+    "Setup rápido e personalizado",
     "Suporte dedicado 24/7",
     "Integração com sistemas existentes",
     "ROI mensurável desde o primeiro mês"
@@ -31,7 +31,7 @@ export function CTA() {
               </h2>
               <p className="text-xl text-calmon-100 mb-8 max-w-2xl mx-auto">
                 Junte-se a centenas de empresas que já revolucionaram a capacitação 
-                de suas equipes. Comece seu teste gratuito agora mesmo.
+                de suas equipes. Cadastre-se agora e comece a transformação.
               </p>
               
               {/* CTA Buttons */}
@@ -41,7 +41,7 @@ export function CTA() {
                   className="bg-white text-calmon-600 hover:bg-gray-50 px-8 py-4 text-lg font-semibold"
                   onClick={() => navigate('/auth')}
                 >
-                  Começar teste gratuito
+                  Cadastrar minha empresa
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button 
@@ -49,7 +49,7 @@ export function CTA() {
                   size="lg" 
                   className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold"
                 >
-                  Agendar demonstração
+                  Falar com consultor
                 </Button>
               </div>
 
