@@ -26,8 +26,22 @@ import CompanyLayout from "./components/CompanyLayout";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import StudentLayout from "./components/StudentLayout";
 import StudentDashboard from "./pages/StudentDashboard";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 const queryClient = new QueryClient();
+
+// Legacy layout wrapper for backward compatibility
+const LegacyLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
+      </div>
+    </SidebarProvider>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -66,13 +80,13 @@ const App = () => (
               <Route path="profile" element={<Profile />} />
             </Route>
 
-            {/* Legacy Routes (for backward compatibility) */}
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/learning" element={<Learning />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/profile" element={<Profile />} />
+            {/* Legacy Routes (for backward compatibility) - wrapped with SidebarProvider */}
+            <Route path="/dashboard" element={<LegacyLayout><Dashboard /></LegacyLayout>} />
+            <Route path="/courses" element={<LegacyLayout><Courses /></LegacyLayout>} />
+            <Route path="/learning" element={<LegacyLayout><Learning /></LegacyLayout>} />
+            <Route path="/community" element={<LegacyLayout><Community /></LegacyLayout>} />
+            <Route path="/analytics" element={<LegacyLayout><Analytics /></LegacyLayout>} />
+            <Route path="/profile" element={<LegacyLayout><Profile /></LegacyLayout>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
