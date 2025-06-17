@@ -90,6 +90,13 @@ const Profile = () => {
 
   // Get company name from company data
   const getCompanyName = () => {
+    console.log('🏢 Getting company name from data:', {
+      hasCompanyUserData: !!companyUserData,
+      hasCompaniesProperty: !!companyUserData?.companies,
+      companyName: companyUserData?.companies?.name,
+      fullCompanyData: companyUserData?.companies
+    });
+    
     if (companyUserData?.companies?.name) {
       return companyUserData.companies.name;
     }

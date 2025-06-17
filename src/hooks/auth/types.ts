@@ -1,4 +1,3 @@
-
 import { User, Session } from '@supabase/supabase-js';
 
 export interface AuthContextType {
@@ -22,4 +21,24 @@ export interface UserRoleData {
   role: string | null;
   needsPasswordChange: boolean;
   companyUserData: any;
+}
+
+export interface CompanyData {
+  id: string;
+  name: string;
+  official_name?: string;
+}
+
+export interface CompanyUserData {
+  id: string;
+  auth_user_id: string;
+  company_id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  position?: string;
+  is_active: boolean;
+  needs_password_change: boolean;
+  created_at: string;
+  companies?: CompanyData | null;
 }
