@@ -57,6 +57,30 @@ export const useGetCompanyCollaborators = (companyId?: string | null) => {
   });
 };
 
+// Helper function to check if user exists in auth.users
+const checkUserExists = async (email: string) => {
+  // We can't directly query auth.users, so we'll try to sign up and catch the specific error
+  return null; // We'll handle this in the mutation function
+};
+
+// Helper function to get existing user ID by email from company_users or other tables
+const findExistingUserByEmail = async (email: string) => {
+  // First check if user exists in company_users table
+  const { data: existingUser, error } = await supabase
+    .from("company_users")
+    .select("auth_user_id")
+    .eq("email", email)
+    .single();
+
+  if (!error && existingUser) {
+    return existingUser.auth_user_id;
+  }
+
+  // Could also check profiles table or companies table for existing users
+  // but for now we'll return null and let the signup handle it
+  return null;
+};
+
 // Mutation Hook: Add Company Collaborator
 export const useAddCompanyCollaborator = () => {
   const queryClient = useQueryClient();
@@ -67,63 +91,128 @@ export const useAddCompanyCollaborator = () => {
       const { company_id, name, email, phone, position } = collaboratorData;
       const defaultPassword = "ia360graus"; // Placeholder default password
 
-      // 1. Attempt to sign up the user in auth.users
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: email,
-        password: defaultPassword,
-        options: {
-          // You might add user_metadata here if needed immediately upon sign-up
-          // data: { full_name: name } // Example, if your auth.users table uses this
+      let auth_user_id: string;
+      let isExistingUser = false;
+
+      try {
+        // 1. First, try to sign up the user
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: email,
+          password: defaultPassword,
+          options: {
+            // You might add user_metadata here if needed immediately upon sign-up
+            // data: { full_name: name } // Example, if your auth.users table uses this
+          }
+        });
+
+        if (signUpError) {
+          // Check if error is due to user already existing
+          if (signUpError.message.includes("User already registered") || 
+              signUpError.message.includes("already registered") ||
+              signUpError.message.includes("already been registered")) {
+            
+            console.log("User already exists, attempting to link existing user");
+            isExistingUser = true;
+            
+            // Try to find the existing user ID
+            const existingUserId = await findExistingUserByEmail(email);
+            
+            if (existingUserId) {
+              auth_user_id = existingUserId;
+              console.log("Found existing user ID:", auth_user_id);
+            } else {
+              // For now, we'll throw an error asking user to contact admin
+              throw new Error(`Usuário com email ${email} já existe no sistema mas não foi possível vincular automaticamente. Entre em contato com o administrador para vincular esta conta manualmente.`);
+            }
+          } else {
+            // Other signup errors
+            console.error("Error signing up new collaborator in auth:", signUpError);
+            throw new Error(`Erro ao criar usuário de autenticação: ${signUpError.message}`);
+          }
+        } else {
+          // Successful signup
+          if (!signUpData.user) {
+            throw new Error("Não foi possível criar o usuário de autenticação. User object não encontrado.");
+          }
+          auth_user_id = signUpData.user.id;
+          console.log("Successfully created new user:", auth_user_id);
         }
-      });
 
-      if (signUpError) {
-        // This error could mean user already exists, or other issues (e.g., weak password policy if not default)
-        console.error("Error signing up new collaborator in auth:", signUpError);
-        // Check for specific error indicating user already exists
-        if (signUpError.message.includes("User already registered")) {
-            // For now, we throw an error. Future enhancement: try to link existing auth user.
-            throw new Error(`Usuário com email ${email} já existe. Funcionalidade de vincular usuário existente pendente.`);
+        // 2. Check if user is already a collaborator in this company
+        const { data: existingCollaborator, error: checkError } = await supabase
+          .from("company_users")
+          .select("id, is_active")
+          .eq("auth_user_id", auth_user_id)
+          .eq("company_id", company_id)
+          .single();
+
+        if (!checkError && existingCollaborator) {
+          if (existingCollaborator.is_active) {
+            throw new Error(`O usuário ${email} já é um colaborador ativo desta empresa.`);
+          } else {
+            // Reactivate existing collaborator
+            const { data: reactivatedData, error: reactivateError } = await supabase
+              .from("company_users")
+              .update({
+                name: name,
+                phone: phone,
+                position: position,
+                is_active: true,
+                needs_password_change: isExistingUser ? false : true, // Existing users don't need password change
+              })
+              .eq("id", existingCollaborator.id)
+              .select()
+              .single();
+
+            if (reactivateError) {
+              console.error("Error reactivating collaborator:", reactivateError);
+              throw new Error(`Erro ao reativar colaborador: ${reactivateError.message}`);
+            }
+
+            return reactivatedData;
+          }
         }
-        throw new Error(`Erro ao criar usuário de autenticação: ${signUpError.message}`);
+
+        // 3. Insert new collaborator record
+        const { data: companyUserData, error: companyUserError } = await supabase
+          .from("company_users")
+          .insert([
+            {
+              auth_user_id: auth_user_id,
+              company_id: company_id,
+              name: name,
+              email: email,
+              phone: phone, // Added phone field
+              position: position,
+              is_active: true,
+              needs_password_change: isExistingUser ? false : true, // Existing users don't need password change
+            },
+          ])
+          .select()
+          .single();
+
+        if (companyUserError) {
+          console.error("Error inserting into company_users:", companyUserError);
+          throw new Error(`Erro ao adicionar colaborador à empresa: ${companyUserError.message}`);
+        }
+
+        return companyUserData;
+
+      } catch (error) {
+        console.error("Error in addCollaborator mutation:", error);
+        throw error;
       }
-
-      if (!signUpData.user) {
-        throw new Error("Não foi possível criar o usuário de autenticação. User object não encontrado.");
-      }
-
-      const auth_user_id = signUpData.user.id;
-
-      // 2. Insert into company_users table
-      const { data: companyUserData, error: companyUserError } = await supabase
-        .from("company_users")
-        .insert([
-          {
-            auth_user_id: auth_user_id,
-            company_id: company_id,
-            name: name,
-            email: email,
-            phone: phone, // Added phone field
-            position: position,
-            is_active: true,
-            needs_password_change: true,
-          },
-        ])
-        .select()
-        .single();
-
-      if (companyUserError) {
-        console.error("Error inserting into company_users:", companyUserError);
-        throw new Error(`Erro ao adicionar colaborador à empresa: ${companyUserError.message}`);
-      }
-
-      return companyUserData;
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["companyCollaborators", variables.company_id] });
+      
+      const isReactivation = !data.needs_password_change;
+      
       toast({
-        title: "Colaborador adicionado com sucesso!",
-        description: `${variables.name} foi adicionado à empresa e receberá instruções para definir a senha.`,
+        title: isReactivation ? "Colaborador vinculado com sucesso!" : "Colaborador adicionado com sucesso!",
+        description: isReactivation 
+          ? `${variables.name} foi vinculado à empresa com sua conta existente.`
+          : `${variables.name} foi adicionado à empresa e receberá instruções para definir a senha.`,
       });
     },
     onError: (error: Error) => {
