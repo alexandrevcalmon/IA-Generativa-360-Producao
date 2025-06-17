@@ -12,6 +12,7 @@ export interface CourseModule {
   order_index: number;
   is_published: boolean;
   created_at: string;
+  image_url?: string | null;
 }
 
 export const useCourseModules = (courseId: string) => {

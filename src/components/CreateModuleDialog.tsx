@@ -22,12 +22,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useCreateModule, useUpdateModule, CourseModule } from "@/hooks/useCourseModules";
+import { FileUploadField } from "@/components/FileUploadField";
 
 const moduleSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   description: z.string().optional(),
   order_index: z.number().min(0),
   is_published: z.boolean().default(false),
+  image_url: z.string().optional(),
 });
 
 type ModuleFormData = z.infer<typeof moduleSchema>;
@@ -50,6 +52,7 @@ export const CreateModuleDialog = ({ isOpen, onClose, courseId, module }: Create
       description: module?.description || "",
       order_index: module?.order_index || 0,
       is_published: module?.is_published || false,
+      image_url: (module as any)?.image_url || "",
     },
   });
 
@@ -61,6 +64,7 @@ export const CreateModuleDialog = ({ isOpen, onClose, courseId, module }: Create
         description: data.description || null,
         order_index: data.order_index,
         is_published: data.is_published,
+        image_url: data.image_url || null,
       };
 
       if (module) {
@@ -78,7 +82,7 @@ export const CreateModuleDialog = ({ isOpen, onClose, courseId, module }: Create
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {module ? "Editar Módulo" : "Criar Novo Módulo"}
@@ -118,6 +122,30 @@ export const CreateModuleDialog = ({ isOpen, onClose, courseId, module }: Create
                       placeholder="Descreva o conteúdo do módulo"
                       className="min-h-[80px]"
                       {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="image_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <FileUploadField
+                      label="Imagem do Módulo (720x1280px recomendado)"
+                      value={field.value || ""}
+                      onChange={(url) => field.onChange(url || "")}
+                      uploadOptions={{
+                        bucket: 'module-images',
+                        maxSize: 5 * 1024 * 1024, // 5MB
+                        allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+                      }}
+                      accept="image/*"
+                      preview={true}
                     />
                   </FormControl>
                   <FormMessage />

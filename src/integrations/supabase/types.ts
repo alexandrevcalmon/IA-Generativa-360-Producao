@@ -247,6 +247,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          image_url: string | null
           is_published: boolean | null
           order_index: number
           title: string
@@ -256,6 +257,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_published?: boolean | null
           order_index: number
           title: string
@@ -265,6 +267,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_published?: boolean | null
           order_index?: number
           title?: string
@@ -601,11 +604,14 @@ export type Database = {
           created_at: string | null
           duration_minutes: number | null
           id: string
+          image_url: string | null
           is_free: boolean | null
+          material_url: string | null
           module_id: string | null
           order_index: number
           resources: Json | null
           title: string
+          video_file_url: string | null
           video_url: string | null
         }
         Insert: {
@@ -613,11 +619,14 @@ export type Database = {
           created_at?: string | null
           duration_minutes?: number | null
           id?: string
+          image_url?: string | null
           is_free?: boolean | null
+          material_url?: string | null
           module_id?: string | null
           order_index: number
           resources?: Json | null
           title: string
+          video_file_url?: string | null
           video_url?: string | null
         }
         Update: {
@@ -625,11 +634,14 @@ export type Database = {
           created_at?: string | null
           duration_minutes?: number | null
           id?: string
+          image_url?: string | null
           is_free?: boolean | null
+          material_url?: string | null
           module_id?: string | null
           order_index?: number
           resources?: Json | null
           title?: string
+          video_file_url?: string | null
           video_url?: string | null
         }
         Relationships: [

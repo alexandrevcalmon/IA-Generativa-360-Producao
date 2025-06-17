@@ -15,6 +15,9 @@ export interface Lesson {
   is_free: boolean;
   resources: any | null;
   created_at: string;
+  image_url?: string | null;
+  video_file_url?: string | null;
+  material_url?: string | null;
 }
 
 export const useLessons = (moduleId: string) => {

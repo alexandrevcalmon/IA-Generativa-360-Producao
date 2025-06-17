@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useCreateLesson, useUpdateLesson, Lesson } from "@/hooks/useLessons";
+import { FileUploadField } from "@/components/FileUploadField";
 
 const lessonSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -30,6 +31,9 @@ const lessonSchema = z.object({
   duration_minutes: z.number().min(0).optional(),
   order_index: z.number().min(0),
   is_free: z.boolean().default(false),
+  image_url: z.string().optional(),
+  video_file_url: z.string().optional(),
+  material_url: z.string().optional(),
 });
 
 type LessonFormData = z.infer<typeof lessonSchema>;
@@ -54,6 +58,9 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
       duration_minutes: lesson?.duration_minutes || undefined,
       order_index: lesson?.order_index || 0,
       is_free: lesson?.is_free || false,
+      image_url: (lesson as any)?.image_url || "",
+      video_file_url: (lesson as any)?.video_file_url || "",
+      material_url: (lesson as any)?.material_url || "",
     },
   });
 
@@ -68,6 +75,9 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
         order_index: data.order_index,
         is_free: data.is_free,
         resources: null,
+        image_url: data.image_url || null,
+        video_file_url: data.video_file_url || null,
+        material_url: data.material_url || null,
       };
 
       if (lesson) {
@@ -85,7 +95,7 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {lesson ? "Editar Aula" : "Criar Nova Aula"}
@@ -132,16 +142,94 @@ export const CreateLessonDialog = ({ isOpen, onClose, moduleId, lesson }: Create
               )}
             />
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="image_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <FileUploadField
+                        label="Imagem da Aula (1920x1080px)"
+                        value={field.value || ""}
+                        onChange={(url) => field.onChange(url || "")}
+                        uploadOptions={{
+                          bucket: 'lesson-images',
+                          maxSize: 5 * 1024 * 1024, // 5MB
+                          allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+                        }}
+                        accept="image/*"
+                        preview={true}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="video_file_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <FileUploadField
+                        label="Arquivo de Vídeo (16:9)"
+                        value={field.value || ""}
+                        onChange={(url) => field.onChange(url || "")}
+                        uploadOptions={{
+                          bucket: 'lesson-videos',
+                          maxSize: 100 * 1024 * 1024, // 100MB
+                          allowedTypes: ['video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov'],
+                        }}
+                        accept="video/*"
+                        preview={true}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="video_url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL do Vídeo</FormLabel>
+                  <FormLabel>URL do Vídeo (YouTube, Vimeo, etc.)</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="https://youtube.com/watch?v=..."
                       {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="material_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <FileUploadField
+                      label="Material da Aula (.pdf, .xlsx, .docx, .csv)"
+                      value={field.value || ""}
+                      onChange={(url) => field.onChange(url || "")}
+                      uploadOptions={{
+                        bucket: 'lesson-materials',
+                        maxSize: 10 * 1024 * 1024, // 10MB
+                        allowedTypes: [
+                          'application/pdf',
+                          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                          'text/csv'
+                        ],
+                      }}
+                      accept=".pdf,.xlsx,.docx,.csv"
                     />
                   </FormControl>
                   <FormMessage />
