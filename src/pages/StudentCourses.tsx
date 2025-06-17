@@ -52,14 +52,34 @@ const StudentCourses = () => {
     return placeholderImages[index % placeholderImages.length];
   };
 
+  const getImageUrl = (course: any, index: number) => {
+    // Log para debug das imagens
+    console.log('Course thumbnail URL:', course.thumbnail_url);
+    console.log('Course title:', course.title);
+    
+    // Se há thumbnail_url, tenta usar ela. Se falhar, usa placeholder
+    if (course.thumbnail_url) {
+      return course.thumbnail_url;
+    }
+    
+    return getPlaceholderImage(index);
+  };
+
   const CourseCard = ({ course, isListView = false, index }: { course: any, isListView?: boolean, index: number }) => (
     <Card className={`hover-lift transition-all duration-200 ${isListView ? 'flex flex-row' : ''}`}>
       <div className={`${isListView ? 'w-48 flex-shrink-0' : 'w-full'}`}>
         <div className={`relative ${isListView ? 'h-32' : 'h-48'} overflow-hidden ${isListView ? 'rounded-l-lg rounded-tr-none' : 'rounded-t-lg'}`}>
           <img 
-            src={course.thumbnail_url || getPlaceholderImage(index)}
+            src={getImageUrl(course, index)}
             alt={course.title}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              console.log('Image failed to load, falling back to placeholder');
+              e.currentTarget.src = getPlaceholderImage(index);
+            }}
+            onLoad={() => {
+              console.log('Image loaded successfully:', course.thumbnail_url || 'placeholder');
+            }}
           />
           {course.progress_percentage > 0 && (
             <Badge className="absolute top-2 right-2 bg-green-500">

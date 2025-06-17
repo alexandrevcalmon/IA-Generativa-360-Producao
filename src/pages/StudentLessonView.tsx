@@ -187,7 +187,7 @@ const StudentLessonView = () => {
                         ref={videoRef}
                         className="w-full aspect-video"
                         controls
-                        poster={currentLesson.image_url}
+                        poster={course?.thumbnail_url || undefined}
                       >
                         <source src={currentLesson.video_file_url} type="video/mp4" />
                         Seu navegador não suporta vídeos HTML5.

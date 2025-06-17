@@ -51,7 +51,7 @@ function App() {
               <Route path="/login-produtor" element={<LoginProdutor />} />
 
               {/* Producer routes */}
-              <Route path="/producer" element={<AuthGuard allowedRoles={["producer"]} />}>
+              <Route path="/producer" element={<AuthGuard />}>
                 <Route index element={<Navigate to="/producer/dashboard" replace />} />
                 <Route path="dashboard" element={<ProducerDashboard />} />
                 <Route path="profile" element={<ProducerProfile />} />
@@ -63,7 +63,7 @@ function App() {
               </Route>
 
               {/* Company routes */}
-              <Route path="/company" element={<AuthGuard allowedRoles={["company"]} />}>
+              <Route path="/company" element={<AuthGuard />}>
                 <Route index element={<Navigate to="/company/dashboard" replace />} />
                 <Route path="dashboard" element={<CompanyDashboard />} />
                 <Route path="profile" element={<CompanyProfile />} />
@@ -74,7 +74,7 @@ function App() {
               </Route>
 
               {/* Student routes */}
-              <Route path="/student" element={<AuthGuard allowedRoles={["student"]} />}>
+              <Route path="/student" element={<AuthGuard />}>
                 <Route index element={<Navigate to="/student/dashboard" replace />} />
                 <Route path="dashboard" element={<StudentDashboard />} />
                 <Route path="profile" element={<StudentProfile />} />
