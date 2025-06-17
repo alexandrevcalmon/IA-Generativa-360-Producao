@@ -46,6 +46,7 @@ export function AddCollaboratorDialog({
     e.preventDefault();
     
     const submitData = {
+      company_id: companyId,
       name: formData.name,
       email: formData.email,
       position: formData.position || null,
@@ -53,10 +54,7 @@ export function AddCollaboratorDialog({
     };
 
     try {
-      await addCollaboratorMutation.mutateAsync({
-        companyId,
-        collaboratorData: submitData
-      });
+      await addCollaboratorMutation.mutateAsync(submitData);
       setFormData(initialFormData);
       onClose();
     } catch (error) {
