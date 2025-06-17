@@ -27,7 +27,7 @@ export const useCourseModules = (courseId: string) => {
         .from('course_modules')
         .select('*')
         .eq('course_id', courseId)
-        .order('order_index', { ascending: true });
+        .order('created_at', { ascending: true }); // Ordenar por data de criação
 
       if (error) {
         console.error('Error fetching modules:', error);
@@ -54,9 +54,20 @@ export const useCreateModule = () => {
 
       console.log('Creating module with data:', moduleData);
 
+      // Buscar o próximo order_index baseado na quantidade de módulos
+      const { count } = await supabase
+        .from('course_modules')
+        .select('*', { count: 'exact', head: true })
+        .eq('course_id', moduleData.course_id);
+
+      const dataWithOrder = {
+        ...moduleData,
+        order_index: count || 0,
+      };
+
       const { data, error } = await supabase
         .from('course_modules')
-        .insert([moduleData])
+        .insert([dataWithOrder])
         .select()
         .single();
 
@@ -126,6 +137,53 @@ export const useUpdateModule = () => {
       toast({
         title: "Erro",
         description: "Erro ao atualizar módulo: " + error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useUpdateModuleOrder = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ courseId, modules }: { courseId: string; modules: { id: string; order_index: number }[] }) => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Updating module order:', modules);
+
+      // Atualizar cada módulo individualmente
+      const updates = modules.map(async (module) => {
+        const { error } = await supabase
+          .from('course_modules')
+          .update({ order_index: module.order_index })
+          .eq('id', module.id);
+
+        if (error) {
+          console.error('Error updating module order:', error);
+          throw error;
+        }
+      });
+
+      await Promise.all(updates);
+      return { courseId };
+    },
+    onSuccess: ({ courseId }) => {
+      queryClient.invalidateQueries({ queryKey: ['course-modules', courseId] });
+      toast({
+        title: "Sucesso",
+        description: "Ordem dos módulos atualizada com sucesso!",
+      });
+    },
+    onError: (error) => {
+      console.error('Update module order error:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar ordem dos módulos: " + error.message,
         variant: "destructive",
       });
     },

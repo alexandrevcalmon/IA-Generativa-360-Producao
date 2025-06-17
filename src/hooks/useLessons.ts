@@ -32,7 +32,7 @@ export const useLessons = (moduleId: string) => {
         .from('lessons')
         .select('*')
         .eq('module_id', moduleId)
-        .order('order_index', { ascending: true });
+        .order('created_at', { ascending: true }); // Ordenar por data de criação
 
       if (error) {
         console.error('Error fetching lessons:', error);
@@ -59,9 +59,20 @@ export const useCreateLesson = () => {
 
       console.log('Creating lesson with data:', lessonData);
 
+      // Buscar o próximo order_index baseado na quantidade de aulas
+      const { count } = await supabase
+        .from('lessons')
+        .select('*', { count: 'exact', head: true })
+        .eq('module_id', lessonData.module_id);
+
+      const dataWithOrder = {
+        ...lessonData,
+        order_index: count || 0,
+      };
+
       const { data, error } = await supabase
         .from('lessons')
-        .insert([lessonData])
+        .insert([dataWithOrder])
         .select()
         .single();
 
@@ -131,6 +142,53 @@ export const useUpdateLesson = () => {
       toast({
         title: "Erro",
         description: "Erro ao atualizar aula: " + error.message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+export const useUpdateLessonOrder = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ moduleId, lessons }: { moduleId: string; lessons: { id: string; order_index: number }[] }) => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Updating lesson order:', lessons);
+
+      // Atualizar cada aula individualmente
+      const updates = lessons.map(async (lesson) => {
+        const { error } = await supabase
+          .from('lessons')
+          .update({ order_index: lesson.order_index })
+          .eq('id', lesson.id);
+
+        if (error) {
+          console.error('Error updating lesson order:', error);
+          throw error;
+        }
+      });
+
+      await Promise.all(updates);
+      return { moduleId };
+    },
+    onSuccess: ({ moduleId }) => {
+      queryClient.invalidateQueries({ queryKey: ['lessons', moduleId] });
+      toast({
+        title: "Sucesso",
+        description: "Ordem das aulas atualizada com sucesso!",
+      });
+    },
+    onError: (error) => {
+      console.error('Update lesson order error:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar ordem das aulas: " + error.message,
         variant: "destructive",
       });
     },

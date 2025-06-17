@@ -12,45 +12,24 @@ interface LessonSettingsFieldsProps {
 export const LessonSettingsFields = ({ control }: LessonSettingsFieldsProps) => {
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
-        <FormField
-          control={control}
-          name="duration_minutes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Duração (minutos)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="Ex: 30"
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="order_index"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Ordem</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="0"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+      <FormField
+        control={control}
+        name="duration_minutes"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Duração (minutos)</FormLabel>
+            <FormControl>
+              <Input 
+                type="number" 
+                placeholder="Ex: 30"
+                {...field}
+                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       <FormField
         control={control}

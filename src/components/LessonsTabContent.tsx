@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Eye, EyeOff } from "lucide-react";
 import { CourseModule } from "@/hooks/useCourseModules";
-import { useLessons, Lesson } from "@/hooks/useLessons";
-import { LessonItem } from "@/components/LessonItem";
+import { useLessons, Lesson, useUpdateLessonOrder } from "@/hooks/useLessons";
+import { DraggableLessonItem } from "@/components/DraggableLessonItem";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
 
 interface LessonsTabContentProps {
   modules: CourseModule[];
@@ -24,6 +25,28 @@ const ModuleLessonsSection = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: lessons = [] } = useLessons(module.id);
+  const updateLessonOrder = useUpdateLessonOrder();
+
+  const handleDragEnd = async (result: any) => {
+    if (!result.destination) return;
+
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+
+    if (sourceIndex === destinationIndex) return;
+
+    const reorderedLessons = Array.from(lessons);
+    const [removed] = reorderedLessons.splice(sourceIndex, 1);
+    reorderedLessons.splice(destinationIndex, 0, removed);
+
+    // Atualizar as ordens no banco
+    const updates = reorderedLessons.map((lesson, index) => ({
+      id: lesson.id,
+      order_index: index,
+    }));
+
+    await updateLessonOrder.mutateAsync({ moduleId: module.id, lessons: updates });
+  };
 
   return (
     <Card>
@@ -70,16 +93,23 @@ const ModuleLessonsSection = ({
               </Button>
             </div>
           ) : (
-            <div className="space-y-3">
-              {lessons.map((lesson: Lesson, index: number) => (
-                <LessonItem
-                  key={lesson.id}
-                  lesson={lesson}
-                  index={index}
-                  onEdit={onEditLesson}
-                />
-              ))}
-            </div>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId={`lessons-tab-${module.id}`} type="lesson">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
+                    {lessons.map((lesson: Lesson, index: number) => (
+                      <DraggableLessonItem
+                        key={lesson.id}
+                        lesson={lesson}
+                        index={index}
+                        onEdit={onEditLesson}
+                      />
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           )}
         </CardContent>
       )}

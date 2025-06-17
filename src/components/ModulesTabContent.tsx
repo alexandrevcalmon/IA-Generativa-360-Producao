@@ -2,8 +2,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Plus } from "lucide-react";
-import { CourseModule } from "@/hooks/useCourseModules";
-import { ModuleCard } from "@/components/ModuleCard";
+import { CourseModule, useUpdateModuleOrder } from "@/hooks/useCourseModules";
+import { DraggableModuleCard } from "@/components/DraggableModuleCard";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
 
 interface ModulesTabContentProps {
   modules: CourseModule[];
@@ -16,6 +17,31 @@ export const ModulesTabContent = ({
   onCreateModule, 
   onEditModule 
 }: ModulesTabContentProps) => {
+  const updateModuleOrder = useUpdateModuleOrder();
+
+  const handleDragEnd = async (result: any) => {
+    if (!result.destination) return;
+
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+
+    if (sourceIndex === destinationIndex) return;
+
+    const reorderedModules = Array.from(modules);
+    const [removed] = reorderedModules.splice(sourceIndex, 1);
+    reorderedModules.splice(destinationIndex, 0, removed);
+
+    // Atualizar as ordens no banco
+    const updates = reorderedModules.map((module, index) => ({
+      id: module.id,
+      order_index: index,
+    }));
+
+    if (modules.length > 0) {
+      await updateModuleOrder.mutateAsync({ courseId: modules[0].course_id, modules: updates });
+    }
+  };
+
   if (modules.length === 0) {
     return (
       <Card>
@@ -38,15 +64,26 @@ export const ModulesTabContent = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {modules.map((module, index) => (
-        <ModuleCard
-          key={module.id}
-          module={module}
-          index={index}
-          onEdit={onEditModule}
-        />
-      ))}
-    </div>
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <Droppable droppableId="modules" type="module">
+        {(provided) => (
+          <div 
+            {...provided.droppableProps} 
+            ref={provided.innerRef}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            {modules.map((module, index) => (
+              <DraggableModuleCard
+                key={module.id}
+                module={module}
+                index={index}
+                onEdit={onEditModule}
+              />
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   );
 };
