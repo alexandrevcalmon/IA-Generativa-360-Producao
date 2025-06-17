@@ -17,6 +17,7 @@ export default function Auth() {
   const [role, setRole] = useState('student');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
   
   const { signIn, signUp, user, userRole, needsPasswordChange, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -30,15 +31,30 @@ export default function Auth() {
     }
   }, [searchParams]);
 
-  // Show password change dialog if needed
+  // Show password change dialog if needed - this should take priority
   if (!authLoading && user && needsPasswordChange) {
+    console.log('Showing password change dialog for user:', user.email);
     return <PasswordChangeDialog />;
   }
 
-  // Redirect if already authenticated and doesn't need password change
+  // Handle redirects after authentication is complete and user data is loaded
   useEffect(() => {
-    if (!authLoading && user && userRole && !needsPasswordChange) {
-      console.log('User authenticated with role:', userRole, 'Redirecting...');
+    console.log('Auth redirect check:', {
+      authLoading,
+      user: user?.email,
+      userRole,
+      needsPasswordChange,
+      shouldRedirect
+    });
+
+    // Only redirect if:
+    // 1. Not loading
+    // 2. User is authenticated
+    // 3. User role is determined
+    // 4. User doesn't need password change
+    // 5. We should redirect (flag set after successful login)
+    if (!authLoading && user && userRole && !needsPasswordChange && shouldRedirect) {
+      console.log('All conditions met for redirect. User role:', userRole);
       
       switch (userRole) {
         case 'producer':
@@ -58,21 +74,28 @@ export default function Auth() {
           navigate('/student/dashboard', { replace: true });
       }
     }
-  }, [user, userRole, authLoading, needsPasswordChange, navigate]);
+  }, [user, userRole, authLoading, needsPasswordChange, shouldRedirect, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setShouldRedirect(false); // Reset redirect flag
 
     try {
       if (isLogin) {
         console.log('Attempting login for:', email);
-        const { error } = await signIn(email, password);
+        const { error, needsPasswordChange: loginNeedsPasswordChange } = await signIn(email, password);
+        
         if (error) {
           console.error('Login error:', error);
         } else {
-          console.log('Login successful');
-          // Don't manually navigate here, let the useEffect handle it
+          console.log('Login successful. Needs password change:', loginNeedsPasswordChange);
+          
+          // If user needs password change, don't set redirect flag
+          // The password change dialog will be shown instead
+          if (!loginNeedsPasswordChange) {
+            setShouldRedirect(true);
+          }
         }
       } else {
         console.log('Attempting signup for:', email, 'with role:', role);

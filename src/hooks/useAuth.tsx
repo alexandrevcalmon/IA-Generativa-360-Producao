@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; needsPasswordChange?: boolean }>;
   signUp: (email: string, password: string, role?: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   changePassword: (newPassword: string) => Promise<{ error: any }>;
@@ -33,11 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [fetchingRole, setFetchingRole] = useState(false);
   const { toast } = useToast();
 
-  const fetchUserRole = async (userId: string): Promise<string | null> => {
+  const fetchUserRole = async (userId: string): Promise<{ role: string | null; needsPasswordChange: boolean; companyUserData: any }> => {
     // Prevent multiple simultaneous requests
     if (fetchingRole) {
       console.log('Role fetch already in progress, skipping...');
-      return null;
+      return { role: null, needsPasswordChange: false, companyUserData: null };
     }
 
     try {
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (!profileError && profile?.role) {
         console.log('User role from profiles:', profile.role);
-        return profile.role;
+        return { role: profile.role, needsPasswordChange: false, companyUserData: null };
       }
       
       // If not found in profiles, check company_users table (student/collaborator)
@@ -65,16 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (!companyUserError && companyUser) {
         console.log('User found in company_users:', companyUser);
-        setCompanyUserData(companyUser);
-        setNeedsPasswordChange(companyUser.needs_password_change || false);
-        return 'student';
+        const needsChange = companyUser.needs_password_change || false;
+        console.log('needs_password_change flag:', needsChange);
+        return { role: 'student', needsPasswordChange: needsChange, companyUserData: companyUser };
       }
       
       console.log('User role not found, defaulting to student');
-      return 'student';
+      return { role: 'student', needsPasswordChange: false, companyUserData: null };
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
-      return 'student'; // Safe fallback
+      return { role: 'student', needsPasswordChange: false, companyUserData: null }; // Safe fallback
     } finally {
       setFetchingRole(false);
     }
@@ -83,10 +83,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUserRole = async () => {
     if (user && !fetchingRole) {
       console.log('Refreshing user role...');
-      const role = await fetchUserRole(user.id);
+      const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(user.id);
       if (role) {
         setUserRole(role);
-        console.log('User role refreshed to:', role);
+        setNeedsPasswordChange(needsChange);
+        setCompanyUserData(userData);
+        console.log('User role refreshed to:', role, 'needs password change:', needsChange);
       }
     }
   };
@@ -139,8 +141,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Debounce role fetching to prevent multiple simultaneous requests
-        if (session?.user && isMounted) {
+        // Only fetch role data if this is NOT from a manual sign-in (to avoid conflicts)
+        if (session?.user && isMounted && event !== 'SIGNED_IN') {
           // Clear any existing timer
           if (debounceTimer) {
             clearTimeout(debounceTimer);
@@ -149,14 +151,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Set a new timer to fetch role after a short delay
           debounceTimer = setTimeout(async () => {
             if (isMounted && !fetchingRole) {
-              const role = await fetchUserRole(session.user.id);
+              const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(session.user.id);
               if (isMounted && role) {
                 setUserRole(role);
-                console.log('User role set to:', role);
+                setNeedsPasswordChange(needsChange);
+                setCompanyUserData(userData);
+                console.log('User role set to:', role, 'needs password change:', needsChange);
               }
             }
           }, 300); // 300ms debounce
-        } else if (isMounted) {
+        } else if (isMounted && !session?.user) {
           setUserRole(null);
           setNeedsPasswordChange(false);
           setCompanyUserData(null);
@@ -180,10 +184,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Use debounce for initial role fetch too
           debounceTimer = setTimeout(async () => {
             if (isMounted && !fetchingRole) {
-              const role = await fetchUserRole(session.user.id);
+              const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(session.user.id);
               if (isMounted && role) {
                 setUserRole(role);
-                console.log('Initial user role set to:', role);
+                setNeedsPasswordChange(needsChange);
+                setCompanyUserData(userData);
+                console.log('Initial user role set to:', role, 'needs password change:', needsChange);
               }
             }
           }, 300);
@@ -214,22 +220,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Starting sign in process for:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
+        console.error('Sign in error:', error);
         toast({
           title: "Erro no login",
           description: error.message,
           variant: "destructive",
         });
-      } else {
+        return { error };
+      }
+
+      if (data.user) {
+        console.log('Sign in successful, fetching user data immediately');
+        
+        // Fetch user role and password change status IMMEDIATELY after successful login
+        const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(data.user.id);
+        
+        console.log('Post-login user data:', { role, needsChange, userData });
+        
+        // Update state immediately
+        setUser(data.user);
+        setSession(data.session);
+        setUserRole(role);
+        setNeedsPasswordChange(needsChange);
+        setCompanyUserData(userData);
+        
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta.",
         });
+        
+        // Return the password change status so Auth page can use it immediately
+        return { error: null, needsPasswordChange: needsChange };
       }
       
       return { error };
@@ -237,7 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('SignIn error:', error);
       return { error };
     } finally {
-      // Don't set loading to false here, let the auth state change handle it
+      setLoading(false);
     }
   };
 
