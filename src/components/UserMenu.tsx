@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,9 +47,8 @@ export function UserMenu() {
         return;
       }
       
-      console.log('✅ Logout successful, redirecting to home...');
-      
-      window.location.href = '/';
+      console.log('✅ Logout successful, navigating to home...');
+      navigate('/', { replace: true });
       
     } catch (error) {
       console.error('💥 Unexpected logout error:', error);

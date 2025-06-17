@@ -54,7 +54,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       console.log('- Is Active:', companyUser.is_active);
       console.log('- Needs Password Change:', companyUser.needs_password_change);
       
-      const needsChange = companyUser.needs_password_change || false;
+      const needsChange = companyUser.needs_password_change === true;
       console.log('🔐 Password change required:', needsChange);
       console.groupEnd();
       return { role: 'student', needsPasswordChange: needsChange, companyUserData: companyUser };

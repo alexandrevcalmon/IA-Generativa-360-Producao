@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
@@ -30,13 +31,11 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
 
   useEffect(() => {
     if (user && userRole && roleValidated) {
-      if (requiredRole === 'producer' && userRole !== 'producer') {
-        console.warn('Role mismatch detected - expected producer but got:', userRole);
-        
-        refreshUserRole();
+      if (requiredRole && userRole !== requiredRole) {
+        console.warn('Role mismatch detected - expected:', requiredRole, 'but got:', userRole);
       }
     }
-  }, [user, userRole, requiredRole, roleValidated, refreshUserRole]);
+  }, [user, userRole, requiredRole, roleValidated]);
 
   if (loading || !roleValidated) {
     return (
