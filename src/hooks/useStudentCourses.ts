@@ -48,7 +48,7 @@ export const useStudentCourses = () => {
 
       console.log('Fetching courses for student:', user.id);
 
-      // Get courses that are published
+      // Get courses that are published - this will now work with RLS policies
       const { data: courses, error: coursesError } = await supabase
         .from('courses')
         .select('*')
@@ -60,45 +60,71 @@ export const useStudentCourses = () => {
         throw coursesError;
       }
 
-      console.log('Found courses:', courses);
+      console.log('Found published courses:', courses?.length || 0);
 
-      // For each course, get modules and lessons
+      // For each course, get enrollment info and modules/lessons
       const coursesWithProgress = await Promise.all(
-        courses.map(async (course) => {
+        (courses || []).map(async (course) => {
+          console.log('Processing course:', course.title);
+
           // Get enrollment info
-          const { data: enrollment } = await supabase
+          const { data: enrollment, error: enrollmentError } = await supabase
             .from('enrollments')
             .select('progress_percentage, enrolled_at')
             .eq('course_id', course.id)
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
 
-          // Get modules
-          const { data: modules } = await supabase
+          if (enrollmentError) {
+            console.error('Error fetching enrollment for course', course.id, ':', enrollmentError);
+          }
+
+          // Get modules - this will now work with RLS policies
+          const { data: modules, error: modulesError } = await supabase
             .from('course_modules')
             .select('*')
             .eq('course_id', course.id)
             .eq('is_published', true)
             .order('order_index');
 
+          if (modulesError) {
+            console.error('Error fetching modules for course', course.id, ':', modulesError);
+          }
+
           const modulesWithLessons = await Promise.all(
             (modules || []).map(async (module) => {
-              // Get lessons
-              const { data: lessons } = await supabase
+              console.log('Processing module:', module.title);
+
+              // Get lessons - this will now work with RLS policies
+              const { data: lessons, error: lessonsError } = await supabase
                 .from('lessons')
                 .select('*')
                 .eq('module_id', module.id)
                 .order('order_index');
 
-              // Get progress for each lesson
+              if (lessonsError) {
+                console.error('Error fetching lessons for module', module.id, ':', lessonsError);
+              }
+
+              // Get progress for each lesson if user is enrolled
               const lessonsWithProgress = await Promise.all(
                 (lessons || []).map(async (lesson) => {
-                  const { data: progress } = await supabase
-                    .from('lesson_progress')
-                    .select('completed, watch_time_seconds')
-                    .eq('lesson_id', lesson.id)
-                    .eq('user_id', user.id)
-                    .single();
+                  let progress = null;
+                  
+                  if (enrollment) {
+                    const { data: lessonProgress, error: progressError } = await supabase
+                      .from('lesson_progress')
+                      .select('completed, watch_time_seconds')
+                      .eq('lesson_id', lesson.id)
+                      .eq('user_id', user.id)
+                      .maybeSingle();
+
+                    if (progressError) {
+                      console.error('Error fetching lesson progress:', progressError);
+                    } else {
+                      progress = lessonProgress;
+                    }
+                  }
 
                   return {
                     ...lesson,
@@ -124,6 +150,7 @@ export const useStudentCourses = () => {
         })
       );
 
+      console.log('Processed courses with modules and lessons:', coursesWithProgress.length);
       return coursesWithProgress as StudentCourse[];
     },
     enabled: !!user,
@@ -147,7 +174,10 @@ export const useStudentCourse = (courseId: string) => {
         .eq('is_published', true)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching course:', error);
+        throw error;
+      }
 
       // Get enrollment info
       const { data: enrollment } = await supabase
@@ -155,7 +185,7 @@ export const useStudentCourse = (courseId: string) => {
         .select('progress_percentage, enrolled_at')
         .eq('course_id', courseId)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       // Get modules with lessons
       const { data: modules } = await supabase
@@ -175,12 +205,18 @@ export const useStudentCourse = (courseId: string) => {
 
           const lessonsWithProgress = await Promise.all(
             (lessons || []).map(async (lesson) => {
-              const { data: progress } = await supabase
-                .from('lesson_progress')
-                .select('completed, watch_time_seconds')
-                .eq('lesson_id', lesson.id)
-                .eq('user_id', user.id)
-                .single();
+              let progress = null;
+              
+              if (enrollment) {
+                const { data: lessonProgress } = await supabase
+                  .from('lesson_progress')
+                  .select('completed, watch_time_seconds')
+                  .eq('lesson_id', lesson.id)
+                  .eq('user_id', user.id)
+                  .maybeSingle();
+
+                progress = lessonProgress;
+              }
 
               return {
                 ...lesson,
