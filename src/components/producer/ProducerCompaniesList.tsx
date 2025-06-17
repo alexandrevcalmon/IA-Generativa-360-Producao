@@ -39,7 +39,7 @@ export function ProducerCompaniesList({
               company={company}
               onEdit={onEdit}
               onDelete={onDelete}
-              isDeleting={deletingCompanyId === company.id}
+              deletingCompanyId={deletingCompanyId}
               transformCompany={transformCompany}
             />
           ))}

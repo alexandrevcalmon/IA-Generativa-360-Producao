@@ -5,11 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 export interface CompanyWithPlan {
   id: string;
   name: string;
+  official_name: string | null;
   logo_url: string | null;
   max_students: number;
   current_students: number;
   is_active: boolean;
   created_at: string;
+  contact_email: string | null;
   subscription_plan: {
     id: string;
     name: string;
@@ -29,11 +31,13 @@ export const useCompaniesWithPlans = () => {
         .select(`
           id,
           name,
+          official_name,
           logo_url,
           max_students,
           current_students,
           is_active,
           created_at,
+          contact_email,
           subscription_plan:subscription_plan_id (
             id,
             name,
