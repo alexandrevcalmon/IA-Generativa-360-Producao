@@ -1,35 +1,33 @@
 
-import { useState } from "react";
 import { CreateCompanyDialog } from "@/components/CreateCompanyDialog";
 import { EditCompanyDialog } from "@/components/EditCompanyDialog";
-import { useCompaniesWithPlans } from "@/hooks/useCompaniesWithPlans";
-import { useDeleteCompany, Company } from "@/hooks/useCompanies";
 import { transformCompanyWithPlanToCompany } from "@/utils/companyTransformations";
 import { ProducerCompaniesHeader } from "@/components/producer/ProducerCompaniesHeader";
-import { ProducerCompaniesSearch } from "@/components/producer/ProducerCompaniesSearch";
-import { ProducerCompaniesStats } from "@/components/producer/ProducerCompaniesStats";
-import { ProducerCompaniesList } from "@/components/producer/ProducerCompaniesList";
+import { ProducerCompaniesContent } from "@/components/producer/ProducerCompaniesContent";
 import { ProducerCompaniesLoading } from "@/components/producer/ProducerCompaniesLoading";
+import { useProducerCompaniesState } from "@/hooks/useProducerCompaniesState";
+import { useProducerCompaniesLogic } from "@/hooks/useProducerCompaniesLogic";
 
 const ProducerCompanies = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const {
+    searchTerm,
+    setSearchTerm,
+    isCreateDialogOpen,
+    setIsCreateDialogOpen,
+    editingCompany,
+    setEditingCompany,
+  } = useProducerCompaniesState();
 
-  const { data: companies = [], isLoading, error } = useCompaniesWithPlans();
-  const deleteCompanyMutation = useDeleteCompany();
-
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const totalCompanies = companies.length;
-  const activeCompanies = companies.filter(c => c.is_active).length;
-  const totalCollaborators = companies.reduce((sum, c) => sum + (c.current_students || 0), 0);
-
-  const handleDeleteCompany = async (companyId: string) => {
-    await deleteCompanyMutation.mutateAsync(companyId);
-  };
+  const {
+    filteredCompanies,
+    isLoading,
+    error,
+    totalCompanies,
+    activeCompanies,
+    totalCollaborators,
+    handleDeleteCompany,
+    deleteCompanyMutation,
+  } = useProducerCompaniesLogic(searchTerm);
 
   if (isLoading) {
     return <ProducerCompaniesLoading />;
@@ -48,32 +46,17 @@ const ProducerCompanies = () => {
     <div className="flex flex-col h-full">
       <ProducerCompaniesHeader onCreateCompany={() => setIsCreateDialogOpen(true)} />
 
-      <div className="flex-1 overflow-auto p-6 bg-gray-50">
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-1">
-              <ProducerCompaniesSearch 
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-              />
-            </div>
-            
-            <ProducerCompaniesStats
-              totalCompanies={totalCompanies}
-              activeCompanies={activeCompanies}
-              totalCollaborators={totalCollaborators}
-            />
-          </div>
-
-          <ProducerCompaniesList
-            companies={filteredCompanies}
-            onEdit={setEditingCompany}
-            onDelete={handleDeleteCompany}
-            deletingCompanyId={deleteCompanyMutation.isPending ? deleteCompanyMutation.variables : null}
-            transformCompany={transformCompanyWithPlanToCompany}
-          />
-        </div>
-      </div>
+      <ProducerCompaniesContent
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        totalCompanies={totalCompanies}
+        activeCompanies={activeCompanies}
+        totalCollaborators={totalCollaborators}
+        filteredCompanies={filteredCompanies}
+        onEdit={setEditingCompany}
+        onDelete={handleDeleteCompany}
+        deletingCompanyId={deleteCompanyMutation.isPending ? deleteCompanyMutation.variables : null}
+      />
 
       <CreateCompanyDialog 
         isOpen={isCreateDialogOpen}
