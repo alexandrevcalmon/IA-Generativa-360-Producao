@@ -8,6 +8,7 @@ import { useFileUpload, FileUploadOptions } from '@/hooks/useFileUpload';
 
 interface FileUploadFieldProps {
   label: string;
+  description?: string;
   value?: string;
   onChange: (url: string | null) => void;
   uploadOptions: FileUploadOptions;
@@ -18,6 +19,7 @@ interface FileUploadFieldProps {
 
 export const FileUploadField = ({
   label,
+  description,
   value,
   onChange,
   uploadOptions,
@@ -76,6 +78,9 @@ export const FileUploadField = ({
   return (
     <div className={className}>
       <Label className="text-sm font-medium">{label}</Label>
+      {description && (
+        <p className="text-sm text-muted-foreground mt-1 mb-2">{description}</p>
+      )}
       
       {!value ? (
         <div
