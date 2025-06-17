@@ -1,7 +1,8 @@
+
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
-import AppSidebar from './AppSidebar'; // Assuming AppSidebar is in the same directory
+import { supabase } from '@/integrations/supabase/client';
+import AppSidebar from './AppSidebar';
 
 const ProdutorLayout = () => {
   const [session, setSession] = useState<any>(null);

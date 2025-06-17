@@ -53,37 +53,82 @@ export type Database = {
       }
       companies: {
         Row: {
+          address_city: string | null
+          address_complement: string | null
+          address_district: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip_code: string | null
+          cnpj: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string | null
           current_students: number | null
+          email: string | null
           id: string
           is_active: boolean | null
           logo_url: string | null
           max_students: number | null
           name: string
+          notes: string | null
+          official_name: string | null
+          phone: string | null
           subscription_plan: string | null
           subscription_plan_id: string | null
           updated_at: string | null
         }
         Insert: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_district?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip_code?: string | null
+          cnpj?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string | null
           current_students?: number | null
+          email?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
           max_students?: number | null
           name: string
+          notes?: string | null
+          official_name?: string | null
+          phone?: string | null
           subscription_plan?: string | null
           subscription_plan_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_district?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip_code?: string | null
+          cnpj?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string | null
           current_students?: number | null
+          email?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
           max_students?: number | null
           name?: string
+          notes?: string | null
+          official_name?: string | null
+          phone?: string | null
           subscription_plan?: string | null
           subscription_plan_id?: string | null
           updated_at?: string | null
@@ -94,6 +139,50 @@ export type Database = {
             columns: ["subscription_plan_id"]
             isOneToOne: false
             referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_users: {
+        Row: {
+          auth_user_id: string
+          company_id: string
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          name: string
+          needs_password_change: boolean
+          position: string | null
+        }
+        Insert: {
+          auth_user_id: string
+          company_id: string
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          name: string
+          needs_password_change?: boolean
+          position?: string | null
+        }
+        Update: {
+          auth_user_id?: string
+          company_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          needs_password_change?: boolean
+          position?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_users_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -327,6 +416,86 @@ export type Database = {
           },
         ]
       }
+      learning_path_courses: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          is_required: boolean
+          learning_path_id: string
+          order_index: number
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          learning_path_id: string
+          order_index: number
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          learning_path_id?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_path_courses_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_path_courses_learning_path_id_fkey"
+            columns: ["learning_path_id"]
+            isOneToOne: false
+            referencedRelation: "learning_paths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      learning_paths: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_paths_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_progress: {
         Row: {
           completed: boolean | null
@@ -415,6 +584,108 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentorship_participants: {
+        Row: {
+          attended: boolean | null
+          id: string
+          mentorship_id: string
+          registered_at: string
+          user_id: string
+        }
+        Insert: {
+          attended?: boolean | null
+          id?: string
+          mentorship_id: string
+          registered_at?: string
+          user_id: string
+        }
+        Update: {
+          attended?: boolean | null
+          id?: string
+          mentorship_id?: string
+          registered_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_participants_mentorship_id_fkey"
+            columns: ["mentorship_id"]
+            isOneToOne: false
+            referencedRelation: "mentorships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentorship_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentorships: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          max_participants: number
+          meeting_url: string | null
+          mentor_id: string | null
+          scheduled_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          max_participants?: number
+          meeting_url?: string | null
+          mentor_id?: string | null
+          scheduled_at: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          max_participants?: number
+          meeting_url?: string | null
+          mentor_id?: string | null
+          scheduled_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorships_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentorships_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -510,6 +781,7 @@ export type Database = {
       }
       subscription_plans: {
         Row: {
+          annual_price: number | null
           created_at: string
           description: string | null
           features: Json
@@ -518,9 +790,11 @@ export type Database = {
           max_students: number
           name: string
           price: number
+          semester_price: number | null
           updated_at: string
         }
         Insert: {
+          annual_price?: number | null
           created_at?: string
           description?: string | null
           features?: Json
@@ -529,9 +803,11 @@ export type Database = {
           max_students: number
           name: string
           price: number
+          semester_price?: number | null
           updated_at?: string
         }
         Update: {
+          annual_price?: number | null
           created_at?: string
           description?: string | null
           features?: Json
@@ -540,6 +816,7 @@ export type Database = {
           max_students?: number
           name?: string
           price?: number
+          semester_price?: number | null
           updated_at?: string
         }
         Relationships: []

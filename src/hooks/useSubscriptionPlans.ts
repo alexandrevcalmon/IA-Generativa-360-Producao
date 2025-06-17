@@ -7,8 +7,9 @@ export interface SubscriptionPlan {
   id: string;
   name: string;
   description: string | null;
-  semester_price: number;
-  annual_price: number;
+  price: number;
+  semester_price: number | null;
+  annual_price: number | null;
   max_students: number;
   features: string[];
   is_active: boolean;
@@ -19,8 +20,9 @@ export interface SubscriptionPlan {
 export interface CreatePlanData {
   name: string;
   description?: string;
-  semester_price: number;
-  annual_price: number;
+  price: number;
+  semester_price?: number;
+  annual_price?: number;
   max_students: number;
   features: string[];
 }
@@ -34,10 +36,9 @@ export const useSubscriptionPlans = () => {
   return useQuery({
     queryKey: ['subscription-plans'],
     queryFn: async () => {
-      // TODO: DB schema needs update for semester_price and annual_price. Assuming they exist for now.
       const { data, error } = await supabase
         .from('subscription_plans')
-        .select('id, name, description, semester_price, annual_price, max_students, features, is_active, created_at, updated_at')
+        .select('*')
         .order('name', { ascending: true });
 
       if (error) {
@@ -56,7 +57,6 @@ export const useCreateSubscriptionPlan = () => {
 
   return useMutation({
     mutationFn: async (planData: CreatePlanData) => {
-      // TODO: DB schema needs update for semester_price and annual_price. Assuming they exist for now.
       const { data, error } = await supabase
         .from('subscription_plans')
         .insert([planData])
@@ -72,7 +72,7 @@ export const useCreateSubscriptionPlan = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
       toast({
         title: "Plano criado com sucesso!",
         description: "O novo plano de assinatura foi adicionado.",
@@ -96,7 +96,6 @@ export const useUpdateSubscriptionPlan = () => {
   return useMutation({
     mutationFn: async (planData: UpdatePlanData) => {
       const { id, ...updateData } = planData;
-      // TODO: DB schema needs update for semester_price and annual_price. Assuming they exist for now.
       const { data, error } = await supabase
         .from('subscription_plans')
         .update(updateData)
@@ -113,7 +112,7 @@ export const useUpdateSubscriptionPlan = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
       toast({
         title: "Plano atualizado com sucesso!",
         description: "As alterações foram salvas.",
@@ -149,7 +148,7 @@ export const useDeleteSubscriptionPlan = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
       toast({
         title: "Plano desativado com sucesso!",
         description: "O plano foi desativado e não aparecerá mais para novas assinaturas.",
