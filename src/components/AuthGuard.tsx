@@ -13,31 +13,44 @@ interface AuthGuardProps {
 export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: AuthGuardProps) {
   const { user, loading, userRole, needsPasswordChange, refreshUserRole } = useAuth();
   const navigate = useNavigate();
-  const [roleValidated, setRoleValidated] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
 
+  // Handle redirect for unauthenticated users
   useEffect(() => {
     if (!loading && !user) {
-      navigate(redirectTo);
+      console.log('🚫 No user, redirecting to:', redirectTo);
+      navigate(redirectTo, { replace: true });
     }
   }, [user, loading, navigate, redirectTo]);
 
+  // Handle role validation once user is loaded
   useEffect(() => {
-    if (user && !loading) {
-      refreshUserRole().then(() => {
-        setRoleValidated(true);
-      });
-    }
-  }, [user, loading, refreshUserRole]);
-
-  useEffect(() => {
-    if (user && userRole && roleValidated) {
-      if (requiredRole && userRole !== requiredRole) {
-        console.warn('Role mismatch detected - expected:', requiredRole, 'but got:', userRole);
+    const validateAccess = async () => {
+      if (!user || loading) {
+        return;
       }
-    }
-  }, [user, userRole, requiredRole, roleValidated]);
 
-  if (loading || !roleValidated) {
+      console.log('🔒 AuthGuard validating access:', {
+        userEmail: user.email,
+        userRole,
+        requiredRole,
+        needsPasswordChange
+      });
+
+      // If no role yet, try to refresh
+      if (!userRole) {
+        console.log('🔄 No role detected, refreshing...');
+        await refreshUserRole();
+      }
+
+      setIsValidating(false);
+    };
+
+    validateAccess();
+  }, [user, loading, userRole, requiredRole, refreshUserRole]);
+
+  // Show loading while validating
+  if (loading || isValidating) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Carregando...</div>
@@ -45,23 +58,30 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
     );
   }
 
+  // Redirect if no user
   if (!user) {
     return null;
   }
 
+  // Show password change dialog if needed
   if (needsPasswordChange) {
+    console.log('🔐 Password change required for:', user.email);
     return <PasswordChangeDialog />;
   }
 
+  // Check role requirements
   if (requiredRole && userRole !== requiredRole) {
+    console.warn('⚠️ Role mismatch - expected:', requiredRole, 'but got:', userRole);
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
           <p className="text-gray-600 mb-4">Você não tem permissão para acessar esta página.</p>
-          <p className="text-sm text-gray-500 mb-4">Role atual: {userRole} | Role necessário: {requiredRole}</p>
+          <p className="text-sm text-gray-500 mb-4">
+            Role atual: {userRole || 'indefinido'} | Role necessário: {requiredRole}
+          </p>
           <button 
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/', { replace: true })}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Voltar ao Início
@@ -71,5 +91,6 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
     );
   }
 
+  console.log('✅ AuthGuard access granted for:', user.email, 'with role:', userRole);
   return <>{children}</>;
 }

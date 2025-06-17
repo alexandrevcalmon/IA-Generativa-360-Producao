@@ -48,7 +48,14 @@ export function UserMenu() {
       }
       
       console.log('✅ Logout successful, navigating to home...');
+      
+      // Navigate to home and force a page reload to clear any cached state
       navigate('/', { replace: true });
+      
+      // Force reload after a short delay to ensure navigation completes
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
       
     } catch (error) {
       console.error('💥 Unexpected logout error:', error);
@@ -61,7 +68,7 @@ export function UserMenu() {
   };
 
   const handleProfileClick = () => {
-    console.log('Profile clicked for user role:', userRole);
+    console.log('👤 Profile clicked for user role:', userRole);
     
     switch (userRole) {
       case 'producer':
@@ -74,8 +81,8 @@ export function UserMenu() {
         navigate('/student/profile');
         break;
       default:
-        console.warn('Unknown user role, defaulting to legacy profile');
-        navigate('/profile');
+        console.warn('⚠️ Unknown user role, redirecting to auth');
+        navigate('/auth');
     }
   };
 
@@ -93,6 +100,9 @@ export function UserMenu() {
   };
 
   const getUserInitials = () => {
+    if (user.user_metadata?.name) {
+      return user.user_metadata.name.charAt(0).toUpperCase();
+    }
     return user.email?.charAt(0).toUpperCase() || 'U';
   };
 
@@ -110,7 +120,9 @@ export function UserMenu() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.email}</p>
+            <p className="text-sm font-medium leading-none">
+              {user.user_metadata?.name || user.email}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
               {getRoleDisplay()}
             </p>

@@ -4,10 +4,10 @@ import { UserRoleData } from './types';
 
 export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
   try {
-    console.group('🔍 Fetching user role and data');
-    console.log('User ID:', userId);
+    console.group('🔍 Fetching user role and data for:', userId);
     
-    // First check profiles table (producer/company)
+    // First check profiles table for producer/company roles
+    console.log('📋 Checking profiles table...');
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
@@ -16,14 +16,18 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
     
     console.log('Profile query result:', { profile, profileError });
     
-    if (!profileError && profile?.role) {
+    if (!profileError && profile?.role && profile.role !== 'student') {
       console.log('✅ User role from profiles:', profile.role);
       console.groupEnd();
-      return { role: profile.role, needsPasswordChange: false, companyUserData: null };
+      return { 
+        role: profile.role, 
+        needsPasswordChange: false, 
+        companyUserData: null 
+      };
     }
     
-    // Check company_users table (student/collaborator) with corrected JOIN
-    console.log('🔍 Checking company_users table...');
+    // Check company_users table for student role
+    console.log('🏢 Checking company_users table...');
     const { data: companyUser, error: companyUserError } = await supabase
       .from('company_users')
       .select(`
@@ -38,46 +42,64 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       .maybeSingle();
     
     console.log('Company user query result:', {
-      companyUser,
-      companyUserError,
       hasData: !!companyUser,
-      companyUserFields: companyUser ? Object.keys(companyUser) : 'no data'
+      error: companyUserError,
+      isActive: companyUser?.is_active,
+      needsPasswordChange: companyUser?.needs_password_change
     });
     
     if (!companyUserError && companyUser) {
       console.log('✅ User found in company_users:');
       console.log('- Name:', companyUser.name);
       console.log('- Email:', companyUser.email);
-      console.log('- Position:', companyUser.position);
-      console.log('- Phone:', companyUser.phone);
       console.log('- Company:', companyUser.companies?.name);
       console.log('- Is Active:', companyUser.is_active);
       console.log('- Needs Password Change:', companyUser.needs_password_change);
       
+      // Ensure proper boolean handling for needs_password_change
       const needsChange = companyUser.needs_password_change === true;
       console.log('🔐 Password change required:', needsChange);
       console.groupEnd();
-      return { role: 'student', needsPasswordChange: needsChange, companyUserData: companyUser };
+      
+      return { 
+        role: 'student', 
+        needsPasswordChange: needsChange, 
+        companyUserData: companyUser 
+      };
     }
     
+    // Handle errors or missing data
     if (companyUserError) {
       console.error('❌ Error fetching company user data:', companyUserError);
-      console.error('Error details:', {
-        message: companyUserError.message,
-        details: companyUserError.details,
-        hint: companyUserError.hint,
-        code: companyUserError.code
-      });
-    } else {
-      console.log('ℹ️ No company user data found for user');
     }
     
-    console.log('🎓 Defaulting to student role without company data');
+    // If user exists in profiles but not in company_users, respect the profile role
+    if (profile?.role) {
+      console.log('✅ Using profile role as fallback:', profile.role);
+      console.groupEnd();
+      return { 
+        role: profile.role, 
+        needsPasswordChange: false, 
+        companyUserData: null 
+      };
+    }
+    
+    // Final fallback to student role
+    console.log('🎓 Defaulting to student role');
     console.groupEnd();
-    return { role: 'student', needsPasswordChange: false, companyUserData: null };
+    return { 
+      role: 'student', 
+      needsPasswordChange: false, 
+      companyUserData: null 
+    };
+    
   } catch (error) {
     console.error('💥 Error in fetchUserRole:', error);
     console.groupEnd();
-    return { role: 'student', needsPasswordChange: false, companyUserData: null };
+    return { 
+      role: 'student', 
+      needsPasswordChange: false, 
+      companyUserData: null 
+    };
   }
 };
