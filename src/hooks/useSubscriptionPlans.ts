@@ -20,7 +20,7 @@ export interface SubscriptionPlan {
 export interface CreatePlanData {
   name: string;
   description?: string;
-  price: number;
+  price?: number; // Make price optional since we use semester_price and annual_price
   semester_price?: number;
   annual_price?: number;
   max_students: number;
@@ -57,9 +57,15 @@ export const useCreateSubscriptionPlan = () => {
 
   return useMutation({
     mutationFn: async (planData: CreatePlanData) => {
+      // Set price to 0 if not provided, since it's required in the database but we use semester/annual prices
+      const dataToInsert = {
+        ...planData,
+        price: planData.price || 0
+      };
+
       const { data, error } = await supabase
         .from('subscription_plans')
-        .insert([planData])
+        .insert([dataToInsert])
         .select()
         .single();
 
@@ -96,9 +102,15 @@ export const useUpdateSubscriptionPlan = () => {
   return useMutation({
     mutationFn: async (planData: UpdatePlanData) => {
       const { id, ...updateData } = planData;
+      // Set price to 0 if not provided
+      const dataToUpdate = {
+        ...updateData,
+        price: updateData.price || 0
+      };
+
       const { data, error } = await supabase
         .from('subscription_plans')
-        .update(updateData)
+        .update(dataToUpdate)
         .eq('id', id)
         .select()
         .single();

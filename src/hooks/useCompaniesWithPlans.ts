@@ -14,6 +14,8 @@ export interface CompanyWithPlan {
     id: string;
     name: string;
     price: number;
+    annual_price: number;
+    semester_price: number;
   } | null;
 }
 
@@ -34,7 +36,9 @@ export const useCompaniesWithPlans = () => {
           subscription_plan:subscription_plan_id (
             id,
             name,
-            price
+            price,
+            annual_price,
+            semester_price
           )
         `)
         .order('created_at', { ascending: false });

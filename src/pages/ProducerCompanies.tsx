@@ -28,7 +28,7 @@ import {
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { CreateCompanyDialog } from "@/components/CreateCompanyDialog";
-import { useCompaniesWithPlans } from "../../hooks/useCompaniesWithPlans"; // Corrected path
+import { useCompaniesWithPlans } from "@/hooks/useCompaniesWithPlans"; // Fixed import path
 import { useDeleteCompany } from "@/hooks/useCompanies"; // Import useDeleteCompany
 import { Skeleton } from "@/components/ui/skeleton"; // For loading state
 
