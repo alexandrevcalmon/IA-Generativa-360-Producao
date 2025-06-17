@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, EyeOff } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Eye, EyeOff, Building2, GraduationCap, Briefcase } from 'lucide-react';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,14 +19,36 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, userRole } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Set role from URL parameter
+  useEffect(() => {
+    const roleParam = searchParams.get('role');
+    if (roleParam && ['student', 'company', 'producer'].includes(roleParam)) {
+      setRole(roleParam);
+    }
+  }, [searchParams]);
 
   // Redirect if already authenticated
-  if (user) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (user && userRole) {
+      switch (userRole) {
+        case 'producer':
+          navigate('/producer/dashboard');
+          break;
+        case 'company':
+          navigate('/company-dashboard');
+          break;
+        case 'student':
+          navigate('/learning');
+          break;
+        default:
+          navigate('/dashboard');
+      }
+    }
+  }, [user, userRole, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +58,8 @@ export default function Auth() {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (!error) {
-          // Redirect based on role will be handled by AuthGuard
-          navigate('/');
+          // Navigation will be handled by the useEffect above
+          console.log('Login successful');
         }
       } else {
         const { error } = await signUp(email, password, role);
@@ -51,6 +74,31 @@ export default function Auth() {
     }
   };
 
+  const getRoleInfo = () => {
+    switch (role) {
+      case 'producer':
+        return {
+          icon: <Briefcase className="h-5 w-5" />,
+          title: 'Produtor de Conteúdo',
+          description: 'Crie e gerencie conteúdos educacionais'
+        };
+      case 'company':
+        return {
+          icon: <Building2 className="h-5 w-5" />,
+          title: 'Empresa',
+          description: 'Gerencie equipes e acompanhe o desenvolvimento'
+        };
+      default:
+        return {
+          icon: <GraduationCap className="h-5 w-5" />,
+          title: 'Colaborador/Estudante',
+          description: 'Acesse cursos e desenvolva suas habilidades'
+        };
+    }
+  };
+
+  const roleInfo = getRoleInfo();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
       <Card className="w-full max-w-md">
@@ -61,6 +109,15 @@ export default function Auth() {
           <CardDescription>
             {isLogin ? 'Entre em sua conta' : 'Crie sua conta'}
           </CardDescription>
+          
+          {/* Role indicator */}
+          <div className="flex items-center justify-center space-x-2 mt-4 p-3 bg-gray-50 rounded-lg">
+            {roleInfo.icon}
+            <div className="text-left">
+              <div className="font-semibold text-sm text-gray-900">{roleInfo.title}</div>
+              <div className="text-xs text-gray-600">{roleInfo.description}</div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Tabs value={isLogin ? 'login' : 'register'} className="w-full">
@@ -196,6 +253,16 @@ export default function Auth() {
               </form>
             </TabsContent>
           </Tabs>
+
+          <div className="mt-6 text-center">
+            <Button 
+              variant="link" 
+              onClick={() => navigate('/')}
+              className="text-gray-600 hover:text-emerald-600"
+            >
+              ← Voltar para o início
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,0 +1,106 @@
+
+import { Building2, GraduationCap, Briefcase } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+
+export function Features() {
+  const navigate = useNavigate();
+
+  const handleProducerClick = () => {
+    navigate('/login-produtor');
+  };
+
+  const handleCompanyClick = () => {
+    navigate('/auth?role=company');
+  };
+
+  const handleStudentClick = () => {
+    navigate('/auth?role=student');
+  };
+
+  return (
+    <section className="py-20 bg-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            Escolha sua jornada
+          </h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Diferentes perfis, diferentes necessidades. Encontre a solução perfeita para você.
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Produtor */}
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-8 text-center hover:shadow-lg transition-shadow border border-emerald-200">
+            <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Briefcase className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Sou Produtor</h3>
+            <p className="text-gray-600 mb-6 text-sm">
+              Crie e gerencie conteúdos educacionais para empresas
+            </p>
+            <ul className="text-left text-sm text-gray-600 mb-8 space-y-2">
+              <li>• Criação de cursos e trilhas</li>
+              <li>• Gestão de conteúdo</li>
+              <li>• Analytics de engajamento</li>
+              <li>• Biblioteca de recursos</li>
+            </ul>
+            <Button 
+              onClick={handleProducerClick}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Acessar Painel do Produtor →
+            </Button>
+          </div>
+
+          {/* Empresa */}
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 text-center hover:shadow-lg transition-shadow border border-orange-200">
+            <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Building2 className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Sou Empresa</h3>
+            <p className="text-gray-600 mb-6 text-sm">
+              Gerencie equipes e acompanhe o desenvolvimento corporativo
+            </p>
+            <ul className="text-left text-sm text-gray-600 mb-8 space-y-2">
+              <li>• Gestão de colaboradores</li>
+              <li>• Relatórios e analytics</li>
+              <li>• Configuração de planos</li>
+              <li>• Dashboard executivo</li>
+            </ul>
+            <Button 
+              onClick={handleCompanyClick}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              Acessar Painel da Empresa →
+            </Button>
+          </div>
+
+          {/* Aluno */}
+          <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-8 text-center hover:shadow-lg transition-shadow border border-yellow-200">
+            <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <GraduationCap className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Sou Aluno</h3>
+            <p className="text-gray-600 mb-6 text-sm">
+              Acesse cursos, trilhas e desenvolva suas habilidades
+            </p>
+            <ul className="text-left text-sm text-gray-600 mb-8 space-y-2">
+              <li>• Cursos e certificações</li>
+              <li>• Progresso personalizado</li>
+              <li>• Comunidade e mentoria</li>
+              <li>• Gamificação e rewards</li>
+            </ul>
+            <Button 
+              onClick={handleStudentClick}
+              className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+            >
+              Acessar Área do Aluno →
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
