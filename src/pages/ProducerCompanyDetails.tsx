@@ -1,3 +1,4 @@
+
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,9 +22,9 @@ import {
   TrendingUp,
   UserPlus,
   MoreVertical,
-  ToggleLeft, // For inactive status
-  ToggleRight, // For active status
-  Loader2 // For loading state on button
+  ToggleLeft,
+  ToggleRight,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -33,26 +34,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
-import React from "react"; // Correctly placed React import
+import React from "react";
 import { AddCollaboratorDialog } from "@/components/AddCollaboratorDialog";
-import { EditCompanyDialog } from "@/components/EditCompanyDialog"; // Already imported
-import { EditCollaboratorDialog as EditCollaboratorDialogComponent } from "@/components/EditCollaboratorDialog"; // Import with alias
+import { EditCompanyDialog } from "@/components/EditCompanyDialog";
+import { EditCollaboratorDialog as EditCollaboratorDialogComponent } from "@/components/EditCollaboratorDialog";
 import { useCompanyById, useToggleCompanyStatus } from "@/hooks/useCompanies";
 import {
   useGetCompanyCollaborators,
   useToggleCollaboratorStatus,
   Collaborator
-} from "@/hooks/useCompanyCollaborators"; // Import more from collaborator hooks
+} from "@/hooks/useCompanyCollaborators";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ProducerCompanyDetails = () => {
-  const { id } = useParams<{ id: string }>(); // companyId
+  const { id } = useParams<{ id: string }>();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddCollaboratorOpen, setIsAddCollaboratorOpen] = useState(false);
-  const [isCompanyEditDialogOpen, setIsCompanyEditDialogOpen] = useState(false); // Renamed to avoid clash
+  const [isCompanyEditDialogOpen, setIsCompanyEditDialogOpen] = useState(false);
   const [isEditCollaboratorDialogOpen, setIsEditCollaboratorDialogOpen] = useState(false);
   const [selectedCollaborator, setSelectedCollaborator] = useState<Collaborator | null>(null);
-
 
   const { data: company, isLoading, error, dataUpdatedAt } = useCompanyById(id);
   const toggleCompanyStatusMutation = useToggleCompanyStatus();
@@ -93,20 +93,12 @@ const ProducerCompanyDetails = () => {
     (collaborator.email?.toLowerCase() || "").includes(searchTerm.toLowerCase())
   );
 
-  // getProgressColor is not used anymore as progress field is removed from display
-  // const getProgressColor = (progress: number) => {
-    // if (progress >= 80) return "bg-green-500";
-    // if (progress >= 60) return "bg-yellow-500";
-    return "bg-red-500";
-  };
-
   if (isLoading) {
     return (
       <>
         <AppSidebar />
         <main className="flex-1 overflow-hidden">
           <div className="flex flex-col h-full">
-            {/* Header Skeleton */}
             <header className="border-b bg-white px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
@@ -128,12 +120,11 @@ const ProducerCompanyDetails = () => {
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Skeleton className="h-9 w-36" /> {/* Edit button */}
-                  <Skeleton className="h-9 w-48" /> {/* Add collaborator button */}
+                  <Skeleton className="h-9 w-36" />
+                  <Skeleton className="h-9 w-48" />
                 </div>
               </div>
             </header>
-            {/* Main Content Skeleton */}
             <div className="flex-1 overflow-auto p-6 bg-gray-50 text-center">
               <p>Carregando detalhes da empresa...</p>
             </div>
@@ -150,14 +141,14 @@ const ProducerCompanyDetails = () => {
         <main className="flex-1 overflow-hidden">
           <div className="flex flex-col h-full items-center justify-center p-6">
             <div className="flex items-center space-x-3 mb-4">
-                <SidebarTrigger />
-                <Link to="/producer/companies">
-                  <Button variant="ghost" size="sm">
-                    <ArrowLeft className="h-4 w-4 mr-1" />
-                    Voltar para Empresas
-                  </Button>
-                </Link>
-              </div>
+              <SidebarTrigger />
+              <Link to="/producer/companies">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Voltar para Empresas
+                </Button>
+              </Link>
+            </div>
             <h2 className="text-xl font-semibold text-red-500">Erro ao carregar empresa</h2>
             <p>{error?.message || "A empresa não foi encontrada ou ocorreu um erro."}</p>
           </div>
@@ -167,11 +158,8 @@ const ProducerCompanyDetails = () => {
   }
 
   const { name, subscription_plan, created_at } = company;
-  // current_students and max_students might be on company.subscription_plan or company directly
-  // For this example, assuming they are on company.subscription_plan if plan exists, else on company
-  const currentStudents = company.subscription_plan?.max_students !== undefined ? company.current_students : company.current_students; // This line is problematic logic wise, current_students is on company.
-  const maxStudents = company.subscription_plan?.max_students || company.max_students; // max_students is likely from plan, or a fallback
-
+  const currentStudents = company.current_students;
+  const maxStudents = company.subscription_plan?.max_students || company.max_students;
 
   return (
     <>
@@ -193,7 +181,6 @@ const ProducerCompanyDetails = () => {
                 </div>
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-calmon-500 to-calmon-700 flex items-center justify-center">
-                    {/* TODO: Add company.logo_url here if available */}
                     <Building2 className="h-6 w-6 text-white" />
                   </div>
                   <div>
@@ -222,7 +209,7 @@ const ProducerCompanyDetails = () => {
               <div className="flex items-center space-x-3">
                 <Button
                   variant="outline"
-                  onClick={() => setIsCompanyEditDialogOpen(true)} // Use renamed state setter
+                  onClick={() => setIsCompanyEditDialogOpen(true)}
                   disabled={isLoading || !!error}
                 >
                   <Edit className="h-4 w-4 mr-2" />
@@ -254,7 +241,7 @@ const ProducerCompanyDetails = () => {
                 <Button 
                   onClick={() => setIsAddCollaboratorOpen(true)}
                   className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white"
-                  disabled={isLoading || !!error} // Also disable if company data isn't fully loaded
+                  disabled={isLoading || !!error}
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Adicionar Colaborador
@@ -323,7 +310,7 @@ const ProducerCompanyDetails = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-muted-foreground">Cursos Ativos</p>
-                          <p className="text-2xl font-bold text-orange-600">8</p> {/* Mocked for now */}
+                          <p className="text-2xl font-bold text-orange-600">8</p>
                         </div>
                         <Building2 className="h-8 w-8 text-orange-600" />
                       </div>
@@ -388,7 +375,7 @@ const ProducerCompanyDetails = () => {
                               <Skeleton className="h-4 w-48" />
                             </div>
                           </div>
-                          <Skeleton className="h-8 w-20" /> {/* Placeholder for actions */}
+                          <Skeleton className="h-8 w-20" />
                         </div>
                       ))}
                     </div>
@@ -435,7 +422,6 @@ const ProducerCompanyDetails = () => {
                           </div>
 
                           <div className="flex items-center space-x-2">
-                             {/* Removed course/progress related info for now */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button size="sm" variant="outline">
@@ -454,7 +440,7 @@ const ProducerCompanyDetails = () => {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={async () => {
-                                    if (id) { // companyId must exist
+                                    if (id) {
                                       await toggleCollaboratorStatusMutation.mutateAsync({
                                         collaboratorId: collaborator.id,
                                         companyId: id,
@@ -473,7 +459,6 @@ const ProducerCompanyDetails = () => {
                                   )}
                                   {collaborator.is_active ? "Bloquear" : "Desbloquear"}
                                 </DropdownMenuItem>
-                                {/* Remover DropdownMenuItem for "Excluir Colaborador" has been removed */}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -512,17 +497,17 @@ const ProducerCompanyDetails = () => {
       />
 
       {company && (
-        <EditCompanyDialog // This is for the Company itself
+        <EditCompanyDialog
           key={`company-edit-${dataUpdatedAt}`}
-          isOpen={isCompanyEditDialogOpen} // Use renamed state
-          onClose={() => setIsCompanyEditDialogOpen(false)} // Use renamed state
+          isOpen={isCompanyEditDialogOpen}
+          onClose={() => setIsCompanyEditDialogOpen(false)}
           company={company}
         />
       )}
 
-      {selectedCollaborator && id && ( // Ensure companyId (id) is available for EditCollaboratorDialogComponent
+      {selectedCollaborator && id && (
         <EditCollaboratorDialogComponent
-          key={`collaborator-edit-${selectedCollaborator.id}-${collaborators.find(c => c.id === selectedCollaborator.id)?.updated_at || ''}`} // More specific key
+          key={`collaborator-edit-${selectedCollaborator.id}-${collaborators.find(c => c.id === selectedCollaborator.id)?.updated_at || ''}`}
           isOpen={isEditCollaboratorDialogOpen}
           onClose={() => {
             setIsEditCollaboratorDialogOpen(false);
