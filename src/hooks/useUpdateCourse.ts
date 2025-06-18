@@ -28,9 +28,11 @@ export const useUpdateCourse = () => {
         tags: courseData.tags || [],
         // Ensure booleans are properly set
         is_published: courseData.is_published ?? false,
-        // Ensure instructor_id is maintained (don't override it during updates)
-        instructor_id: courseData.instructor_id || user.id,
+        // Ensure instructor_id is maintained (don't override it during updates unless explicitly provided)
+        ...(courseData.instructor_id === undefined ? {} : { instructor_id: courseData.instructor_id }),
       };
+
+      console.log('Final update data:', updateData);
 
       const { data, error } = await supabase
         .from('courses')
@@ -51,6 +53,7 @@ export const useUpdateCourse = () => {
       // Invalidate multiple query keys to ensure data consistency
       queryClient.invalidateQueries({ queryKey: ['courses'] });
       queryClient.invalidateQueries({ queryKey: ['course', data.id] });
+      console.log('Course update successful, queries invalidated');
       toast({
         title: "Sucesso",
         description: "Curso atualizado com sucesso!",
@@ -66,4 +69,3 @@ export const useUpdateCourse = () => {
     },
   });
 };
-

@@ -26,6 +26,8 @@ export const useCreateCourse = () => {
         instructor_id: user.id, // Set the instructor_id to current user
       };
 
+      console.log('Course data with instructor:', courseDataWithInstructor);
+
       const { data, error } = await supabase
         .from('courses')
         .insert([courseDataWithInstructor])
@@ -40,8 +42,10 @@ export const useCreateCourse = () => {
       console.log('Course created successfully:', data);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Invalidate queries to refresh the course list
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      console.log('Course creation successful, queries invalidated');
       toast({
         title: "Sucesso",
         description: "Curso criado com sucesso!",
@@ -57,4 +61,3 @@ export const useCreateCourse = () => {
     },
   });
 };
-

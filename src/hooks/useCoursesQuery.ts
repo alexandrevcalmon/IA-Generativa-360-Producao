@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth'; // useAuth should provide userRole
@@ -39,16 +38,15 @@ export const useCourses = () => {
         .select('*');
 
       if (userRole === 'producer') {
-        console.log(`[useCourses] User is a producer. Fetching courses for instructor_id: ${user.id}`);
-        query = query.eq('instructor_id', user.id);
+        console.log(`[useCourses] User is a producer. Fetching all courses (RLS will filter appropriately)`);
+        // For producers, we don't need to filter here - RLS will handle it
+        // The RLS policy "Producers can manage their own courses" will ensure they only see their courses
+        query = query.order('created_at', { ascending: false });
       } else {
         // For other roles (e.g., student, collaborator, company), fetch all published courses.
         console.log(`[useCourses] User role is '${userRole}'. Fetching all published courses.`);
-        query = query.eq('is_published', true);
+        query = query.eq('is_published', true).order('created_at', { ascending: false });
       }
-
-      // Common ordering for all queries
-      query = query.order('created_at', { ascending: false });
 
       const { data, error } = await query;
 
@@ -65,6 +63,9 @@ export const useCourses = () => {
     // Query enabled only if user is logged in.
     // The queryFn itself handles the !user case, but this prevents even attempting if no user.
     enabled: !!user,
+    // Add retry configuration to help with any remaining connection issues
+    retry: 3,
+    retryDelay: 1000,
   });
 };
 

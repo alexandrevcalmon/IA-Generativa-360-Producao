@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +19,21 @@ const ProducerCourses = () => {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
   const { user, userRole, loading } = useAuth();
-  const { data: courses = [], isLoading: coursesLoading } = useCourses();
+  const { data: courses = [], isLoading: coursesLoading, error: coursesError, refetch: refetchCourses } = useCourses();
   const deleteCourse = useDeleteCourse();
 
-  console.log('ProducerCourses - Auth state:', { user: user?.email, userRole, loading });
-  console.log('ProducerCourses - Courses data:', courses);
+  // Debug logging
+  useEffect(() => {
+    console.log('ProducerCourses - Auth state:', { 
+      user: user?.email, 
+      userId: user?.id,
+      userRole, 
+      loading 
+    });
+    console.log('ProducerCourses - Courses data:', courses);
+    console.log('ProducerCourses - Courses loading:', coursesLoading);
+    console.log('ProducerCourses - Courses error:', coursesError);
+  }, [user, userRole, loading, courses, coursesLoading, coursesError]);
 
   const handleEditCourse = (course: Course) => {
     setEditingCourse(course);
@@ -95,6 +104,37 @@ const ProducerCourses = () => {
               <p className="text-sm text-muted-foreground mt-2">
                 Usuário: {user?.email || 'Não logado'}
               </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if there's an issue loading courses
+  if (coursesError) {
+    return (
+      <div className="flex flex-col h-full">
+        <header className="border-b bg-white px-6 py-4">
+          <div className="flex items-center space-x-4">
+            <SidebarTrigger />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Gerenciar Cursos</h1>
+              <p className="text-gray-600">Erro ao carregar cursos</p>
+            </div>
+          </div>
+        </header>
+        <div className="flex-1 overflow-auto p-6 bg-gray-50">
+          <Card>
+            <CardContent className="p-12 text-center">
+              <BookOpen className="h-12 w-12 mx-auto text-red-500 mb-4" />
+              <h3 className="text-lg font-medium mb-2 text-red-700">Erro ao Carregar Cursos</h3>
+              <p className="text-muted-foreground mb-4">
+                {coursesError.message || 'Ocorreu um erro inesperado'}
+              </p>
+              <Button onClick={() => refetchCourses()} variant="outline">
+                Tentar Novamente
+              </Button>
             </CardContent>
           </Card>
         </div>
