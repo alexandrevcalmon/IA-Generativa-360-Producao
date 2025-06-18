@@ -28,6 +28,8 @@ export const useUpdateCourse = () => {
         tags: courseData.tags || [],
         // Ensure booleans are properly set
         is_published: courseData.is_published ?? false,
+        // Ensure instructor_id is maintained (don't override it during updates)
+        instructor_id: courseData.instructor_id || user.id,
       };
 
       const { data, error } = await supabase
@@ -64,3 +66,4 @@ export const useUpdateCourse = () => {
     },
   });
 };
+

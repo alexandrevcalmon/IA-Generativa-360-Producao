@@ -19,9 +19,16 @@ export const useCreateCourse = () => {
       console.log('Creating course with data:', courseData);
       console.log('Current user:', user.id);
 
+      // Ensure instructor_id is set to current user for producers
+      // The database trigger will handle this, but we can set it explicitly for clarity
+      const courseDataWithInstructor = {
+        ...courseData,
+        instructor_id: user.id, // Set the instructor_id to current user
+      };
+
       const { data, error } = await supabase
         .from('courses')
-        .insert([courseData])
+        .insert([courseDataWithInstructor])
         .select()
         .single();
 
@@ -50,3 +57,4 @@ export const useCreateCourse = () => {
     },
   });
 };
+
