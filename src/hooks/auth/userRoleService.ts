@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 export const createUserRoleService = () => {
   const getUserRole = async (userId: string) => {
@@ -78,4 +79,86 @@ export const createUserRoleService = () => {
     getUserRole,
     updateUserRole,
   };
+};
+
+// New function that was missing - this fetches auxiliary data for role determination
+export const fetchUserRoleAuxiliaryData = async (user: User) => {
+  console.log(`[fetchUserRoleAuxiliaryData] Fetching auxiliary data for user: ${user.email}`);
+  
+  try {
+    // First try to get role from profiles table
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!profileError && profileData?.role) {
+      console.log(`[fetchUserRoleAuxiliaryData] Found role in profiles: ${profileData.role}`);
+      return {
+        role: profileData.role,
+        profileData,
+        companyData: null,
+        collaboratorData: null
+      };
+    }
+
+    // Check if user is a company owner
+    const { data: companyData, error: companyError } = await supabase
+      .from('companies')
+      .select('*')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!companyError && companyData) {
+      console.log('[fetchUserRoleAuxiliaryData] User is a company owner');
+      return {
+        role: 'company',
+        profileData,
+        companyData,
+        collaboratorData: null
+      };
+    }
+
+    // Check if user is a company collaborator
+    const { data: collaboratorData, error: collaboratorError } = await supabase
+      .from('company_users')
+      .select(`
+        *,
+        companies!inner(name)
+      `)
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!collaboratorError && collaboratorData) {
+      console.log('[fetchUserRoleAuxiliaryData] User is a company collaborator');
+      return {
+        role: 'collaborator',
+        profileData,
+        companyData: null,
+        collaboratorData: {
+          ...collaboratorData,
+          company_name: collaboratorData.companies?.name || 'Unknown Company'
+        }
+      };
+    }
+
+    // Default to student role
+    console.log('[fetchUserRoleAuxiliaryData] Defaulting to student role');
+    return {
+      role: 'student',
+      profileData,
+      companyData: null,
+      collaboratorData: null
+    };
+
+  } catch (error) {
+    console.error('[fetchUserRoleAuxiliaryData] Error fetching auxiliary data:', error);
+    return {
+      role: 'student',
+      profileData: null,
+      companyData: null,
+      collaboratorData: null
+    };
+  }
 };
