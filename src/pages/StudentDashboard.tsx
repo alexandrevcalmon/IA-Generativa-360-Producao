@@ -4,7 +4,6 @@ import { useEnrollInCourse } from '@/hooks/useStudentProgress';
 import { StudentDashboardHeader } from '@/components/student/StudentDashboardHeader';
 import { StudentStatsGrid } from '@/components/student/StudentStatsGrid';
 import { StudentQuickActions } from '@/components/student/StudentQuickActions';
-import { StudentGoalProgress } from '@/components/student/StudentGoalProgress';
 import { StudentRecentActivities } from '@/components/student/StudentRecentActivities';
 import { StudentAchievements } from '@/components/student/StudentAchievements';
 
@@ -26,8 +25,7 @@ const StudentDashboard = () => {
     hoursStudied: courses?.reduce((total, course) => {
       return total + (course.estimated_hours * (course.progress_percentage / 100));
     }, 0) || 0,
-    certificatesEarned: courses?.filter(c => c.progress_percentage === 100).length || 0,
-    nextGoalProgress: 75
+    certificatesEarned: courses?.filter(c => c.progress_percentage === 100).length || 0
   };
 
   const recentActivities = [
@@ -98,7 +96,6 @@ const StudentDashboard = () => {
 
             {/* Right Column - 1/3 width */}
             <div className="space-y-6">
-              <StudentGoalProgress nextGoalProgress={studentStats.nextGoalProgress} />
               <StudentRecentActivities activities={recentActivities} />
               <StudentAchievements 
                 coursesInProgress={studentStats.coursesInProgress}

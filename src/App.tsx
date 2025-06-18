@@ -28,8 +28,6 @@ import StudentProfile from "./pages/StudentProfile";
 import StudentCourses from "./pages/StudentCourses";
 import StudentCourseDetail from "./pages/StudentCourseDetail";
 import StudentLessonView from "./pages/StudentLessonView";
-import StudentAnalytics from "./pages/StudentAnalytics";
-import StudentLearning from "./pages/StudentLearning";
 import StudentCommunity from "./pages/StudentCommunity";
 import NotFound from "./pages/NotFound";
 import { AuthGuard } from "@/components/AuthGuard";
@@ -82,8 +80,6 @@ function App() {
                   <Route path="profile" element={<StudentProfile />} />
                   <Route path="courses" element={<StudentCourses />} />
                   <Route path="courses/:courseId" element={<StudentCourseDetail />} />
-                  <Route path="analytics" element={<StudentAnalytics />} />
-                  <Route path="learning" element={<StudentLearning />} />
                   <Route path="community" element={<StudentCommunity />} />
                 </Route>
                 {/* Lesson view without sidebar for better video viewing */}

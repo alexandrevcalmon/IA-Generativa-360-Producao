@@ -17,11 +17,8 @@ import {
   Home, 
   BookOpen, 
   Trophy, 
-  BarChart3, 
   MessageCircle,
-  Target,
   Calendar,
-  GraduationCap,
   Users
 } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
@@ -38,24 +35,9 @@ const studentMenuItems = [
     icon: BookOpen,
   },
   {
-    title: 'Trilhas de Aprendizado',
-    url: '/student/learning',
-    icon: GraduationCap,
-  },
-  {
-    title: 'Progresso',
-    url: '/student/analytics',
-    icon: BarChart3,
-  },
-  {
     title: 'Gamificação',
     url: '/student/gamification',
     icon: Trophy,
-  },
-  {
-    title: 'Objetivos',
-    url: '/student/goals',
-    icon: Target,
   },
   {
     title: 'Comunidade',
