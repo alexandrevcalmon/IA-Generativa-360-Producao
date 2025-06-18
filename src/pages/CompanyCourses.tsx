@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCompanyCourses } from "@/hooks/useCompanyCourses";
-import { BookOpen, Users, Clock, Search, Filter, Eye, GraduationCap } from "lucide-react";
+import { BookOpen, Users, Clock, Search, Filter, Eye, GraduationCap, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const CompanyCourses = () => {
   const { data: courses = [], isLoading, error } = useCompanyCourses();
@@ -110,6 +111,12 @@ const CompanyCourses = () => {
               </p>
             </div>
           </div>
+          <Button asChild>
+            <Link to="/company/course-progress">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Ver Progresso dos Colaboradores
+            </Link>
+          </Button>
         </div>
       </header>
 

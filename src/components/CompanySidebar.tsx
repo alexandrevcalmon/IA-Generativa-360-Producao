@@ -12,13 +12,13 @@ import {
   Home, 
   Users, 
   BookOpen, 
-  Calendar, 
-  BarChart3,
+  Calendar,
   LogOut,
   User
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
+import { useCompanyData } from '@/hooks/useCompanyData';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 
 export function CompanySidebar() {
   const { user, signOut } = useAuth();
+  const { data: companyData } = useCompanyData();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -47,6 +48,9 @@ export function CompanySidebar() {
   };
 
   const getDisplayName = () => {
+    if (companyData?.name) {
+      return companyData.name;
+    }
     if (user?.email) {
       const emailPrefix = user.email.split('@')[0];
       return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
@@ -64,11 +68,6 @@ export function CompanySidebar() {
       title: 'Colaboradores',
       icon: Users,
       href: '/company/collaborators'
-    },
-    {
-      title: 'Analytics',
-      icon: BarChart3,
-      href: '/company/collaborators-analytics'
     },
     {
       title: 'Cursos',
@@ -89,7 +88,14 @@ export function CompanySidebar() {
           <div className="w-8 h-8 bg-calmon-600 rounded flex items-center justify-center text-white font-bold">
             C
           </div>
-          <span className="font-bold text-lg">Calmon Academy</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-lg">Calmon Academy</span>
+            {companyData?.name && (
+              <span className="text-sm text-gray-600 truncate">
+                {companyData.name}
+              </span>
+            )}
+          </div>
         </Link>
       </SidebarHeader>
       
