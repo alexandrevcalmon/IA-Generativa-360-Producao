@@ -51,7 +51,7 @@ export const useCreateMentorshipSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (sessionData: Partial<MentorshipSession>) => {
+    mutationFn: async (sessionData: Omit<MentorshipSession, 'id' | 'producer_id' | 'created_at' | 'updated_at'>) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
@@ -119,4 +119,40 @@ export const useSessionParticipants = (sessionId: string) => {
     },
     enabled: !!sessionId,
   });
+};
+
+export const useRegisterForMentorship = () => {
+  const queryClient = useQueryClient();
+
+  return {
+    registerForMentorship: async (sessionId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Get user profile to get name and email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) throw new Error('User profile not found');
+
+      const { data, error } = await supabase
+        .from('producer_mentorship_participants')
+        .insert({
+          session_id: sessionId,
+          participant_id: user.id,
+          participant_name: user.user_metadata?.name || user.email || 'User',
+          participant_email: user.email || '',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['session-participants', sessionId] });
+      return data;
+    }
+  };
 };

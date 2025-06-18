@@ -116,9 +116,9 @@ const StudentMentorship = () => {
                             </div>
                           )}
                         </div>
-                        {session.meet_url && (
+                        {session.google_meet_url && (
                           <Button asChild className="w-full bg-green-600 hover:bg-green-700">
-                            <a href={session.meet_url} target="_blank" rel="noopener noreferrer">
+                            <a href={session.google_meet_url} target="_blank" rel="noopener noreferrer">
                               <Video className="h-4 w-4 mr-2" />
                               Entrar na Sessão
                             </a>
