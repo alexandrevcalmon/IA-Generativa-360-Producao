@@ -1,85 +1,133 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./auth";
+import { useCompanyData } from "./useCompanyData";
 
-export interface CollaboratorStats {
+export interface CollaboratorAnalytics {
   id: string;
-  collaborator_id: string;
-  company_id: string;
-  last_login_at: string | null;
-  total_login_count: number;
-  total_watch_time_minutes: number;
-  lessons_completed: number;
-  lessons_started: number;
-  courses_enrolled: number;
-  courses_completed: number;
-  quiz_attempts: number;
-  quiz_passed: number;
-  average_quiz_score: number;
-  streak_days: number;
-  total_points: number;
-  current_level: number;
-  created_at: string;
-  updated_at: string;
   collaborator: {
     id: string;
     name: string;
     email: string;
-    position: string | null;
+    phone?: string;
+    position?: string;
     is_active: boolean;
-    phone: string | null;
   };
+  lessons_completed: number;
+  courses_completed: number;
+  total_watch_time_minutes: number;
+  total_points: number;
+  last_login_at?: string;
 }
 
 export const useCollaboratorAnalytics = () => {
+  const { user, userRole } = useAuth();
+  const { data: companyData } = useCompanyData();
+
   return useQuery({
-    queryKey: ['collaborator-analytics'],
+    queryKey: ['collaborator-analytics', user?.id, companyData?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('collaborator_activity_stats')
-        .select(`
-          *,
-          collaborator:collaborator_id (
-            id,
-            name,
-            email,
-            position,
-            is_active,
-            phone
-          )
-        `)
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-      return data as CollaboratorStats[];
-    },
-  });
-};
-
-export const useCollaboratorActivityLogs = (collaboratorId?: string) => {
-  return useQuery({
-    queryKey: ['collaborator-activity-logs', collaboratorId],
-    queryFn: async () => {
-      let query = supabase
-        .from('collaborator_activity_logs')
-        .select(`
-          *,
-          collaborator:collaborator_id (
-            name,
-            email
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (collaboratorId) {
-        query = query.eq('collaborator_id', collaboratorId);
+      if (!user?.id || !companyData?.id) {
+        throw new Error('User not authenticated or company not found');
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      console.log('📊 Fetching collaborator analytics for company:', companyData.id);
+
+      // Get all company users/collaborators
+      const { data: collaborators, error: collaboratorsError } = await supabase
+        .from('company_users')
+        .select('*')
+        .eq('company_id', companyData.id);
+
+      if (collaboratorsError) {
+        console.error('❌ Error fetching collaborators:', collaboratorsError);
+        throw collaboratorsError;
+      }
+
+      console.log('✅ Found collaborators:', collaborators?.length || 0);
+
+      if (!collaborators || collaborators.length === 0) {
+        return [];
+      }
+
+      // Get analytics for each collaborator
+      const analyticsData = await Promise.all(
+        collaborators.map(async (collaborator) => {
+          try {
+            // Get lessons completed
+            const { count: lessonsCompleted } = await supabase
+              .from('lesson_progress')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', collaborator.auth_user_id)
+              .eq('completed', true);
+
+            // Get total watch time
+            const { data: watchTimeData } = await supabase
+              .from('lesson_progress')
+              .select('watch_time_seconds')
+              .eq('user_id', collaborator.auth_user_id);
+
+            const totalWatchTimeMinutes = Math.round(
+              (watchTimeData?.reduce((sum, item) => sum + (item.watch_time_seconds || 0), 0) || 0) / 60
+            );
+
+            // Get courses completed (enrollments with completed_at)
+            const { count: coursesCompleted } = await supabase
+              .from('enrollments')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', collaborator.auth_user_id)
+              .not('completed_at', 'is', null);
+
+            // Get total points
+            const { data: pointsData } = await supabase
+              .from('student_points')
+              .select('total_points')
+              .eq('student_id', collaborator.auth_user_id)
+              .maybeSingle();
+
+            return {
+              id: collaborator.id,
+              collaborator: {
+                id: collaborator.id,
+                name: collaborator.name,
+                email: collaborator.email,
+                phone: collaborator.phone,
+                position: collaborator.position,
+                is_active: collaborator.is_active,
+              },
+              lessons_completed: lessonsCompleted || 0,
+              courses_completed: coursesCompleted || 0,
+              total_watch_time_minutes: totalWatchTimeMinutes,
+              total_points: pointsData?.total_points || 0,
+              last_login_at: null, // This would need to be tracked separately
+            };
+          } catch (error) {
+            console.warn('⚠️ Error fetching analytics for collaborator:', collaborator.id, error);
+            return {
+              id: collaborator.id,
+              collaborator: {
+                id: collaborator.id,
+                name: collaborator.name,
+                email: collaborator.email,
+                phone: collaborator.phone,
+                position: collaborator.position,
+                is_active: collaborator.is_active,
+              },
+              lessons_completed: 0,
+              courses_completed: 0,
+              total_watch_time_minutes: 0,
+              total_points: 0,
+              last_login_at: null,
+            };
+          }
+        })
+      );
+
+      console.log('✅ Analytics processed for', analyticsData.length, 'collaborators');
+      return analyticsData as CollaboratorAnalytics[];
     },
-    enabled: true,
+    enabled: !!user?.id && !!companyData?.id && userRole === 'company',
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

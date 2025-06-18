@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./auth";
 
 export interface CompanyCourse {
   id: string;
@@ -17,33 +18,68 @@ export interface CompanyCourse {
 }
 
 export const useCompanyCourses = () => {
-  return useQuery({
-    queryKey: ['company-courses'],
-    queryFn: async () => {
-      console.log('Fetching published courses...');
+  const { user, userRole } = useAuth();
 
-      const { data: courses, error } = await supabase
+  return useQuery({
+    queryKey: ['company-courses', user?.id],
+    queryFn: async () => {
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('📚 Fetching published courses for company dashboard...');
+
+      // First, get all published courses
+      const { data: courses, error: coursesError } = await supabase
         .from('courses')
-        .select(`
-          *,
-          enrollments_aggregate:enrollments(count),
-          completed_enrollments:enrollments!inner(completed_at)
-        `)
+        .select('*')
         .eq('is_published', true)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching courses:', error);
-        throw error;
+      if (coursesError) {
+        console.error('❌ Error fetching courses:', coursesError);
+        throw coursesError;
       }
 
-      console.log('Published courses fetched:', courses);
+      console.log('✅ Found courses:', courses?.length || 0);
 
-      return (courses || []).map(course => ({
-        ...course,
-        enrolled_students: course.enrollments_aggregate?.[0]?.count || 0,
-        completed_students: course.completed_enrollments?.filter((e: any) => e.completed_at).length || 0
-      })) as CompanyCourse[];
+      // For each course, get enrollment stats
+      const coursesWithStats = await Promise.all(
+        (courses || []).map(async (course) => {
+          try {
+            // Get total enrollments
+            const { count: enrolledCount } = await supabase
+              .from('enrollments')
+              .select('*', { count: 'exact', head: true })
+              .eq('course_id', course.id);
+
+            // Get completed enrollments (those with completed_at)
+            const { count: completedCount } = await supabase
+              .from('enrollments')
+              .select('*', { count: 'exact', head: true })
+              .eq('course_id', course.id)
+              .not('completed_at', 'is', null);
+
+            return {
+              ...course,
+              enrolled_students: enrolledCount || 0,
+              completed_students: completedCount || 0
+            };
+          } catch (error) {
+            console.warn('⚠️ Error fetching stats for course:', course.id, error);
+            return {
+              ...course,
+              enrolled_students: 0,
+              completed_students: 0
+            };
+          }
+        })
+      );
+
+      console.log('✅ Courses with stats processed:', coursesWithStats.length);
+      return coursesWithStats as CompanyCourse[];
     },
+    enabled: !!user?.id && userRole === 'company',
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

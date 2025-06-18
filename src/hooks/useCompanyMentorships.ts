@@ -2,68 +2,74 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
+import { useCompanyData } from "./useCompanyData";
 
 export interface CompanyMentorship {
   id: string;
+  company_id: string;
   title: string;
   description?: string;
   scheduled_at: string;
   duration_minutes: number;
-  status: string;
   max_participants: number;
-  meet_url?: string;
   participants_count: number;
+  status: string;
+  meet_url?: string;
   created_at: string;
 }
 
 export const useCompanyMentorships = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
+  const { data: companyData } = useCompanyData();
 
   return useQuery({
-    queryKey: ['company-mentorships', user?.id],
+    queryKey: ['company-mentorships', user?.id, companyData?.id],
     queryFn: async () => {
-      if (!user?.id) {
-        throw new Error('User not authenticated');
+      if (!user?.id || !companyData?.id) {
+        throw new Error('User not authenticated or company not found');
       }
 
-      console.log('Fetching company mentorships for user:', user.id);
+      console.log('🎯 Fetching mentorships for company:', companyData.id);
 
-      // Buscar o company_id primeiro
-      const { data: companyData, error: companyError } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
-
-      if (companyError || !companyData) {
-        console.error('Error fetching company:', companyError);
-        return [];
-      }
-
-      console.log('Company ID found:', companyData.id);
-
-      // Buscar as sessões de mentoria da empresa
-      const { data: sessions, error: sessionsError } = await supabase
+      const { data: mentorships, error } = await supabase
         .from('mentorship_sessions')
-        .select(`
-          *,
-          attendees:mentorship_attendees(count)
-        `)
+        .select('*')
         .eq('company_id', companyData.id)
-        .order('scheduled_at', { ascending: true });
+        .order('scheduled_at', { ascending: false });
 
-      if (sessionsError) {
-        console.error('Error fetching mentorship sessions:', sessionsError);
-        throw sessionsError;
+      if (error) {
+        console.error('❌ Error fetching mentorships:', error);
+        throw error;
       }
 
-      console.log('Mentorship sessions fetched:', sessions);
+      console.log('✅ Found mentorships:', mentorships?.length || 0);
 
-      return (sessions || []).map(session => ({
-        ...session,
-        participants_count: session.attendees?.[0]?.count || 0
-      })) as CompanyMentorship[];
+      // For each mentorship, get participant count
+      const mentorshipsWithCounts = await Promise.all(
+        (mentorships || []).map(async (mentorship) => {
+          try {
+            const { count } = await supabase
+              .from('mentorship_attendees')
+              .select('*', { count: 'exact', head: true })
+              .eq('mentorship_session_id', mentorship.id);
+
+            return {
+              ...mentorship,
+              participants_count: count || 0
+            };
+          } catch (error) {
+            console.warn('⚠️ Error fetching participants for mentorship:', mentorship.id, error);
+            return {
+              ...mentorship,
+              participants_count: 0
+            };
+          }
+        })
+      );
+
+      return mentorshipsWithCounts as CompanyMentorship[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!companyData?.id && userRole === 'company',
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

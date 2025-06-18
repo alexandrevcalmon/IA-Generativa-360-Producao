@@ -27,7 +27,7 @@ export interface CompanyData {
 }
 
 export const useCompanyData = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
 
   return useQuery({
     queryKey: ['company-data', user?.id],
@@ -36,7 +36,7 @@ export const useCompanyData = () => {
         throw new Error('User not authenticated');
       }
 
-      console.log('Fetching company data for user:', user.id);
+      console.log('🏢 Fetching company data for user:', user.id, 'with role:', userRole);
 
       const { data, error } = await supabase
         .from('companies')
@@ -50,16 +50,22 @@ export const useCompanyData = () => {
           )
         `)
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.error('Error fetching company data:', error);
+        console.error('❌ Error fetching company data:', error);
         throw error;
       }
 
-      console.log('Company data fetched:', data);
+      if (!data) {
+        console.log('⚠️ No company data found for user:', user.id);
+        return null;
+      }
+
+      console.log('✅ Company data fetched:', data);
       return data as CompanyData;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && userRole === 'company',
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
