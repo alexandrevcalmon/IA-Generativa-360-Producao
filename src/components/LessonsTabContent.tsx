@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Play, Edit, Plus } from "lucide-react";
 import { CourseModule } from "@/hooks/useCourseModules";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 interface LessonsTabContentProps {
   modules: CourseModule[];
@@ -18,7 +24,8 @@ export const LessonsTabContent = ({ modules, onEditLesson, onCreateLesson }: Les
     console.log(`[LessonsTabContent] Module ${module.title} has ${module.lessons?.length || 0} lessons:`, module.lessons);
     return module.lessons?.map(lesson => ({ 
       ...lesson, 
-      moduleName: module.title 
+      moduleName: module.title,
+      moduleId: module.id
     })) || [];
   });
 
@@ -35,6 +42,27 @@ export const LessonsTabContent = ({ modules, onEditLesson, onCreateLesson }: Les
               ? "Crie módulos primeiro, depois adicione aulas a eles."
               : "Adicione aulas aos módulos existentes."}
           </p>
+          {modules.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Primeira Aula
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {modules.map((module) => (
+                  <DropdownMenuItem 
+                    key={module.id}
+                    onClick={() => onCreateLesson(module.id)}
+                  >
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    {module.title}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </CardContent>
       </Card>
     );
@@ -44,6 +72,27 @@ export const LessonsTabContent = ({ modules, onEditLesson, onCreateLesson }: Les
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Todas as Aulas ({allLessons.length})</h3>
+        {modules.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Aula
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {modules.map((module) => (
+                <DropdownMenuItem 
+                  key={module.id}
+                  onClick={() => onCreateLesson(module.id)}
+                >
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  {module.title}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
       
       <div className="grid gap-4">
