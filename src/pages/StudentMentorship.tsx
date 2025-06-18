@@ -114,45 +114,64 @@ const StudentMentorship = () => {
                 🔴 Ao Vivo Agora
               </h2>
               <div className="grid gap-4">
-                {liveSessions.map((session) => (
-                  <Card key={session.id} className="border-green-200 bg-green-50">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{session.title}</CardTitle>
-                        <Badge className={getStatusColor(session.status)}>
-                          {getStatusText(session.status)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {session.description && (
-                          <p className="text-gray-600">{session.description}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>{session.duration_minutes} minutos</span>
-                          </div>
-                          {session.max_participants && (
+                {liveSessions.map((session) => {
+                  const isRegistered = isUserRegistered(session.id);
+                  
+                  return (
+                    <Card key={session.id} className="border-green-200 bg-green-50">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">{session.title}</CardTitle>
+                          <Badge className={getStatusColor(session.status)}>
+                            {getStatusText(session.status)}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {session.description && (
+                            <p className="text-gray-600">{session.description}</p>
+                          )}
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              <span>Máx. {session.max_participants} participantes</span>
+                              <Clock className="h-4 w-4" />
+                              <span>{session.duration_minutes} minutos</span>
                             </div>
+                            {session.max_participants && (
+                              <div className="flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                <span>Máx. {session.max_participants} participantes</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Show meeting link if user is registered */}
+                          {isRegistered && session.google_meet_url ? (
+                            <Button asChild className="w-full bg-green-600 hover:bg-green-700">
+                              <a href={session.google_meet_url} target="_blank" rel="noopener noreferrer">
+                                <Video className="h-4 w-4 mr-2" />
+                                Entrar na Sessão
+                              </a>
+                            </Button>
+                          ) : !isRegistered ? (
+                            <Button 
+                              onClick={() => handleRegister(session.id)}
+                              className="w-full"
+                            >
+                              <Users className="h-4 w-4 mr-2" />
+                              Participar
+                            </Button>
+                          ) : (
+                            <Button disabled className="w-full bg-green-600">
+                              <Check className="h-4 w-4 mr-2" />
+                              Inscrito - Link em breve
+                            </Button>
                           )}
                         </div>
-                        {session.google_meet_url && (
-                          <Button asChild className="w-full bg-green-600 hover:bg-green-700">
-                            <a href={session.google_meet_url} target="_blank" rel="noopener noreferrer">
-                              <Video className="h-4 w-4 mr-2" />
-                              Entrar na Sessão
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -207,23 +226,31 @@ const StudentMentorship = () => {
                               </div>
                             )}
                           </div>
-                          <Button 
-                            onClick={() => handleRegister(session.id)}
-                            className={`w-full ${isRegistered ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                            disabled={isRegistered}
-                          >
-                            {isRegistered ? (
-                              <>
-                                <Check className="h-4 w-4 mr-2" />
-                                Inscrito
-                              </>
+
+                          {/* Show different buttons based on registration status and meeting link */}
+                          {isRegistered ? (
+                            session.google_meet_url ? (
+                              <Button asChild className="w-full bg-green-600 hover:bg-green-700">
+                                <a href={session.google_meet_url} target="_blank" rel="noopener noreferrer">
+                                  <Video className="h-4 w-4 mr-2" />
+                                  Acessar Reunião
+                                </a>
+                              </Button>
                             ) : (
-                              <>
-                                <Users className="h-4 w-4 mr-2" />
-                                Participar
-                              </>
-                            )}
-                          </Button>
+                              <Button disabled className="w-full bg-green-600">
+                                <Check className="h-4 w-4 mr-2" />
+                                Inscrito - Link em breve
+                              </Button>
+                            )
+                          ) : (
+                            <Button 
+                              onClick={() => handleRegister(session.id)}
+                              className="w-full"
+                            >
+                              <Users className="h-4 w-4 mr-2" />
+                              Participar
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
