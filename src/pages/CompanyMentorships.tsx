@@ -17,10 +17,18 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useState } from "react";
 
 const CompanyMentorships = () => {
-  const { data: mentorships, isLoading, error } = useCompanyMentorships();
+  const { data: mentorships, isLoading, error, refetch } = useCompanyMentorships();
   const { data: companyData } = useCompanyData();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
 
   if (isLoading) {
     return (
@@ -60,8 +68,19 @@ const CompanyMentorships = () => {
         <div className="flex-1 p-6 bg-gray-50 flex items-center justify-center">
           <Card>
             <CardContent className="p-8 text-center">
-              <p className="text-red-500 mb-4">Erro ao carregar sessões de mentoria</p>
-              <Button onClick={() => window.location.reload()}>Tentar Novamente</Button>
+              <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+              <h3 className="text-lg font-medium mb-2">Erro ao carregar sessões de mentoria</h3>
+              <p className="text-gray-600 mb-4">
+                Ocorreu um erro ao carregar as sessões de mentoria. Tente novamente.
+              </p>
+              <div className="space-x-2">
+                <Button onClick={handleRefresh} disabled={refreshing}>
+                  {refreshing ? 'Atualizando...' : 'Tentar Novamente'}
+                </Button>
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                  Recarregar Página
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -114,10 +133,15 @@ const CompanyMentorships = () => {
               </p>
             </div>
           </div>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Solicitar Mentoria
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+              {refreshing ? 'Atualizando...' : 'Atualizar'}
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Solicitar Mentoria
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -210,7 +234,11 @@ const CompanyMentorships = () => {
                         
                         <div className="flex flex-col gap-2">
                           {mentorship.meet_url && (
-                            <Button size="sm" className="flex items-center space-x-1">
+                            <Button 
+                              size="sm" 
+                              className="flex items-center space-x-1"
+                              onClick={() => window.open(mentorship.meet_url, '_blank')}
+                            >
                               <Video className="h-4 w-4" />
                               <span>Entrar na Sessão</span>
                             </Button>
