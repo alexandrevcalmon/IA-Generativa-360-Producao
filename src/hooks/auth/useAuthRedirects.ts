@@ -35,7 +35,8 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
     const isOnCorrectDashboard = 
       (userRole === 'producer' && location.pathname.startsWith('/producer')) ||
       (userRole === 'company' && (location.pathname.startsWith('/company') || location.pathname === '/company-dashboard')) ||
-      (userRole === 'student' && location.pathname.startsWith('/student'));
+      (userRole === 'student' && location.pathname.startsWith('/student')) ||
+      (userRole === 'collaborator' && location.pathname.startsWith('/student')); // Collaborators use student dashboard
 
     if (isOnCorrectDashboard) {
       console.log('✅ User already on correct dashboard, no redirect needed');
@@ -67,11 +68,8 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
           navigate('/company-dashboard', { replace: true });
           break;
         case 'student':
-          console.log('🎓 Redirecting student to dashboard');
-          navigate('/student/dashboard', { replace: true });
-          break;
-        case 'collaborator': // ADDED THIS CASE
-          console.log('🤝 Redirecting collaborator to student dashboard');
+        case 'collaborator': // Both student and collaborator go to student dashboard
+          console.log('🎓 Redirecting student/collaborator to dashboard');
           navigate('/student/dashboard', { replace: true });
           break;
         default:

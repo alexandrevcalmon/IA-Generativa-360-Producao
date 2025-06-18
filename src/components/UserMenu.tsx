@@ -93,6 +93,7 @@ export function UserMenu() {
         navigate('/company/profile');
         break;
       case 'student':
+      case 'collaborator': // Both student and collaborator use student profile
         navigate('/student/profile');
         break;
       default:
@@ -108,6 +109,8 @@ export function UserMenu() {
       case 'company':
         return 'Empresa';
       case 'student':
+        return 'Estudante';
+      case 'collaborator':
         return 'Colaborador';
       default:
         return 'Usuário';

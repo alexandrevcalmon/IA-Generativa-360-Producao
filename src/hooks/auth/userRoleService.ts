@@ -1,96 +1,91 @@
+
 // src/hooks/auth/userRoleService.ts
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
 export interface UserRoleAuxiliaryData {
-  role: string | null; // Changed from string to string | null to match usage
+  role: string | null;
   companyData?: any;
   collaboratorData?: any;
   profileData?: any;
 }
 
 export const fetchUserRoleAuxiliaryData = async (user: User): Promise<UserRoleAuxiliaryData> => {
-  // Role is determined from user_metadata. Default to 'student' if not present.
-  const baseRole = user.user_metadata?.role || 'student';
+  // First, check if user is a collaborator in company_users table
+  console.log(`[fetchUserRoleAuxiliaryData] Checking user roles for: ${user.id}`);
+  
   let companyData = null;
   let collaboratorData = null;
-  let profileData = null; // Renamed from 'profile' to 'profileData' for consistency
-
-  console.log(`[fetchUserRoleAuxiliaryDataV2] User ID: ${user.id}, Role from metadata: ${baseRole}`);
+  let profileData = null;
+  let finalRole = user.user_metadata?.role || 'student';
 
   try {
-    if (baseRole === 'company') {
-      console.log(`[fetchUserRoleAuxiliaryDataV2] User is a '${baseRole}'. Fetching company details where auth_user_id = ${user.id}`);
+    // Check if user is a collaborator first
+    const { data: collabResult, error: collabError } = await supabase
+      .from('company_users')
+      .select('*, companies(*)')
+      .eq('auth_user_id', user.id)
+      .maybeSingle();
+
+    if (collabError) {
+      console.error(`[fetchUserRoleAuxiliaryData] Error checking collaborator status:`, collabError.message);
+    } else if (collabResult) {
+      console.log(`[fetchUserRoleAuxiliaryData] User is a collaborator`);
+      finalRole = 'collaborator';
+      collaboratorData = collabResult;
+      companyData = collabResult.companies;
+    }
+
+    // If not a collaborator, check if user is a company owner
+    if (!collabResult) {
       const { data: companyResult, error: companyError } = await supabase
         .from('companies')
-        .select('*') // Adjust selection as needed
+        .select('*')
         .eq('auth_user_id', user.id)
-        .maybeSingle(); // MODIFIED to maybeSingle()
+        .maybeSingle();
 
       if (companyError) {
-        console.error(`[fetchUserRoleAuxiliaryDataV2] Error fetching company details for owner ${user.id}:`, companyError.message);
-        // A 406 error here would mean PostgREST is trying to return a single object but found multiple,
-        // or the Accept header is not allowing the response type. maybeSingle() helps with 0 or 1.
-        // If it's about Accept header, that's a deeper Supabase client/config issue.
+        console.error(`[fetchUserRoleAuxiliaryData] Error checking company ownership:`, companyError.message);
       } else if (companyResult) {
+        console.log(`[fetchUserRoleAuxiliaryData] User is a company owner`);
+        finalRole = 'company';
         companyData = companyResult;
-        console.log(`[fetchUserRoleAuxiliaryDataV2] Fetched company details for owner ${user.id}:`, companyData.name);
-      } else {
-        console.warn(`[fetchUserRoleAuxiliaryDataV2] No company found for owner ${user.id} where auth_user_id matches. This might indicate a data linkage issue (auth_user_id not set on company record) or an RLS problem preventing access.`);
-      }
-    } else if (baseRole === 'collaborator') {
-      console.log(`[fetchUserRoleAuxiliaryDataV2] User is a '${baseRole}'. Fetching collaborator details for auth_user_id = ${user.id}`);
-      const { data: collabResult, error: collabError } = await supabase
-        .from('company_users')
-        .select('*, companies(*)') // companies(*) should fetch the related company
-        .eq('auth_user_id', user.id)
-        .maybeSingle(); // MODIFIED to maybeSingle()
-
-      if (collabError) {
-        console.error(`[fetchUserRoleAuxiliaryDataV2] Error fetching collaborator details for user ${user.id}:`, collabError.message);
-      } else if (collabResult) {
-        collaboratorData = collabResult;
-        companyData = collabResult.companies; // This is the nested company data
-        if (companyData) {
-          console.log(`[fetchUserRoleAuxiliaryDataV2] Fetched collaborator details for user ${user.id}, company: ${companyData.name}`);
-        } else if (collabResult) { // Ensure collabResult itself is not null before accessing its properties
-          console.warn(`[fetchUserRoleAuxiliaryDataV2] Collaborator ${user.id} (company_user record ID: ${collabResult.id}) found, but linked company data (companies(*)) is missing. Company ID from company_users: ${collabResult.company_id}. This could be due to RLS on the 'companies' table preventing access for collaborators, the company record (ID: ${collabResult.company_id}) itself is missing/invalid, or the foreign key relationship is not properly established.`);
-        }
-      } else {
-        console.warn(`[fetchUserRoleAuxiliaryDataV2] No collaborator record found for user ${user.id}.`);
       }
     }
 
-    // Fetch general profile data from public.profiles
+    // Fetch profile data
     const { data: fetchedProfile, error: profileError } = await supabase
       .from('profiles')
-      .select('*') // Select required fields e.g., name, email, avatar_url
+      .select('*')
       .eq('id', user.id)
-      .maybeSingle(); // Changed to maybeSingle for safety, though trigger should ensure one.
+      .maybeSingle();
 
     if (profileError) {
-      console.error(`[fetchUserRoleAuxiliaryDataV2] Error fetching profile data for user ${user.id}:`, profileError.message);
+      console.error(`[fetchUserRoleAuxiliaryData] Error fetching profile:`, profileError.message);
     } else if (fetchedProfile) {
       profileData = fetchedProfile;
-      // Log if there's still a mismatch for observation.
-      if (profileData.role !== baseRole) {
-          console.warn(`[fetchUserRoleAuxiliaryDataV2] Mismatch between metadata role (${baseRole}) and profile table role (${profileData.role}) for user ${user.id}. Metadata role is primary.`);
+      
+      // Update profile role if it doesn't match what we determined
+      if (fetchedProfile.role !== finalRole) {
+        console.log(`[fetchUserRoleAuxiliaryData] Updating profile role from ${fetchedProfile.role} to ${finalRole}`);
+        await supabase
+          .from('profiles')
+          .update({ role: finalRole })
+          .eq('id', user.id);
       }
-    } else {
-      console.warn(`[fetchUserRoleAuxiliaryDataV2] No profile record found for user ${user.id}. This is unexpected if the trigger is working.`);
     }
 
     return {
-      role: baseRole,
+      role: finalRole,
       companyData,
       collaboratorData,
       profileData,
     };
 
   } catch (error: any) {
-    console.error(`[fetchUserRoleAuxiliaryDataV2] Unexpected error for user ${user.id}:`, error.message);
+    console.error(`[fetchUserRoleAuxiliaryData] Unexpected error for user ${user.id}:`, error.message);
     return {
-      role: baseRole, // Return baseRole even in case of other errors
+      role: finalRole,
       companyData: null,
       collaboratorData: null,
       profileData: null,

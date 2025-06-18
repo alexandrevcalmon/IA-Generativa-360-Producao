@@ -86,19 +86,24 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
     setTimeout(async () => {
       try {
         const user = session.user as User;
-        console.log('👤 Setting role from metadata and fetching auxiliary data for:', user.email);
+        console.log('👤 Determining role and fetching auxiliary data for:', user.email);
         
-        const primaryRole = user.user_metadata?.role || 'student';
-        setUserRole(primaryRole);
-
         const auxData = await fetchUserRoleAuxiliaryData(user);
+        
+        console.log('🔍 Role determination result:', {
+          userEmail: user.email,
+          determinedRole: auxData.role,
+          hasCompanyData: !!auxData.companyData,
+          hasCollaboratorData: !!auxData.collaboratorData
+        });
 
-        if (primaryRole === 'company') {
+        setUserRole(auxData.role);
+
+        // Set company user data based on role
+        if (auxData.role === 'company') {
           setCompanyUserData(auxData.companyData);
-          console.log('✅ Company auxiliary data loaded for:', user.email, auxData.companyData);
-        } else if (primaryRole === 'collaborator') {
+        } else if (auxData.role === 'collaborator') {
           setCompanyUserData(auxData.collaboratorData);
-          console.log('✅ Collaborator auxiliary data loaded for:', user.email, auxData.collaboratorData);
         } else {
           setCompanyUserData(null);
         }
