@@ -1689,6 +1689,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      initialize_student_gamification: {
+        Args: { user_auth_id: string }
+        Returns: undefined
+      }
       is_company_user: {
         Args: { user_id: string }
         Returns: boolean

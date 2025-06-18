@@ -17,7 +17,7 @@ const debounce = <T extends (...args: any[]) => void>(
   };
 };
 
-// Retry utility with exponential backoff
+// Improved retry utility with better conflict handling
 const retryWithBackoff = async <T>(
   operation: () => Promise<T>,
   maxRetries: number = 3,
@@ -31,9 +31,17 @@ const retryWithBackoff = async <T>(
     } catch (error: any) {
       lastError = error;
       
-      // Only retry on conflict errors
-      if (error?.code === '23505' && attempt < maxRetries) {
-        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+      // Retry on conflict errors (409) and constraint violations (23505)
+      const shouldRetry = (
+        error?.code === '23505' || 
+        error?.status === 409 ||
+        error?.message?.includes('conflict')
+      ) && attempt < maxRetries;
+      
+      if (shouldRetry) {
+        // Add exponential backoff with jitter
+        const jitter = Math.random() * 500;
+        const delay = baseDelay * Math.pow(2, attempt) + jitter;
         console.log(`🔄 Retrying lesson progress update after ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
@@ -50,6 +58,7 @@ export const useUpdateLessonProgress = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const pendingUpdatesRef = useRef<Set<string>>(new Set());
+  const lastUpdateTimeRef = useRef<Map<string, number>>(new Map());
 
   const updateProgressMutation = useMutation({
     mutationFn: async ({ 
@@ -64,6 +73,7 @@ export const useUpdateLessonProgress = () => {
       if (!user) throw new Error('User not authenticated');
 
       const updateKey = `${user.id}-${lessonId}`;
+      const currentTime = Date.now();
       
       // Check if update is already in progress
       if (pendingUpdatesRef.current.has(updateKey)) {
@@ -71,8 +81,17 @@ export const useUpdateLessonProgress = () => {
         return null;
       }
 
+      // Throttle updates to prevent rapid fire (minimum 1 second between updates)
+      const lastUpdateTime = lastUpdateTimeRef.current.get(updateKey) || 0;
+      const timeSinceLastUpdate = currentTime - lastUpdateTime;
+      if (timeSinceLastUpdate < 1000) {
+        console.log('🚫 Throttling update for lesson:', lessonId, 'time since last:', timeSinceLastUpdate);
+        return null;
+      }
+
       // Mark update as in progress
       pendingUpdatesRef.current.add(updateKey);
+      lastUpdateTimeRef.current.set(updateKey, currentTime);
 
       try {
         console.log('📝 Updating lesson progress:', { 
@@ -84,17 +103,29 @@ export const useUpdateLessonProgress = () => {
         });
 
         const result = await retryWithBackoff(async () => {
-          // Use explicit conflict resolution with ON CONFLICT clause
+          // First, try to get existing progress to understand current state
+          const { data: existingProgress } = await supabase
+            .from('lesson_progress')
+            .select('*')
+            .eq('lesson_id', lessonId)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          console.log('📊 Existing progress:', existingProgress);
+
+          const updateData = {
+            lesson_id: lessonId,
+            user_id: user.id,
+            completed: completed ?? existingProgress?.completed ?? false,
+            watch_time_seconds: watchTimeSeconds ?? existingProgress?.watch_time_seconds ?? 0,
+            completed_at: completed ? new Date().toISOString() : existingProgress?.completed_at,
+            last_watched_at: new Date().toISOString(),
+          };
+
+          // Use upsert with proper conflict resolution
           const { data, error } = await supabase
             .from('lesson_progress')
-            .upsert({
-              lesson_id: lessonId,
-              user_id: user.id,
-              completed: completed ?? false,
-              watch_time_seconds: watchTimeSeconds ?? 0,
-              completed_at: completed ? new Date().toISOString() : null,
-              last_watched_at: new Date().toISOString(),
-            }, {
+            .upsert(updateData, {
               onConflict: 'user_id,lesson_id',
               ignoreDuplicates: false
             })
@@ -126,18 +157,23 @@ export const useUpdateLessonProgress = () => {
     },
     onSuccess: (data) => {
       if (data) {
+        // Invalidate relevant queries
         queryClient.invalidateQueries({ queryKey: ['student-courses'] });
         queryClient.invalidateQueries({ queryKey: ['student-course'] });
+        queryClient.invalidateQueries({ queryKey: ['student-points'] });
+        queryClient.invalidateQueries({ queryKey: ['points-history'] });
       }
     },
     onError: (error: any) => {
       console.error('❌ Progress update error:', error);
       
-      // Don't show error toast for duplicate key violations (they're expected during conflicts)
-      if (error?.code !== '23505') {
+      // Only show user-facing errors for non-conflict situations
+      if (error?.code !== '23505' && error?.status !== 409) {
         toast.error("Erro ao atualizar progresso", {
           description: "Não foi possível atualizar o progresso da aula.",
         });
+      } else {
+        console.log('🔄 Conflict error suppressed (expected during high concurrency)');
       }
     },
   });
@@ -202,14 +238,14 @@ export const useEnrollInCourse = () => {
   });
 };
 
-// Hook for debounced progress updates
+// Hook for debounced progress updates with improved timing
 export const useDebouncedLessonProgress = () => {
   const updateProgress = useUpdateLessonProgress();
   
   const debouncedUpdate = useCallback(
     debounce((params: Parameters<typeof updateProgress.mutate>[0]) => {
       updateProgress.mutate(params);
-    }, 2000), // 2 second debounce
+    }, 3000), // Increased to 3 seconds to reduce conflicts
     [updateProgress]
   );
 

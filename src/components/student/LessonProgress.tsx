@@ -22,6 +22,7 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
   const lastSavedTimeRef = useRef<number>(0);
   const autoCompletedRef = useRef<boolean>(false);
   const lastProgressPercentageRef = useRef<number>(0);
+  const saveIntervalRef = useRef<number>(0);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -55,33 +56,41 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
     lastProgressPercentageRef.current = progressPercentage;
   }, [currentLesson, progressPercentage, duration, watchTime, updateProgress, user?.id]);
 
-  // Save progress periodically with debounce (every 30 seconds, but debounced)
+  // Improved periodic save with better timing and conflict prevention
   useEffect(() => {
     if (
       currentLesson && 
       user?.id &&
       watchTime > 0 && 
-      !autoCompletedRef.current && // Don't save if auto-completion is in progress
-      Math.floor(watchTime) % 30 === 0 && // Every 30 seconds
-      Math.floor(watchTime) !== lastSavedTimeRef.current // Avoid duplicate saves
+      !autoCompletedRef.current // Don't save if auto-completion is in progress
     ) {
-      console.log('💾 Saving lesson progress (debounced):', Math.floor(watchTime), 'seconds');
-      lastSavedTimeRef.current = Math.floor(watchTime);
+      const currentSaveInterval = Math.floor(watchTime / 45); // Save every 45 seconds
       
-      // Use debounced update to prevent conflicts
-      debouncedMutate({
-        lessonId: currentLesson.id,
-        completed: currentLesson.completed || false,
-        watchTimeSeconds: Math.floor(watchTime)
-      });
+      if (
+        currentSaveInterval > saveIntervalRef.current && // New interval reached
+        Math.floor(watchTime) !== lastSavedTimeRef.current // Avoid duplicate saves
+      ) {
+        console.log('💾 Saving lesson progress (debounced) at interval:', currentSaveInterval, 'time:', Math.floor(watchTime));
+        lastSavedTimeRef.current = Math.floor(watchTime);
+        saveIntervalRef.current = currentSaveInterval;
+        
+        // Use debounced update to prevent conflicts
+        debouncedMutate({
+          lessonId: currentLesson.id,
+          completed: currentLesson.completed || false,
+          watchTimeSeconds: Math.floor(watchTime)
+        });
+      }
     }
   }, [watchTime, currentLesson, debouncedMutate, user?.id]);
 
-  // Reset auto-completion flag when lesson changes
+  // Reset all tracking refs when lesson changes
   useEffect(() => {
+    console.log('🔄 Lesson changed, resetting tracking refs');
     autoCompletedRef.current = false;
     lastSavedTimeRef.current = 0;
     lastProgressPercentageRef.current = 0;
+    saveIntervalRef.current = 0;
   }, [currentLesson?.id]);
 
   return (
