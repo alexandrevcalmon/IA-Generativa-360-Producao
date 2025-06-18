@@ -37,16 +37,7 @@ async function getUserProfile(userId: string): Promise<'producer' | 'company' | 
   console.log('Getting user profile for:', userId);
   
   try {
-    // Try to get the profile using the security definer function
-    const { data: roleData, error: roleError } = await supabase
-      .rpc('get_current_user_role');
-
-    if (!roleError && roleData) {
-      console.log('Got role from security definer function:', roleData);
-      return roleData as 'producer' | 'company' | 'student';
-    }
-
-    // Fallback: try direct profile query (this should work for own profile)
+    // Direct profile query using the new simplified RLS policies
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
@@ -58,7 +49,11 @@ async function getUserProfile(userId: string): Promise<'producer' | 'company' | 
       return profile.role as 'producer' | 'company' | 'student';
     }
 
-    console.log('No profile found, profile may need to be created by trigger');
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+    }
+
+    console.log('No profile found or error occurred, profile may need to be created');
     
     // Get user email to infer role as fallback
     const { data: { user }, error: userError } = await supabase.auth.getUser();

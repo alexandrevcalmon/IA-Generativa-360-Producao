@@ -14,19 +14,7 @@ export const useProducerAuth = () => {
       console.log('Checking producer auth for user:', user.id);
 
       try {
-        // First try using the security definer function
-        const { data: isProducer, error: functionError } = await supabase
-          .rpc('is_current_user_producer');
-
-        if (!functionError && isProducer !== null) {
-          console.log('Got producer status from function:', isProducer);
-          return {
-            isProducer,
-            role: isProducer ? 'producer' : 'student'
-          };
-        }
-
-        // Fallback: try direct profile query
+        // Direct profile query with the new simplified RLS policies
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
@@ -42,12 +30,21 @@ export const useProducerAuth = () => {
           };
         }
 
-        const isProducerFromProfile = profile?.role === 'producer';
+        if (!profile) {
+          console.log('No profile found, may need to be created');
+          // Return false as safe default when no profile exists
+          return {
+            isProducer: false,
+            role: 'student'
+          };
+        }
+
+        const isProducerFromProfile = profile.role === 'producer';
         console.log('Got producer status from profile:', isProducerFromProfile);
         
         return {
           isProducer: isProducerFromProfile,
-          role: profile?.role || 'student'
+          role: profile.role || 'student'
         };
       } catch (error) {
         console.error('Error in useProducerAuth:', error);
