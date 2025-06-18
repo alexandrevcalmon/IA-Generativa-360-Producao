@@ -33,53 +33,48 @@ function inferRoleFromEmail(email: string): 'producer' | 'company' | 'student' {
   return 'student';
 }
 
-async function ensureUserProfile(userId: string, email: string): Promise<'producer' | 'company' | 'student'> {
-  console.log('Ensuring user profile for:', { userId, email });
+async function getUserProfile(userId: string): Promise<'producer' | 'company' | 'student'> {
+  console.log('Getting user profile for:', userId);
   
   try {
-    // First check if profile already exists
-    const { data: existingProfile, error: profileError } = await supabase
+    // Try to get the profile using the security definer function
+    const { data: roleData, error: roleError } = await supabase
+      .rpc('get_current_user_role');
+
+    if (!roleError && roleData) {
+      console.log('Got role from security definer function:', roleData);
+      return roleData as 'producer' | 'company' | 'student';
+    }
+
+    // Fallback: try direct profile query (this should work for own profile)
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .maybeSingle();
 
-    if (profileError) {
-      console.error('Error checking existing profile:', profileError);
-      // Don't throw here, continue with profile creation
+    if (!profileError && profile?.role) {
+      console.log('Got role from direct profile query:', profile.role);
+      return profile.role as 'producer' | 'company' | 'student';
     }
 
-    if (existingProfile?.role) {
-      console.log('Found existing profile with role:', existingProfile.role);
-      return existingProfile.role as 'producer' | 'company' | 'student';
+    console.log('No profile found, profile may need to be created by trigger');
+    
+    // Get user email to infer role as fallback
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user?.email) {
+      console.error('Error getting user email:', userError);
+      return 'student';
     }
 
-    // Infer role from email
-    const inferredRole = inferRoleFromEmail(email);
-    console.log('Inferred role from email:', inferredRole);
-
-    // Create profile with inferred role
-    const { data: newProfile, error: insertError } = await supabase
-      .from('profiles')
-      .insert({ 
-        id: userId, 
-        role: inferredRole 
-      })
-      .select('role')
-      .single();
-
-    if (insertError) {
-      console.error('Error creating profile:', insertError);
-      // Even if insert failed, return inferred role as fallback
-      return inferredRole;
-    }
-
-    console.log('Successfully created profile with role:', newProfile.role);
-    return newProfile.role as 'producer' | 'company' | 'student';
+    const inferredRole = inferRoleFromEmail(user.email);
+    console.log('Inferred role from email as fallback:', inferredRole);
+    return inferredRole;
+    
   } catch (error) {
-    console.error('Error in ensureUserProfile:', error);
-    // Fallback to email inference
-    return inferRoleFromEmail(email);
+    console.error('Error in getUserProfile:', error);
+    return 'student';
   }
 }
 
@@ -87,19 +82,6 @@ export async function getUserRole(userId: string): Promise<UserRoleInfo> {
   console.log('Getting user role for:', userId);
   
   try {
-    // Get user email from auth
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user?.email) {
-      console.error('Error getting user or no email:', userError);
-      return { role: 'student' };
-    }
-
-    console.log('User email:', user.email);
-
-    // Ensure profile exists and get role
-    const role = await ensureUserProfile(userId, user.email);
-
     // Check if user is a company (existing data takes precedence)
     const { data: company, error: companyError } = await supabase
       .from('companies')
@@ -139,9 +121,11 @@ export async function getUserRole(userId: string): Promise<UserRoleInfo> {
       };
     }
 
-    // Return the role from profile/inference
+    // Get role from profile or infer it
+    const role = await getUserProfile(userId);
     console.log('Using role from profile/inference:', role);
     return { role };
+    
   } catch (error) {
     console.error('Error in getUserRole:', error);
     return { role: 'student' };
@@ -152,23 +136,6 @@ export async function fetchUserRole(userId: string): Promise<UserRoleData> {
   console.log('Fetching user role data for:', userId);
   
   try {
-    // Get user email from auth
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user?.email) {
-      console.error('Error getting user or no email:', userError);
-      return { 
-        role: 'student',
-        needsPasswordChange: false,
-        companyUserData: null
-      };
-    }
-
-    console.log('User email:', user.email);
-
-    // Ensure profile exists and get role
-    const profileRole = await ensureUserProfile(userId, user.email);
-
     // Check if user is a company (existing data takes precedence)
     const { data: company, error: companyError } = await supabase
       .from('companies')
@@ -209,13 +176,15 @@ export async function fetchUserRole(userId: string): Promise<UserRoleData> {
       };
     }
 
-    // Use role from profile/inference with no password change required for fresh profiles
+    // Get role from profile or infer it
+    const profileRole = await getUserProfile(userId);
     console.log('Using profile role with no password change required:', profileRole);
     return { 
       role: profileRole,
       needsPasswordChange: false,
       companyUserData: null
     };
+    
   } catch (error) {
     console.error('Error in fetchUserRole:', error);
     return { 
