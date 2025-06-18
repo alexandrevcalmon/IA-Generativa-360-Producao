@@ -14,8 +14,7 @@ import {
   BookOpen, 
   Calendar,
   LogOut,
-  User,
-  TrendingUp
+  User
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
@@ -74,11 +73,6 @@ export function CompanySidebar() {
       title: 'Cursos',
       icon: BookOpen,
       href: '/company/courses'
-    },
-    {
-      title: 'Progresso dos Cursos',
-      icon: TrendingUp,
-      href: '/company/course-progress'
     },
     {
       title: 'Mentorias',

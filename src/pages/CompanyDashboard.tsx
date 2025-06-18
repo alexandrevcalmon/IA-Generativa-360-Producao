@@ -7,7 +7,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCompanyData } from "@/hooks/useCompanyData";
 import { useCompanyCourses } from "@/hooks/useCompanyCourses";
 import { useCompanyMentorships } from "@/hooks/useCompanyMentorships";
-import { useGetCompanyCollaborators } from "@/hooks/useCompanyCollaborators";
 import { 
   Users, 
   BookOpen, 
@@ -24,22 +23,14 @@ const CompanyDashboard = () => {
   const { data: companyData, isLoading: companyLoading } = useCompanyData();
   const { data: courses = [], isLoading: coursesLoading } = useCompanyCourses();
   const { data: mentorships = [], isLoading: mentorshipsLoading } = useCompanyMentorships();
-  const { data: collaborators = [], isLoading: collaboratorsLoading } = useGetCompanyCollaborators(companyData?.id);
 
-  const isLoading = companyLoading || coursesLoading || mentorshipsLoading || collaboratorsLoading;
+  const isLoading = companyLoading || coursesLoading || mentorshipsLoading;
 
   // Calculate stats
   const totalEnrollments = courses.reduce((sum, course) => sum + course.enrolled_students, 0);
   const totalCompletions = courses.reduce((sum, course) => sum + course.completed_students, 0);
   const completionRate = totalEnrollments > 0 ? Math.round((totalCompletions / totalEnrollments) * 100) : 0;
   const upcomingMentorships = mentorships.filter(m => m.status === 'scheduled').length;
-
-  // Get plan limits from company data - use max_students directly
-  const maxStudents = companyData?.max_students || 50;
-  const currentStudents = companyData?.current_students || collaborators.length;
-
-  // Get plan name - prioritize subscription_plan over subscription_plan_data
-  const planName = companyData?.subscription_plan || 'Básico';
 
   const stats = [
     {
@@ -161,13 +152,13 @@ const CompanyDashboard = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-600">Plano Atual</p>
                     <p className="text-lg font-semibold capitalize">
-                      {planName}
+                      {companyData.subscription_plan_data?.name || companyData.subscription_plan || 'Básico'}
                     </p>
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-600">Colaboradores</p>
                     <p className="text-lg font-semibold">
-                      {currentStudents} / {maxStudents}
+                      {companyData.current_students} / {companyData.max_students}
                     </p>
                   </div>
                   <div className="space-y-2">

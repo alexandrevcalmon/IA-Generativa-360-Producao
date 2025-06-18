@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -10,11 +11,13 @@ import { useCompanyData } from "@/hooks/useCompanyData";
 import { 
   Users, 
   Search, 
+  UserPlus, 
   Mail, 
   Phone, 
   Calendar,
   Activity,
   BookOpen,
+  Trophy,
   Clock
 } from "lucide-react";
 
@@ -62,6 +65,7 @@ const CompanyCollaborators = () => {
           <Card>
             <CardContent className="p-8 text-center">
               <p className="text-red-500 mb-4">Erro ao carregar dados dos colaboradores</p>
+              <Button onClick={() => window.location.reload()}>Tentar Novamente</Button>
             </CardContent>
           </Card>
         </div>
@@ -83,24 +87,24 @@ const CompanyCollaborators = () => {
     return new Date(date).toLocaleDateString('pt-BR');
   };
 
-  const formatTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
-  };
-
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <header className="border-b bg-white px-6 py-4">
-        <div className="flex items-center space-x-4">
-          <SidebarTrigger />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Colaboradores</h1>
-            <p className="text-gray-600">
-              Gerencie os colaboradores da {companyData?.name || 'empresa'}
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <SidebarTrigger />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Colaboradores</h1>
+              <p className="text-gray-600">
+                Gerencie os colaboradores da {companyData?.name || 'empresa'}
+              </p>
+            </div>
           </div>
+          <Button>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Adicionar Colaborador
+          </Button>
         </div>
       </header>
 
@@ -233,7 +237,7 @@ const CompanyCollaborators = () => {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-4 gap-4 text-center">
+                      <div className="grid grid-cols-3 gap-4 text-center">
                         <div>
                           <p className="text-lg font-semibold text-blue-600">{stat.lessons_completed}</p>
                           <p className="text-xs text-gray-500">Lições</p>
@@ -241,10 +245,6 @@ const CompanyCollaborators = () => {
                         <div>
                           <p className="text-lg font-semibold text-green-600">{stat.courses_completed}</p>
                           <p className="text-xs text-gray-500">Cursos</p>
-                        </div>
-                        <div>
-                          <p className="text-lg font-semibold text-orange-600">{formatTime(stat.total_watch_time_minutes)}</p>
-                          <p className="text-xs text-gray-500">Tempo</p>
                         </div>
                         <div>
                           <p className="text-lg font-semibold text-purple-600">{stat.total_points}</p>
@@ -263,12 +263,18 @@ const CompanyCollaborators = () => {
                 <h3 className="text-lg font-medium mb-2">
                   {searchTerm ? 'Nenhum colaborador encontrado' : 'Nenhum colaborador cadastrado'}
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 mb-4">
                   {searchTerm 
                     ? 'Tente buscar com outros termos ou limpe o filtro'
-                    : 'Colaboradores serão exibidos quando disponíveis'
+                    : 'Adicione colaboradores para começar a acompanhar o progresso'
                   }
                 </p>
+                {!searchTerm && (
+                  <Button>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Adicionar Primeiro Colaborador
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}
