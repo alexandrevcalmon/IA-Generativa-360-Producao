@@ -3,6 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { createAuthService } from './authService';
 import { fetchUserRole } from './userRoleService';
 import { createSessionValidationService } from './sessionValidationService';
+import { createSessionCleanupService } from './sessionCleanupService';
 
 interface UseAuthMethodsProps {
   user: any;
@@ -28,6 +29,7 @@ export function useAuthMethods({
   const { toast } = useToast();
   const authService = createAuthService(toast);
   const sessionService = createSessionValidationService();
+  const cleanupService = createSessionCleanupService();
 
   const refreshUserRole = async () => {
     if (!user) {
@@ -144,7 +146,7 @@ export function useAuthMethods({
     } catch (error) {
       console.error('💥 SignOut error:', error);
       // Force local cleanup on any error
-      sessionService.clearLocalSession();
+      cleanupService.clearLocalSession();
       setUser(null);
       setSession(null);
       setUserRole(null);
