@@ -38,6 +38,11 @@ export function CompanySidebar() {
       href: '/company/collaborators'
     },
     {
+      title: 'Analytics',
+      icon: BarChart3,
+      href: '/company/collaborators-analytics'
+    },
+    {
       title: 'Cursos',
       icon: BookOpen,
       href: '/company/courses'
@@ -46,11 +51,6 @@ export function CompanySidebar() {
       title: 'Mentorias',
       icon: Calendar,
       href: '/company/mentorships'
-    },
-    {
-      title: 'Analytics',
-      icon: BarChart3,
-      href: '/analytics'
     }
   ];
 
