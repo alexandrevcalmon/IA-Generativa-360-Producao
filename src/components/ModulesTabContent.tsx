@@ -1,8 +1,9 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, BookOpen, Edit, Trash2, Play } from "lucide-react";
+import { Plus, BookOpen, Edit, Trash2, Play, ChevronDown, ChevronRight } from "lucide-react";
 import { CourseModule } from "@/hooks/useCourseModules";
 
 interface ModulesTabContentProps {
@@ -13,7 +14,19 @@ interface ModulesTabContentProps {
 }
 
 export const ModulesTabContent = ({ modules, onCreateModule, onEditModule, onCreateLesson }: ModulesTabContentProps) => {
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  
   console.log('[ModulesTabContent] Modules received:', modules);
+
+  const toggleModule = (moduleId: string) => {
+    const newExpanded = new Set(expandedModules);
+    if (newExpanded.has(moduleId)) {
+      newExpanded.delete(moduleId);
+    } else {
+      newExpanded.add(moduleId);
+    }
+    setExpandedModules(newExpanded);
+  };
 
   if (modules.length === 0) {
     return (
@@ -52,6 +65,8 @@ export const ModulesTabContent = ({ modules, onCreateModule, onEditModule, onCre
       <div className="grid gap-4">
         {modules.map((module) => {
           const lessonsCount = module.lessons?.length || 0;
+          const isExpanded = expandedModules.has(module.id);
+          
           console.log(`[ModulesTabContent] Module ${module.title} has ${lessonsCount} lessons:`, module.lessons);
           
           return (
@@ -80,11 +95,27 @@ export const ModulesTabContent = ({ modules, onCreateModule, onEditModule, onCre
                     <Play className="h-4 w-4" />
                     <span>{lessonsCount} aulas</span>
                   </div>
-                  <span>Ordem: {module.order_index}</span>
+                  <div className="flex items-center gap-2">
+                    <span>Ordem: {module.order_index}</span>
+                    {lessonsCount > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleModule(module.id)}
+                        className="h-8 w-8 p-0"
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 
-                {/* Exibir as aulas do módulo se existirem */}
-                {lessonsCount > 0 && (
+                {/* Exibir as aulas do módulo se existirem e estiver expandido */}
+                {lessonsCount > 0 && isExpanded && (
                   <div className="mb-4 pt-3 border-t">
                     <h5 className="text-sm font-medium mb-3">Aulas:</h5>
                     <div className="space-y-2">
