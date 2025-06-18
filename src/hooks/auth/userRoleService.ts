@@ -6,7 +6,41 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
   try {
     console.group('🔍 Fetching user role and data for:', userId);
     
-    // First check profiles table for producer/company roles
+    // First, check if user is a company by auth_user_id
+    console.log('🏢 Checking companies table first...');
+    const { data: company, error: companyError } = await supabase
+      .from('companies')
+      .select('*')
+      .eq('auth_user_id', userId)
+      .maybeSingle();
+    
+    console.log('Company query result:', {
+      hasData: !!company,
+      error: companyError,
+      companyId: company?.id,
+      needsPasswordChange: company?.needs_password_change,
+      companyEmail: company?.contact_email
+    });
+    
+    if (!companyError && company) {
+      console.log('✅ User found as company owner');
+      console.log('- Company Name:', company.name);
+      console.log('- Company Email:', company.contact_email);
+      console.log('- Needs Password Change:', company.needs_password_change);
+      
+      const needsChange = company.needs_password_change === true;
+      console.log('🔐 Password change required:', needsChange);
+      
+      console.groupEnd();
+      
+      return { 
+        role: 'company', 
+        needsPasswordChange: needsChange, 
+        companyUserData: company 
+      };
+    }
+    
+    // Then check profiles table for producer/admin roles
     console.log('📋 Checking profiles table...');
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -26,40 +60,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       };
     }
     
-    // Check if user is a company
-    console.log('🏢 Checking companies table...');
-    const { data: company, error: companyError } = await supabase
-      .from('companies')
-      .select('*')
-      .eq('auth_user_id', userId)
-      .maybeSingle();
-    
-    console.log('Company query result:', {
-      hasData: !!company,
-      error: companyError,
-      companyId: company?.id,
-      needsPasswordChange: company?.needs_password_change
-    });
-    
-    if (!companyError && company) {
-      console.log('✅ User found as company user');
-      console.log('- Company Name:', company.name);
-      console.log('- Company Email:', company.contact_email);
-      console.log('- Needs Password Change:', company.needs_password_change);
-      
-      const needsChange = company.needs_password_change === true;
-      console.log('🔐 Password change required:', needsChange);
-      
-      console.groupEnd();
-      
-      return { 
-        role: 'company', 
-        needsPasswordChange: needsChange, 
-        companyUserData: company 
-      };
-    }
-    
-    // Check company_users table for student role
+    // Check company_users table for student/collaborator role
     console.log('👥 Checking company_users table...');
     const { data: companyUser, error: companyUserError } = await supabase
       .from('company_users')

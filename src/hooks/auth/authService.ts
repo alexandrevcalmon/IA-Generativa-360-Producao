@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,14 +15,16 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
         console.error('Sign in error:', error);
         
         // If login fails with default password, try to create/link company auth user
-        if (error.message.includes('Invalid login credentials') && password === 'ia360graus') {
-          console.log('Login failed with default password, checking for company...');
+        if (error.message.includes('Invalid login credentials')) {
+          console.log('Login failed, checking for company with email:', email);
           
           // Try to find a company with this email that doesn't have auth_user_id
           const { data: companies, error: companySearchError } = await supabase
             .from('companies')
-            .select('id, contact_email, auth_user_id')
+            .select('id, contact_email, auth_user_id, name')
             .eq('contact_email', email);
+          
+          console.log('Company search result:', { companies, companySearchError });
           
           if (!companySearchError && companies && companies.length > 0) {
             const company = companies[0];
@@ -51,6 +52,15 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
               if (!retryError && retryData.user) {
                 console.log('Company login successful after auth user creation/linking');
                 
+                // Ensure the user has company role metadata
+                await supabase.auth.updateUser({
+                  data: {
+                    role: 'company',
+                    company_id: company.id,
+                    company_name: company.name
+                  }
+                });
+                
                 toast({
                   title: "Login realizado com sucesso!",
                   description: "Bem-vindo! Você precisa alterar sua senha.",
@@ -64,20 +74,34 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
                 };
               } else {
                 console.error('Retry login failed:', retryError);
+                toast({
+                  title: "Erro no login",
+                  description: "Falha ao fazer login após criação da conta",
+                  variant: "destructive",
+                });
               }
             } else {
               console.error('Failed to create/link company auth user:', createError);
+              toast({
+                title: "Erro no login",
+                description: "Falha ao criar conta da empresa",
+                variant: "destructive",
+              });
             }
+          } else {
+            toast({
+              title: "Erro no login",
+              description: "Email ou senha incorretos",
+              variant: "destructive",
+            });
           }
+        } else {
+          toast({
+            title: "Erro no login",
+            description: error.message,
+            variant: "destructive",
+          });
         }
-        
-        toast({
-          title: "Erro no login",
-          description: error.message === 'Invalid login credentials' 
-            ? 'Email ou senha incorretos' 
-            : error.message,
-          variant: "destructive",
-        });
         return { error };
       }
 

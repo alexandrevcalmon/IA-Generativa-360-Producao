@@ -76,7 +76,8 @@ serve(async (req) => {
           user_metadata: {
             ...existingUser.user_metadata,
             role: 'company',
-            company_id: companyId
+            company_id: companyId,
+            company_name: company.name
           }
         }
       )
@@ -94,7 +95,8 @@ serve(async (req) => {
         email_confirm: true,
         user_metadata: {
           role: 'company',
-          company_id: companyId
+          company_id: companyId,
+          company_name: company.name
         }
       })
 
