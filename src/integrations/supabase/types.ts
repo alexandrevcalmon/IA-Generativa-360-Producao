@@ -9,6 +9,120 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          badge_color: string | null
+          created_at: string
+          criteria: Json | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          points_required: number | null
+          type: string
+        }
+        Insert: {
+          badge_color?: string | null
+          created_at?: string
+          criteria?: Json | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          points_required?: number | null
+          type: string
+        }
+        Update: {
+          badge_color?: string | null
+          created_at?: string
+          criteria?: Json | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          points_required?: number | null
+          type?: string
+        }
+        Relationships: []
+      }
+      calendar_events: {
+        Row: {
+          all_day: boolean
+          color: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string
+          event_type: string
+          id: string
+          is_recurring: boolean
+          location: string | null
+          meet_url: string | null
+          recurrence_rule: Json | null
+          reference_id: string | null
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          all_day?: boolean
+          color?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date: string
+          event_type: string
+          id?: string
+          is_recurring?: boolean
+          location?: string | null
+          meet_url?: string | null
+          recurrence_rule?: Json | null
+          reference_id?: string | null
+          start_date: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          all_day?: boolean
+          color?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string
+          event_type?: string
+          id?: string
+          is_recurring?: boolean
+          location?: string | null
+          meet_url?: string | null
+          recurrence_rule?: Json | null
+          reference_id?: string | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "company_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificates: {
         Row: {
           certificate_url: string | null
@@ -660,6 +774,51 @@ export type Database = {
           },
         ]
       }
+      mentorship_attendees: {
+        Row: {
+          attended: boolean | null
+          id: string
+          joined_at: string | null
+          left_at: string | null
+          mentorship_session_id: string
+          registered_at: string
+          student_id: string
+        }
+        Insert: {
+          attended?: boolean | null
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          mentorship_session_id: string
+          registered_at?: string
+          student_id: string
+        }
+        Update: {
+          attended?: boolean | null
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          mentorship_session_id?: string
+          registered_at?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_attendees_mentorship_session_id_fkey"
+            columns: ["mentorship_session_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentorship_attendees_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "company_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentorship_participants: {
         Row: {
           attended: boolean | null
@@ -695,6 +854,59 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentorship_sessions: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          max_participants: number | null
+          meet_id: string | null
+          meet_url: string | null
+          scheduled_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          max_participants?: number | null
+          meet_id?: string | null
+          meet_url?: string | null
+          scheduled_at: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          max_participants?: number | null
+          meet_id?: string | null
+          meet_url?: string | null
+          scheduled_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_sessions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -758,6 +970,44 @@ export type Database = {
             columns: ["mentor_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      points_history: {
+        Row: {
+          action_type: string
+          description: string | null
+          earned_at: string
+          id: string
+          points: number
+          reference_id: string | null
+          student_id: string
+        }
+        Insert: {
+          action_type: string
+          description?: string | null
+          earned_at?: string
+          id?: string
+          points: number
+          reference_id?: string | null
+          student_id: string
+        }
+        Update: {
+          action_type?: string
+          description?: string | null
+          earned_at?: string
+          id?: string
+          points?: number
+          reference_id?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "points_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "company_users"
             referencedColumns: ["id"]
           },
         ]
@@ -868,6 +1118,86 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          student_id: string
+          unlocked_at: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          student_id: string
+          unlocked_at?: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          student_id?: string
+          unlocked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_achievements_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "company_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_points: {
+        Row: {
+          created_at: string
+          id: string
+          last_activity_date: string | null
+          level: number
+          points: number
+          streak_days: number
+          student_id: string
+          total_points: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_activity_date?: string | null
+          level?: number
+          points?: number
+          streak_days?: number
+          student_id: string
+          total_points?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_activity_date?: string | null
+          level?: number
+          points?: number
+          streak_days?: number
+          student_id?: string
+          total_points?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_points_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "company_users"
             referencedColumns: ["id"]
           },
         ]
