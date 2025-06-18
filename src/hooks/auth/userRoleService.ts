@@ -36,7 +36,7 @@ export const fetchUserRoleAuxiliaryData = async (user: User): Promise<UserRoleAu
         companyData = companyResult;
         console.log(`[fetchUserRoleAuxiliaryDataV2] Fetched company details for owner ${user.id}:`, companyData.name);
       } else {
-        console.warn(`[fetchUserRoleAuxiliaryDataV2] No company found for owner ${user.id} where auth_user_id matches.`);
+        console.warn(`[fetchUserRoleAuxiliaryDataV2] No company found for owner ${user.id} where auth_user_id matches. This might indicate a data linkage issue (auth_user_id not set on company record) or an RLS problem preventing access.`);
       }
     } else if (baseRole === 'collaborator') {
       console.log(`[fetchUserRoleAuxiliaryDataV2] User is a '${baseRole}'. Fetching collaborator details for auth_user_id = ${user.id}`);
@@ -53,9 +53,8 @@ export const fetchUserRoleAuxiliaryData = async (user: User): Promise<UserRoleAu
         companyData = collabResult.companies; // This is the nested company data
         if (companyData) {
           console.log(`[fetchUserRoleAuxiliaryDataV2] Fetched collaborator details for user ${user.id}, company: ${companyData.name}`);
-        } else {
-          // This can happen if companies(*) returns null due to RLS or if the company_id is invalid
-          console.warn(`[fetchUserRoleAuxiliaryDataV2] Collaborator ${user.id} found, but linked company data via companies(*) is missing. Company ID from company_users: ${collabResult.company_id}`);
+        } else if (collabResult) { // Ensure collabResult itself is not null before accessing its properties
+          console.warn(`[fetchUserRoleAuxiliaryDataV2] Collaborator ${user.id} (company_user record ID: ${collabResult.id}) found, but linked company data (companies(*)) is missing. Company ID from company_users: ${collabResult.company_id}. This could be due to RLS on the 'companies' table preventing access for collaborators, the company record (ID: ${collabResult.company_id}) itself is missing/invalid, or the foreign key relationship is not properly established.`);
         }
       } else {
         console.warn(`[fetchUserRoleAuxiliaryDataV2] No collaborator record found for user ${user.id}.`);
