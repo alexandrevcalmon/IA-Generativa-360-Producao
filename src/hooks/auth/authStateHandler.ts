@@ -82,7 +82,7 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
     setSession(session);
     setUser(session.user);
     
-    // Fetch role data asynchronously to avoid blocking
+    // Fetch role data asynchronously with improved error handling
     setTimeout(async () => {
       try {
         const user = session.user as User;
@@ -94,15 +94,18 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
           userEmail: user.email,
           determinedRole: auxData.role,
           hasCompanyData: !!auxData.companyData,
-          hasCollaboratorData: !!auxData.collaboratorData
+          hasCollaboratorData: !!auxData.collaboratorData,
+          hasProfileData: !!auxData.profileData
         });
 
-        setUserRole(auxData.role);
+        // Set role with fallback
+        const finalRole = auxData.role || 'student';
+        setUserRole(finalRole);
 
         // Set company user data based on role
-        if (auxData.role === 'company') {
+        if (finalRole === 'company') {
           setCompanyUserData(auxData.companyData);
-        } else if (auxData.role === 'collaborator') {
+        } else if (finalRole === 'collaborator') {
           setCompanyUserData(auxData.collaboratorData);
         } else {
           setCompanyUserData(null);
@@ -110,6 +113,8 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
 
       } catch (error) {
         console.error('❌ Error loading user auxiliary data:', error);
+        // Set safe defaults on error
+        setUserRole('student');
         setCompanyUserData(null);
       } finally {
         setLoading(false);

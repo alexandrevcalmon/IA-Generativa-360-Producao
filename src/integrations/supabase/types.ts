@@ -1679,6 +1679,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_user_profile: {
+        Args: { user_id: string; user_role?: string }
+        Returns: undefined
+      }
       ensure_user_profile_consistency: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1696,6 +1700,10 @@ export type Database = {
         Returns: string
       }
       get_user_role: {
+        Args: { user_id: string }
+        Returns: string
+      }
+      get_user_role_safe: {
         Args: { user_id: string }
         Returns: string
       }

@@ -5,9 +5,10 @@ import { fetchUserRoleAuxiliaryData } from './userRoleService';
 import { createSessionValidationService } from './sessionValidationService';
 import { createSessionCleanupService } from './sessionCleanupService';
 import { User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseAuthMethodsProps {
-  user: User | null; // Updated to use User type
+  user: User | null;
   companyUserData: any;
   setUser: (user: any) => void;
   setSession: (session: any) => void;
@@ -40,22 +41,29 @@ export function useAuthMethods({
     
     console.log('🔄 Refreshing user role for:', user.email);
     try {
-      const primaryRole = user.user_metadata?.role || 'student';
-      setUserRole(primaryRole);
-      // needsPasswordChange state is managed by direct results from signIn or changePassword.
-
+      // Use the improved role determination service
       const auxData = await fetchUserRoleAuxiliaryData(user);
-      if (primaryRole === 'company') {
+      
+      const finalRole = auxData.role || 'student';
+      setUserRole(finalRole);
+
+      // Set company data based on role
+      if (finalRole === 'company') {
         setCompanyUserData(auxData.companyData);
-      } else if (primaryRole === 'collaborator') {
+      } else if (finalRole === 'collaborator') {
         setCompanyUserData(auxData.collaboratorData);
       } else {
         setCompanyUserData(null);
       }
-      console.log('✅ User auxiliary data refreshed for role:', primaryRole, { hasCompanyData: !!auxData.companyData, hasCollaboratorData: !!auxData.collaboratorData });
+      
+      console.log('✅ User role refreshed:', finalRole, { 
+        hasCompanyData: !!auxData.companyData, 
+        hasCollaboratorData: !!auxData.collaboratorData 
+      });
     } catch (error) {
-      console.error('❌ Error refreshing user auxiliary data:', error);
-      // Role is already set from metadata, set companyUserData to null on error
+      console.error('❌ Error refreshing user role:', error);
+      // Set safe defaults
+      setUserRole('student');
       setCompanyUserData(null);
     }
   };
@@ -79,54 +87,68 @@ export function useAuthMethods({
           return { error: { message: 'Session validation failed' } };
         }
         
-        // Check if authService already determined needsPasswordChange
+        // Handle password change requirement
         if (result.needsPasswordChange) {
           console.log('🔐 Password change required from authService');
           
-          // Role and auxiliary data setup
           const authUser = result.user as User;
-          const primaryRole = authUser.user_metadata?.role || 'student';
-          setUserRole(primaryRole);
           
-          const auxData = await fetchUserRoleAuxiliaryData(authUser);
-          if (primaryRole === 'company') {
-            setCompanyUserData(auxData.companyData);
-          } else if (primaryRole === 'collaborator') {
-            setCompanyUserData(auxData.collaboratorData);
-          } else {
+          // Get role and auxiliary data with improved error handling
+          try {
+            const auxData = await fetchUserRoleAuxiliaryData(authUser);
+            const finalRole = auxData.role || authUser.user_metadata?.role || 'student';
+            
+            setUserRole(finalRole);
+            
+            if (finalRole === 'company') {
+              setCompanyUserData(auxData.companyData);
+            } else if (finalRole === 'collaborator') {
+              setCompanyUserData(auxData.collaboratorData);
+            } else {
+              setCompanyUserData(null);
+            }
+          } catch (auxError) {
+            console.error('❌ Error fetching auxiliary data during password change flow:', auxError);
+            // Set safe defaults
+            setUserRole(authUser.user_metadata?.role || 'student');
             setCompanyUserData(null);
           }
 
           setUser(authUser);
           setSession(result.session);
-          setNeedsPasswordChange(true); // This is from signIn result
+          setNeedsPasswordChange(true);
           
           setLoading(false);
           return { error: null, needsPasswordChange: true };
         } else {
-          // Normal login flow - set role from metadata, fetch auxiliary data
+          // Normal login flow
           const authUser = result.user as User;
-          const primaryRole = authUser.user_metadata?.role || 'student';
-          setUserRole(primaryRole);
+          
+          try {
+            const auxData = await fetchUserRoleAuxiliaryData(authUser);
+            const finalRole = auxData.role || authUser.user_metadata?.role || 'student';
+            
+            setUserRole(finalRole);
+            setNeedsPasswordChange(result.needsPasswordChange || false);
 
-          // needsPasswordChange from signIn result is false here, or not present.
-          // Rely on the needsPasswordChange from the signIn result (which should be false or undefined)
-          setNeedsPasswordChange(result.needsPasswordChange || false);
-
-
-          const auxData = await fetchUserRoleAuxiliaryData(authUser);
-          if (primaryRole === 'company') {
-            setCompanyUserData(auxData.companyData);
-          } else if (primaryRole === 'collaborator') {
-            setCompanyUserData(auxData.collaboratorData);
-          } else {
+            if (finalRole === 'company') {
+              setCompanyUserData(auxData.companyData);
+            } else if (finalRole === 'collaborator') {
+              setCompanyUserData(auxData.collaboratorData);
+            } else {
+              setCompanyUserData(null);
+            }
+          } catch (auxError) {
+            console.error('❌ Error fetching auxiliary data during normal login:', auxError);
+            // Set safe defaults
+            setUserRole(authUser.user_metadata?.role || 'student');
             setCompanyUserData(null);
           }
           
           setUser(authUser);
           setSession(result.session);
           
-          console.log('✅ Sign in complete. Role:', primaryRole, { needsPasswordChange: result.needsPasswordChange, hasCompanyData: !!auxData.companyData, hasCollaboratorData: !!auxData.collaboratorData });
+          console.log('✅ Sign in complete');
           
           setLoading(false);
           return { error: null, needsPasswordChange: result.needsPasswordChange || false };
@@ -161,7 +183,7 @@ export function useAuthMethods({
       
       if (!result.error) {
         console.log('✅ SignOut successful, clearing local state');
-        // Auth state change will handle clearing state, but also clear immediately
+        // Clear state immediately
         setUser(null);
         setSession(null);
         setUserRole(null);
