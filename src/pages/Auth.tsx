@@ -15,8 +15,6 @@ export default function Auth() {
   const navigate = useNavigate();
   
   const {
-    isLogin,
-    setIsLogin,
     email,
     setEmail,
     password,
@@ -49,15 +47,13 @@ export default function Auth() {
             Calmon Academy
           </CardTitle>
           <CardDescription>
-            {isLogin ? 'Entre em sua conta' : 'Crie sua conta'}
+            Entre em sua conta
           </CardDescription>
           
           <RoleIndicator role={role} />
         </CardHeader>
         <CardContent>
           <AuthTabs
-            isLogin={isLogin}
-            setIsLogin={setIsLogin}
             email={email}
             setEmail={setEmail}
             password={password}

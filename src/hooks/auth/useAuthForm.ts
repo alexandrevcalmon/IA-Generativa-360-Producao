@@ -4,13 +4,12 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
 
 export function useAuthForm() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student');
   const [loading, setLoading] = useState(false);
   
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const [searchParams] = useSearchParams();
 
   // Set role from URL parameter
@@ -26,21 +25,13 @@ export function useAuthForm() {
     setLoading(true);
 
     try {
-      if (isLogin) {
-        console.log('Attempting login for:', email);
-        const { error } = await signIn(email, password);
-        
-        if (error) {
-          console.error('Login error:', error);
-        } else {
-          console.log('Login successful');
-        }
+      console.log('Attempting login for:', email);
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        console.error('Login error:', error);
       } else {
-        console.log('Attempting signup for:', email, 'with role:', role);
-        const { error } = await signUp(email, password, role);
-        if (!error) {
-          setIsLogin(true);
-        }
+        console.log('Login successful');
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -50,8 +41,6 @@ export function useAuthForm() {
   };
 
   return {
-    isLogin,
-    setIsLogin,
     email,
     setEmail,
     password,

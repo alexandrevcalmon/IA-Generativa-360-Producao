@@ -9,6 +9,7 @@ export interface AuthContextType {
   signUp: (email: string, password: string, role?: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   changePassword: (newPassword: string) => Promise<{ error: any }>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
   userRole: string | null;
   isProducer: boolean;
   isCompany: boolean;

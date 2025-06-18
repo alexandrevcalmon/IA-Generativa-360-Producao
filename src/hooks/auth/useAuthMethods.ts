@@ -119,6 +119,7 @@ export function useAuthMethods({
     signUp: authService.signUp,
     signOut,
     changePassword,
+    resetPassword: authService.resetPassword,
     refreshUserRole,
   };
 }

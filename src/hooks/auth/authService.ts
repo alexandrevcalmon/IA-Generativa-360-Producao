@@ -13,21 +13,23 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
       });
       
       if (error) {
-        // If login fails, check if this is a company trying to log in for the first time
+        console.error('Sign in error:', error);
+        
+        // If login fails with default password, try to create/link company auth user
         if (error.message.includes('Invalid login credentials') && password === 'ia360graus') {
-          console.log('Attempting to create company auth user...');
+          console.log('Login failed with default password, checking for company...');
           
-          // Try to find a company with this email
+          // Try to find a company with this email that doesn't have auth_user_id
           const { data: companies, error: companySearchError } = await supabase
             .from('companies')
-            .select('id, contact_email')
-            .eq('contact_email', email)
-            .is('auth_user_id', null);
+            .select('id, contact_email, auth_user_id')
+            .eq('contact_email', email);
           
           if (!companySearchError && companies && companies.length > 0) {
             const company = companies[0];
+            console.log('Found company:', company);
             
-            // Call edge function to create auth user
+            // Call edge function to create/link auth user
             const { data: createResult, error: createError } = await supabase.functions.invoke(
               'create-company-auth-user',
               {
@@ -35,8 +37,10 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
               }
             );
             
+            console.log('Edge function result:', { createResult, createError });
+            
             if (!createError && createResult?.success) {
-              console.log('Company auth user created, attempting login again...');
+              console.log('Company auth user created/linked, attempting login again...');
               
               // Try login again
               const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
@@ -45,7 +49,7 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
               });
               
               if (!retryError && retryData.user) {
-                console.log('Company login successful after auth user creation');
+                console.log('Company login successful after auth user creation/linking');
                 
                 toast({
                   title: "Login realizado com sucesso!",
@@ -58,15 +62,20 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
                   session: retryData.session,
                   needsPasswordChange: true 
                 };
+              } else {
+                console.error('Retry login failed:', retryError);
               }
+            } else {
+              console.error('Failed to create/link company auth user:', createError);
             }
           }
         }
         
-        console.error('Sign in error:', error);
         toast({
           title: "Erro no login",
-          description: error.message,
+          description: error.message === 'Invalid login credentials' 
+            ? 'Email ou senha incorretos' 
+            : error.message,
           variant: "destructive",
         });
         return { error };
@@ -121,6 +130,34 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
       return { error };
     } catch (error) {
       console.error('SignUp error:', error);
+      return { error };
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const redirectUrl = `${window.location.origin}/auth?reset=true`;
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+      
+      if (error) {
+        toast({
+          title: "Erro ao enviar email",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email enviado!",
+          description: "Verifique seu email para redefinir sua senha.",
+        });
+      }
+      
+      return { error };
+    } catch (error) {
+      console.error('Reset password error:', error);
       return { error };
     }
   };
@@ -196,6 +233,7 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
   return {
     signIn,
     signUp,
+    resetPassword,
     changePassword,
     signOut
   };

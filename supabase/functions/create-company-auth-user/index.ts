@@ -59,35 +59,65 @@ serve(async (req) => {
       )
     }
 
-    // Create auth user with temporary password
-    const tempPassword = 'ia360graus'
-    
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      password: tempPassword,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        role: 'company',
-        company_id: companyId
-      }
-    })
+    // Check if auth user already exists with this email
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
+    const existingUser = existingUsers.users?.find(user => user.email === email)
 
-    if (authError || !authUser.user) {
-      console.error('Error creating auth user:', authError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to create auth user' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    let authUserId: string
+
+    if (existingUser) {
+      console.log('Auth user already exists, linking to company:', existingUser.id)
+      authUserId = existingUser.id
+
+      // Update existing user metadata to include company role
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        existingUser.id,
+        {
+          user_metadata: {
+            ...existingUser.user_metadata,
+            role: 'company',
+            company_id: companyId
+          }
         }
       )
+
+      if (updateError) {
+        console.error('Error updating existing user metadata:', updateError)
+      }
+    } else {
+      // Create new auth user with temporary password
+      const tempPassword = 'ia360graus'
+      
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: email,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          role: 'company',
+          company_id: companyId
+        }
+      })
+
+      if (authError || !authUser.user) {
+        console.error('Error creating auth user:', authError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to create auth user' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+
+      authUserId = authUser.user.id
+      console.log('Successfully created new auth user:', authUserId)
     }
 
     // Update company with auth_user_id
     const { error: updateError } = await supabaseAdmin
       .from('companies')
       .update({ 
-        auth_user_id: authUser.user.id,
+        auth_user_id: authUserId,
         needs_password_change: true 
       })
       .eq('id', companyId)
@@ -103,12 +133,12 @@ serve(async (req) => {
       )
     }
 
-    console.log('Successfully created auth user for company:', authUser.user.id)
+    console.log('Successfully linked auth user to company:', { authUserId, companyId })
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        authUserId: authUser.user.id,
+        authUserId: authUserId,
         needsPasswordChange: true 
       }),
       { 
