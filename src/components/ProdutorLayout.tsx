@@ -1,12 +1,29 @@
+
 import { useAuth } from '@/hooks/auth';
 import { Navigate, Outlet } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const ProdutorLayout = () => {
-  const { user, loading, userRole } = useAuth();
+  // Add debugging to see what's happening
+  console.log('ProdutorLayout: Attempting to use auth hook...');
+  
+  let user, loading, userRole;
+  
+  try {
+    const authData = useAuth();
+    user = authData.user;
+    loading = authData.loading;
+    userRole = authData.userRole;
+    console.log('ProdutorLayout: Auth hook successful', { user: user?.email, userRole, loading });
+  } catch (error) {
+    console.error('ProdutorLayout: Error using auth hook:', error);
+    // If we can't access auth context, redirect to auth page
+    return <Navigate to="/auth" replace />;
+  }
 
   if (loading) {
+    console.log('ProdutorLayout: Auth loading...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Carregando...</div>
@@ -15,10 +32,12 @@ const ProdutorLayout = () => {
   }
 
   if (!user) {
+    console.log('ProdutorLayout: No user, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
   if (userRole !== 'producer') {
+    console.log('ProdutorLayout: User role mismatch', { userRole, expected: 'producer' });
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -34,6 +53,8 @@ const ProdutorLayout = () => {
       </div>
     );
   }
+
+  console.log('ProdutorLayout: Rendering producer layout for user:', user.email);
 
   return (
     <SidebarProvider>

@@ -69,7 +69,8 @@ export const useStudentPoints = () => {
   });
 
   return {
-    points,
+    data: points, // Return as 'data' to match expected interface
+    points, // Keep backward compatibility
     isLoading,
     initializePoints: initializeMutation.mutate,
     isInitializing: initializeMutation.isPending,

@@ -35,11 +35,13 @@ import CompanyMentorships from "./pages/CompanyMentorships";
 const queryClient = new QueryClient();
 
 function App() {
+  console.log('App: Initializing application...');
+  
   return (
-    <Router>
-      <AuthProvider>
-        <Toaster />
-        <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AuthProvider>
+          <Toaster />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
@@ -94,27 +96,33 @@ function App() {
             {/* Default Route */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
-        </QueryClientProvider>
-      </AuthProvider>
-    </Router>
+        </AuthProvider>
+      </Router>
+    </QueryClientProvider>
   );
 }
 
 function RequireAuth({ children, role }: { children: JSX.Element; role?: string }) {
+  console.log('RequireAuth: Checking authentication...');
+  
   const { user, loading, userRole } = useAuth();
 
   if (loading) {
+    console.log('RequireAuth: Loading...');
     return <div>Loading...</div>;
   }
 
   if (!user) {
+    console.log('RequireAuth: No user, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
   if (role && userRole !== role) {
+    console.log('RequireAuth: Role mismatch', { userRole, requiredRole: role });
     return <div>Unauthorized</div>;
   }
 
+  console.log('RequireAuth: Access granted');
   return children;
 }
 
