@@ -7,83 +7,72 @@ export const createSignOutService = (toast: ReturnType<typeof useToast>['toast']
   const sessionService = createSessionValidationService();
   
   const signOut = async () => {
-    console.log('🚪 Enhanced signOut initiated...');
+    console.log('🚪 Starting enhanced logout process...');
     
     try {
-      // First, check if we have a valid session to sign out from
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      // Always clear local data first to prevent UI inconsistencies
+      sessionService.clearLocalSession();
+      
+      // Check if we have a session that might be valid on the server
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.log('❌ Error getting session during logout:', sessionError.message);
+        // Session is already invalid, just show success message
+        toast({
+          title: "Logout realizado",
+          description: "Sessão encerrada com sucesso.",
+        });
+        return { error: null };
+      }
       
       if (!currentSession) {
-        console.log('ℹ️ No active session found, performing local cleanup only');
-        sessionService.clearLocalSession();
-        
+        console.log('ℹ️ No session found, logout completed locally');
         toast({
           title: "Logout realizado",
-          description: "Sessão local limpa com sucesso.",
+          description: "Sessão já estava encerrada.",
         });
-        
         return { error: null };
       }
       
-      console.log('🔍 Found active session, proceeding with server logout...', {
-        sessionId: currentSession.access_token?.substring(0, 10) + '...',
-        expiresAt: new Date(currentSession.expires_at! * 1000).toISOString()
-      });
-      
-      // Validate session before attempting logout
-      const validation = await sessionService.validateSession(currentSession);
-      
-      if (!validation.isValid && !validation.needsRefresh) {
-        console.log('⚠️ Session already invalid, skipping server logout');
-        sessionService.clearLocalSession();
+      // Only attempt server logout if we have a session with valid tokens
+      if (currentSession.access_token && currentSession.refresh_token) {
+        console.log('🔍 Valid session found, attempting server logout...');
         
-        toast({
-          title: "Logout realizado",
-          description: "Sessão já estava inválida, limpeza local concluída.",
-        });
+        // Validate session before attempting logout to avoid 403 errors
+        const validation = await sessionService.validateSession(currentSession);
         
-        return { error: null };
-      }
-      
-      // Attempt server logout
-      const { error } = await supabase.auth.signOut({
-        scope: 'local' // Only sign out from this browser/device
-      });
-      
-      if (error) {
-        console.error('❌ Server signOut error:', error);
-        
-        // Handle specific known errors gracefully
-        if (error.message.includes('Session not found') || 
-            error.message.includes('session_not_found') ||
-            error.message.includes('Invalid session')) {
-          
-          console.log('ℹ️ Session not found on server, proceeding with local cleanup');
-          sessionService.clearLocalSession();
-          
+        if (!validation.isValid && !validation.needsRefresh) {
+          console.log('⚠️ Session already invalid on server, skipping server logout');
           toast({
             title: "Logout realizado",
             description: "Sessão encerrada localmente.",
+          });
+          return { error: null };
+        }
+        
+        // Attempt server logout with local scope only to avoid global session conflicts
+        const { error: logoutError } = await supabase.auth.signOut({
+          scope: 'local'
+        });
+        
+        if (logoutError) {
+          console.warn('⚠️ Server logout failed, but local cleanup completed:', logoutError.message);
+          
+          // Don't treat server logout failure as a critical error
+          // The important thing is that local state is cleared
+          toast({
+            title: "Logout realizado",
+            description: "Sessão encerrada localmente. Pode ser necessário limpar o cache do navegador.",
           });
           
           return { error: null };
         }
         
-        // For other errors, still clean local state but show warning
-        console.warn('⚠️ Server logout failed, but cleaning local state:', error.message);
-        sessionService.clearLocalSession();
-        
-        toast({
-          title: "Logout parcial",
-          description: "Sessão local limpa, mas pode ainda estar ativa no servidor.",
-          variant: "destructive",
-        });
-        
-        return { error: null }; // Don't block navigation
+        console.log('✅ Server logout successful');
+      } else {
+        console.log('⚠️ Session missing required tokens, skipping server logout');
       }
-      
-      console.log('✅ Server logout successful');
-      sessionService.clearLocalSession();
       
       toast({
         title: "Logout realizado com sucesso!",
@@ -93,14 +82,14 @@ export const createSignOutService = (toast: ReturnType<typeof useToast>['toast']
       return { error: null };
       
     } catch (error) {
-      console.error('💥 Unexpected signOut error:', error);
+      console.error('💥 Unexpected error during logout:', error);
       
-      // Always clean local state on any error
+      // Always ensure local state is cleared even on errors
       sessionService.clearLocalSession();
       
       toast({
         title: "Logout realizado",
-        description: "Sessão encerrada com limpeza de emergência.",
+        description: "Sessão encerrada com limpeza de segurança.",
       });
       
       return { error: null }; // Always allow navigation

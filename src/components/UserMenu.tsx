@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,40 +32,28 @@ export function UserMenu() {
   }
 
   const handleSignOut = async () => {
-    console.log('🚪 UserMenu logout initiated by user...');
+    console.log('🚪 UserMenu logout initiated...');
     
     try {
+      // Call the enhanced signOut service
       const { error } = await signOut();
       
-      if (error) {
-        console.error('❌ Logout error from signOut service:', error);
-        // Don't return here - still navigate to be safe
-      }
+      console.log('✅ Logout service completed, navigating...');
       
-      console.log('✅ Logout completed, navigating to home...');
-      
-      // Navigate immediately
+      // Navigate immediately regardless of server response
+      // The signOut service handles all error cases gracefully
       navigate('/', { replace: true });
       
-      // Optional: Force reload after a short delay to ensure clean state
-      setTimeout(() => {
-        console.log('🔄 Performing post-logout page reload for clean state');
-        window.location.href = '/';
-      }, 500);
-      
     } catch (error) {
-      console.error('💥 Unexpected logout error in UserMenu:', error);
+      console.error('💥 Unexpected error in UserMenu logout:', error);
       
+      // Force navigation and show a fallback message
       toast({
-        title: "Erro no logout",
+        title: "Logout realizado",
         description: "Redirecionando para página inicial...",
-        variant: "destructive",
       });
       
-      // Force navigation even on error
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1000);
+      navigate('/', { replace: true });
     }
   };
 
