@@ -1138,6 +1138,101 @@ export type Database = {
           },
         ]
       }
+      producer_mentorship_participants: {
+        Row: {
+          attended: boolean | null
+          company_name: string | null
+          id: string
+          joined_at: string | null
+          left_at: string | null
+          participant_email: string
+          participant_id: string
+          participant_name: string
+          registered_at: string
+          session_id: string
+        }
+        Insert: {
+          attended?: boolean | null
+          company_name?: string | null
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          participant_email: string
+          participant_id: string
+          participant_name: string
+          registered_at?: string
+          session_id: string
+        }
+        Update: {
+          attended?: boolean | null
+          company_name?: string | null
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          participant_email?: string
+          participant_id?: string
+          participant_name?: string
+          registered_at?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producer_mentorship_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "producer_mentorship_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      producer_mentorship_sessions: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          google_meet_id: string | null
+          google_meet_url: string | null
+          id: string
+          is_active: boolean
+          max_participants: number | null
+          producer_id: string
+          scheduled_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          google_meet_id?: string | null
+          google_meet_url?: string | null
+          id?: string
+          is_active?: boolean
+          max_participants?: number | null
+          producer_id: string
+          scheduled_at: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          google_meet_id?: string | null
+          google_meet_url?: string | null
+          id?: string
+          is_active?: boolean
+          max_participants?: number | null
+          producer_id?: string
+          scheduled_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
