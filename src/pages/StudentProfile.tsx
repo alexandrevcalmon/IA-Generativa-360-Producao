@@ -23,29 +23,31 @@ import {
   CheckCircle,
   XCircle
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from '@/hooks/auth';
 import { useToast } from '@/hooks/use-toast';
+import { useStudentProfile } from '@/hooks/useStudentProfile';
 
 const StudentProfile = () => {
-  const { companyUserData, user, loading: authLoading, refreshUserRole } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { data: studentData, isLoading: profileLoading, refetch, error } = useStudentProfile();
   const [isEditing, setIsEditing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    console.log('🔄 Manually refreshing user role and data...');
+    console.log('🔄 Manually refreshing student profile...');
     
     try {
-      await refreshUserRole();
-      console.log('✅ User role refresh completed');
+      await refetch();
+      console.log('✅ Student profile refresh completed');
       toast({
         title: "Dados atualizados",
         description: "As informações do perfil foram atualizadas com sucesso.",
       });
     } catch (error) {
-      console.error('❌ Error refreshing user role:', error);
+      console.error('❌ Error refreshing student profile:', error);
       toast({
         title: "Erro ao atualizar",
         description: "Não foi possível atualizar os dados. Tente novamente.",
@@ -57,8 +59,8 @@ const StudentProfile = () => {
   };
 
   const getUserInitials = () => {
-    if (companyUserData?.name) {
-      return companyUserData.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    if (studentData?.name) {
+      return studentData.name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
     if (user?.email) {
       return user.email.charAt(0).toUpperCase();
@@ -67,21 +69,23 @@ const StudentProfile = () => {
   };
 
   const getProfileCompleteness = () => {
-    if (!companyUserData) return 0;
+    if (!studentData) return 0;
     
     const fields = [
-      companyUserData.name,
-      companyUserData.email,
-      companyUserData.position,
-      companyUserData.phone
+      studentData.name,
+      studentData.email,
+      studentData.position,
+      studentData.phone
     ];
     
     const completedFields = fields.filter(field => field && field.trim() !== '').length;
     return Math.round((completedFields / fields.length) * 100);
   };
 
+  const loading = authLoading || profileLoading;
+
   // Show loading state
-  if (authLoading) {
+  if (loading) {
     return (
       <div className="flex flex-col h-full">
         <header className="border-b bg-white px-6 py-4">
@@ -136,7 +140,7 @@ const StudentProfile = () => {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Meu Perfil</h1>
             <p className="text-gray-600">Gerencie suas informações pessoais e preferências</p>
-            {companyUserData && (
+            {studentData && (
               <div className="flex items-center mt-2 space-x-2">
                 <div className="flex items-center space-x-1">
                   {profileCompleteness === 100 ? (
@@ -193,7 +197,25 @@ const StudentProfile = () => {
       <div className="flex-1 overflow-auto p-6 bg-gray-50">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Data Status Alerts */}
-          {!companyUserData && user && (
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Erro ao carregar dados:</strong> Não foi possível carregar as informações do perfil.
+                <Button 
+                  onClick={handleRefresh} 
+                  variant="outline" 
+                  size="sm" 
+                  className="ml-2"
+                  disabled={isRefreshing}
+                >
+                  {isRefreshing ? 'Atualizando...' : 'Tentar Novamente'}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {!studentData && !error && user && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -212,7 +234,7 @@ const StudentProfile = () => {
             </Alert>
           )}
 
-          {companyUserData && !companyUserData.name && (
+          {studentData && !studentData.name && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -244,23 +266,23 @@ const StudentProfile = () => {
                 
                 <div className="flex-1 text-center md:text-left">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {companyUserData?.name || user.email || 'Usuário'}
+                    {studentData?.name || user.email || 'Usuário'}
                   </h2>
-                  <p className="text-gray-600">{user.email}</p>
-                  {companyUserData?.companies && (
+                  <p className="text-gray-600">{studentData?.email || user.email}</p>
+                  {studentData?.companies && (
                     <p className="text-sm text-blue-600 mt-1">
-                      {companyUserData.companies.name}
+                      {studentData.companies.name}
                     </p>
                   )}
-                  {companyUserData?.position && (
+                  {studentData?.position && (
                     <p className="text-sm text-gray-500 mt-1">
-                      {companyUserData.position}
+                      {studentData.position}
                     </p>
                   )}
                   <div className="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
                     <Badge variant="secondary">Colaborador</Badge>
-                    {companyUserData?.is_active !== undefined && (
-                      companyUserData.is_active ? (
+                    {studentData?.is_active !== undefined && (
+                      studentData.is_active ? (
                         <Badge variant="outline" className="bg-green-100 text-green-700">Ativo</Badge>
                       ) : (
                         <Badge variant="outline" className="bg-red-100 text-red-700">Inativo</Badge>
@@ -294,7 +316,7 @@ const StudentProfile = () => {
                   </CardTitle>
                   <CardDescription>
                     Suas informações pessoais e de contato
-                    {!companyUserData && (
+                    {!studentData && (
                       <span className="text-red-600 ml-2">
                         (Dados não carregados - tente atualizar)
                       </span>
@@ -307,12 +329,12 @@ const StudentProfile = () => {
                       <Label htmlFor="name">Nome Completo</Label>
                       <Input 
                         id="name" 
-                        value={companyUserData?.name || ''}
+                        value={studentData?.name || ''}
                         disabled={!isEditing}
                         readOnly
-                        placeholder={!companyUserData ? "Dados não carregados" : "Nome não informado"}
+                        placeholder={!studentData ? "Dados não carregados" : "Nome não informado"}
                       />
-                      {!companyUserData?.name && companyUserData && (
+                      {!studentData?.name && studentData && (
                         <p className="text-sm text-orange-600">Nome não informado no sistema</p>
                       )}
                     </div>
@@ -321,7 +343,7 @@ const StudentProfile = () => {
                       <Input 
                         id="email" 
                         type="email" 
-                        value={companyUserData?.email || user.email || ''}
+                        value={studentData?.email || user.email || ''}
                         disabled={!isEditing}
                         readOnly
                       />
@@ -331,12 +353,12 @@ const StudentProfile = () => {
                       <Input 
                         id="phone" 
                         type="tel" 
-                        value={companyUserData?.phone || ''}
+                        value={studentData?.phone || ''}
                         disabled={!isEditing}
                         readOnly
-                        placeholder={!companyUserData ? "Dados não carregados" : "Telefone não informado"}
+                        placeholder={!studentData ? "Dados não carregados" : "Telefone não informado"}
                       />
-                      {!companyUserData?.phone && companyUserData && (
+                      {!studentData?.phone && studentData && (
                         <p className="text-sm text-gray-500">Telefone não informado</p>
                       )}
                     </div>
@@ -344,22 +366,22 @@ const StudentProfile = () => {
                       <Label htmlFor="position">Cargo</Label>
                       <Input 
                         id="position" 
-                        value={companyUserData?.position || ''}
+                        value={studentData?.position || ''}
                         disabled={!isEditing}
                         readOnly
-                        placeholder={!companyUserData ? "Dados não carregados" : "Cargo não informado"}
+                        placeholder={!studentData ? "Dados não carregados" : "Cargo não informado"}
                       />
-                      {!companyUserData?.position && companyUserData && (
+                      {!studentData?.position && studentData && (
                         <p className="text-sm text-gray-500">Cargo não informado</p>
                       )}
                     </div>
                   </div>
-                  {companyUserData?.companies && (
+                  {studentData?.companies && (
                     <div className="space-y-2">
                       <Label htmlFor="company">Empresa</Label>
                       <Input 
                         id="company" 
-                        value={companyUserData.companies.name}
+                        value={studentData.companies.name}
                         disabled
                         readOnly
                       />
@@ -371,36 +393,36 @@ const StudentProfile = () => {
                     <h4 className="font-medium mb-2">Status dos Dados</h4>
                     <div className="grid md:grid-cols-2 gap-2 text-sm">
                       <div className="flex items-center space-x-2">
-                        {companyUserData?.name ? (
+                        {studentData?.name ? (
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
                           <XCircle className="h-4 w-4 text-red-500" />
                         )}
-                        <span>Nome: {companyUserData?.name ? 'Informado' : 'Não informado'}</span>
+                        <span>Nome: {studentData?.name ? 'Informado' : 'Não informado'}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {companyUserData?.position ? (
+                        {studentData?.position ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />  
+                        ) : (
+                          <XCircle className="h-4 w-4 text-orange-500" />
+                        )}
+                        <span>Cargo: {studentData?.position ? 'Informado' : 'Não informado'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {studentData?.phone ? (
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
                           <XCircle className="h-4 w-4 text-orange-500" />
                         )}
-                        <span>Cargo: {companyUserData?.position ? 'Informado' : 'Não informado'}</span>
+                        <span>Telefone: {studentData?.phone ? 'Informado' : 'Não informado'}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {companyUserData?.phone ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-orange-500" />
-                        )}
-                        <span>Telefone: {companyUserData?.phone ? 'Informado' : 'Não informado'}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {companyUserData?.companies ? (
+                        {studentData?.companies ? (
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
                           <XCircle className="h-4 w-4 text-red-500" />
                         )}
-                        <span>Empresa: {companyUserData?.companies ? 'Vinculado' : 'Não vinculado'}</span>
+                        <span>Empresa: {studentData?.companies ? 'Vinculado' : 'Não vinculado'}</span>
                       </div>
                     </div>
                   </div>
