@@ -187,6 +187,8 @@ const StudentLessonView = () => {
                         ref={videoRef}
                         className="w-full aspect-video"
                         controls
+                        controlsList="nodownload"
+                        onContextMenu={(e) => e.preventDefault()}
                         poster={course?.thumbnail_url || undefined}
                       >
                         <source src={currentLesson.video_file_url} type="video/mp4" />
