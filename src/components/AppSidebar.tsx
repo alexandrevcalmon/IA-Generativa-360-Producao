@@ -1,3 +1,4 @@
+
 import { 
   Sidebar, 
   SidebarContent, 
@@ -63,11 +64,6 @@ export function AppSidebar() {
       title: 'Analytics Colaboradores',
       icon: Users,
       href: '/producer/collaborators-analytics'
-    },
-    {
-      title: 'Analytics',
-      icon: BarChart3,
-      href: '/analytics'
     }
   ];
 
