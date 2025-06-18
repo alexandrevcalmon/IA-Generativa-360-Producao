@@ -11,20 +11,22 @@ export const useProducerAuth = () => {
     queryFn: async () => {
       if (!user) throw new Error('No user found');
 
+      console.log('[useProducerAuth] Checking producer auth for user:', user.id);
+
+      // Use the safe function to avoid RLS recursion
       const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+        .rpc('get_user_role_safe', { user_id: user.id });
 
       if (error) {
-        console.error('Error checking producer auth:', error);
+        console.error('[useProducerAuth] Error checking producer auth:', error);
         throw error;
       }
 
+      console.log('[useProducerAuth] User role result:', data);
+
       return {
-        isProducer: data?.role === 'producer',
-        role: data?.role
+        isProducer: data === 'producer',
+        role: data
       };
     },
     enabled: !!user,

@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth'; // useAuth should provide userRole
@@ -31,6 +32,8 @@ export const useCourses = () => {
         return [];
       }
 
+      console.log(`[useCourses] Current user: ${user.email}, Role: ${userRole}, ID: ${user.id}`);
+
       let query = supabase
         .from('courses')
         .select('*');
@@ -51,10 +54,12 @@ export const useCourses = () => {
 
       if (error) {
         console.error('[useCourses] Error fetching courses:', error.message, error.details);
+        console.error('[useCourses] Full error object:', error);
         throw error; // Rethrow to let React Query handle the error state
       }
       
       console.log(`[useCourses] Courses fetched successfully for role '${userRole}', user '${user.id}'. Count: ${data?.length || 0}`);
+      console.log('[useCourses] Fetched courses data:', data);
       return data as Course[] || []; // Ensure an array is returned even if data is null
     },
     // Query enabled only if user is logged in.

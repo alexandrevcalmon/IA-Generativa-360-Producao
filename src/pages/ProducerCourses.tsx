@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Search, Filter, BookOpen, Users, Clock, TrendingUp } from "lucide-react";
 import { useCourses, useDeleteCourse, Course } from "@/hooks/useCourses";
-import { useProducerAuth } from "@/hooks/useProducerAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { CreateCourseDialog } from "@/components/CreateCourseDialog";
 import { CourseCard } from "@/components/CourseCard";
 
@@ -18,12 +19,12 @@ const ProducerCourses = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
-  const { data: producerAuth, isLoading: authLoading } = useProducerAuth();
-  const { data: courses = [], isLoading } = useCourses();
+  const { user, userRole, loading } = useAuth();
+  const { data: courses = [], isLoading: coursesLoading } = useCourses();
   const deleteCourse = useDeleteCourse();
 
-  console.log('Producer auth:', producerAuth);
-  console.log('Courses data:', courses);
+  console.log('ProducerCourses - Auth state:', { user: user?.email, userRole, loading });
+  console.log('ProducerCourses - Courses data:', courses);
 
   const handleEditCourse = (course: Course) => {
     setEditingCourse(course);
@@ -42,7 +43,7 @@ const ProducerCourses = () => {
   };
 
   // Show loading state while checking authentication
-  if (authLoading) {
+  if (loading) {
     return (
       <div className="flex flex-col h-full">
         <header className="border-b bg-white px-6 py-4">
@@ -68,7 +69,7 @@ const ProducerCourses = () => {
   }
 
   // Show access denied if user is not a producer
-  if (!producerAuth?.isProducer) {
+  if (!user || userRole !== 'producer') {
     return (
       <div className="flex flex-col h-full">
         <header className="border-b bg-white px-6 py-4">
@@ -89,7 +90,10 @@ const ProducerCourses = () => {
                 Esta área é exclusiva para produtores de conteúdo.
               </p>
               <p className="text-sm text-muted-foreground">
-                Seu perfil atual: {producerAuth?.role || 'Não definido'}
+                Seu perfil atual: {userRole || 'Não definido'}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Usuário: {user?.email || 'Não logado'}
               </p>
             </CardContent>
           </Card>
@@ -120,7 +124,7 @@ const ProducerCourses = () => {
 
   const categories = Array.from(new Set(courses.map(c => c.category).filter(Boolean)));
 
-  if (isLoading) {
+  if (coursesLoading) {
     return (
       <div className="flex flex-col h-full">
         <header className="border-b bg-white px-6 py-4">
@@ -128,7 +132,7 @@ const ProducerCourses = () => {
             <SidebarTrigger />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Gerenciar Cursos</h1>
-              <p className="text-gray-600">Carregando...</p>
+              <p className="text-gray-600">Carregando cursos...</p>
             </div>
           </div>
         </header>
