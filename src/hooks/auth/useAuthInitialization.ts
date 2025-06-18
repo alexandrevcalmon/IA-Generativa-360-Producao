@@ -4,9 +4,12 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchUserRole } from './userRoleService';
 import { useAuthState } from './useAuthState';
+import { createSessionValidationService } from './sessionValidationService';
 
 export function useAuthInitialization() {
   const authState = useAuthState();
+  const sessionService = createSessionValidationService();
+  
   const {
     setSession,
     setUser,
@@ -19,7 +22,12 @@ export function useAuthInitialization() {
   } = authState;
 
   const handleAuthStateChange = async (event: string, session: Session | null) => {
-    console.log('🔐 Auth state changed:', { event, userEmail: session?.user?.email, hasSession: !!session });
+    console.log('🔐 Enhanced auth state changed:', { 
+      event, 
+      userEmail: session?.user?.email, 
+      hasSession: !!session,
+      sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A'
+    });
     
     if (event === 'SIGNED_OUT' || !session?.user) {
       console.log('🚪 User signed out, clearing state');
@@ -27,6 +35,33 @@ export function useAuthInitialization() {
       setLoading(false);
       setIsInitialized(true);
       return;
+    }
+    
+    // Validate the session before proceeding
+    const validation = await sessionService.validateSession(session);
+    
+    if (!validation.isValid) {
+      if (validation.needsRefresh) {
+        console.log('🔄 Session needs refresh, attempting...');
+        const refreshResult = await sessionService.refreshSession();
+        
+        if (refreshResult.isValid && refreshResult.session) {
+          console.log('✅ Session refreshed successfully');
+          session = refreshResult.session;
+        } else {
+          console.log('❌ Session refresh failed, clearing state');
+          clearUserState();
+          setLoading(false);
+          setIsInitialized(true);
+          return;
+        }
+      } else {
+        console.log('❌ Invalid session, clearing state');
+        clearUserState();
+        setLoading(false);
+        setIsInitialized(true);
+        return;
+      }
     }
     
     // Update session and user immediately
@@ -63,31 +98,34 @@ export function useAuthInitialization() {
   };
 
   useEffect(() => {
-    console.log('🚀 Initializing AuthProvider...');
+    console.log('🚀 Initializing Enhanced AuthProvider...');
     let isMounted = true;
 
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
-    // Then check for existing session
+    // Then check for existing session with validation
     const initializeAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('🔍 Validating existing session...');
+        const validation = await sessionService.validateSession();
         
-        if (error) {
-          console.error('❌ Error getting session:', error);
-          if (isMounted) {
-            setLoading(false);
-            setIsInitialized(true);
+        if (!validation.isValid && validation.needsRefresh) {
+          console.log('🔄 Session expired, attempting refresh...');
+          const refreshResult = await sessionService.refreshSession();
+          
+          if (refreshResult.isValid && refreshResult.session && isMounted) {
+            console.log('✅ Session refreshed during initialization');
+            await handleAuthStateChange('SIGNED_IN', refreshResult.session);
+            return;
           }
-          return;
         }
-
-        if (session?.user && isMounted) {
-          console.log('✅ Found existing session for:', session.user.email);
-          await handleAuthStateChange('SIGNED_IN', session);
+        
+        if (validation.isValid && validation.session && isMounted) {
+          console.log('✅ Found valid existing session');
+          await handleAuthStateChange('SIGNED_IN', validation.session);
         } else {
-          console.log('ℹ️ No existing session found');
+          console.log('ℹ️ No valid session found');
           if (isMounted) {
             setLoading(false);
             setIsInitialized(true);
@@ -104,9 +142,26 @@ export function useAuthInitialization() {
 
     initializeAuth();
 
+    // Set up periodic session monitoring
+    const sessionMonitor = setInterval(async () => {
+      if (!isMounted) return;
+      
+      const validation = await sessionService.validateSession();
+      if (!validation.isValid && validation.needsRefresh) {
+        console.log('🔄 Session expired during monitoring, attempting refresh...');
+        const refreshResult = await sessionService.refreshSession();
+        
+        if (!refreshResult.isValid) {
+          console.log('❌ Session refresh failed during monitoring, signing out...');
+          clearUserState();
+        }
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+      clearInterval(sessionMonitor);
     };
   }, []);
 

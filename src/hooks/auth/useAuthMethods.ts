@@ -2,6 +2,7 @@
 import { useToast } from '@/hooks/use-toast';
 import { createAuthService } from './authService';
 import { fetchUserRole } from './userRoleService';
+import { createSessionValidationService } from './sessionValidationService';
 
 interface UseAuthMethodsProps {
   user: any;
@@ -26,6 +27,7 @@ export function useAuthMethods({
 }: UseAuthMethodsProps) {
   const { toast } = useToast();
   const authService = createAuthService(toast);
+  const sessionService = createSessionValidationService();
 
   const refreshUserRole = async () => {
     if (!user) {
@@ -50,14 +52,23 @@ export function useAuthMethods({
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔑 Starting sign in for:', email);
+    console.log('🔑 Starting enhanced sign in for:', email);
     setLoading(true);
     
     try {
       const result = await authService.signIn(email, password);
       
       if (result.user && !result.error) {
-        console.log('✅ Sign in successful, fetching user data...');
+        console.log('✅ Sign in successful, validating session...');
+        
+        // Validate the session immediately after sign in
+        const validation = await sessionService.validateSession();
+        
+        if (!validation.isValid) {
+          console.error('❌ Session validation failed after sign in');
+          setLoading(false);
+          return { error: { message: 'Session validation failed' } };
+        }
         
         // Check if authService already determined needsPasswordChange
         if (result.needsPasswordChange) {
@@ -112,14 +123,19 @@ export function useAuthMethods({
   };
 
   const signOut = async () => {
-    console.log('🚪 AuthProvider signOut called');
+    console.log('🚪 Enhanced AuthProvider signOut called');
     
     try {
       const result = await authService.signOut();
       
       if (!result.error) {
-        console.log('✅ SignOut successful');
-        // Auth state change will handle clearing state
+        console.log('✅ SignOut successful, clearing local state');
+        // Auth state change will handle clearing state, but also clear immediately
+        setUser(null);
+        setSession(null);
+        setUserRole(null);
+        setNeedsPasswordChange(false);
+        setCompanyUserData(null);
       } else {
         console.error('❌ SignOut error:', result.error);
       }
@@ -127,7 +143,14 @@ export function useAuthMethods({
       return result;
     } catch (error) {
       console.error('💥 SignOut error:', error);
-      return { error };
+      // Force local cleanup on any error
+      sessionService.clearLocalSession();
+      setUser(null);
+      setSession(null);
+      setUserRole(null);
+      setNeedsPasswordChange(false);
+      setCompanyUserData(null);
+      return { error: null }; // Return success to allow navigation
     }
   };
 

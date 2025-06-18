@@ -67,7 +67,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             .maybeSingle();
           
           if (company) {
-            // Only update if needs_password_change field exists in the table
+            // Only update the updated_at timestamp since needs_password_change doesn't exist
             const { error: updateError } = await supabase
               .from('companies')
               .update({ updated_at: new Date().toISOString() })
@@ -79,11 +79,14 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           }
         }
         
-        // Handle company_users (collaborators)
+        // Handle company_users (collaborators) - only update timestamp
         if (companyUserData && userId) {
           const { error: updateError } = await supabase
             .from('company_users')
-            .update({ updated_at: new Date().toISOString() })
+            .update({ 
+              needs_password_change: false,
+              updated_at: new Date().toISOString() 
+            })
             .eq('auth_user_id', userId);
           
           if (updateError) {
