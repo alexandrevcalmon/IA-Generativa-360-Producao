@@ -1,4 +1,3 @@
-
 import {
   BrowserRouter as Router,
   Routes,
@@ -14,9 +13,7 @@ import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import CompanyCollaborators from "./pages/CompanyCollaborators";
-// CompanyCollaboratorsAnalytics is already imported, but we need ProducerCollaboratorsAnalytics
-// Assuming ProducerCollaboratorsAnalytics is a different component. If it's the same, then no new import needed.
-// For this task, let's assume it's a distinct component for producers.
+import CompanyCollaboratorsAnalytics from "./pages/CompanyCollaboratorsAnalytics";
 import ProducerCollaboratorsAnalytics from "./pages/ProducerCollaboratorsAnalytics";
 import ProducerMentorship from "./pages/ProducerMentorship";
 import CompanyProfile from "./pages/CompanyProfile";
@@ -26,7 +23,7 @@ import ProducerDashboard from "./pages/ProducerDashboard";
 import ProducerCompanies from "./pages/ProducerCompanies";
 import ProducerCourses from "./pages/ProducerCourses";
 import ProducerCommunity from "./pages/ProducerCommunity";
-import ProducerPlans from "./pages/ProducerPlans"; // IMPORT THIS
+import ProducerPlans from "./pages/ProducerPlans";
 import StudentDashboard from "./pages/StudentDashboard";
 
 import { ChangePassword } from "./components/auth/ChangePassword";
@@ -81,7 +78,7 @@ function App() {
               <Route path="courses" element={<ProducerCourses />} />
               <Route path="community" element={<ProducerCommunity />} />
               <Route path="plans" element={<ProducerPlans />} />
-              <Route path="collaborators-analytics" element={<ProducerCollaboratorsAnalytics />} /> {/* ADD THIS LINE */}
+              <Route path="collaborators-analytics" element={<ProducerCollaboratorsAnalytics />} />
               <Route path="mentorship" element={<ProducerMentorship />} />
             </Route>
             
