@@ -28,39 +28,22 @@ import {
   useDeleteCommunityTopic,
   type CommunityTopic
 } from '@/hooks/useCommunityTopics';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { CreateTopicDialog } from '@/components/community/CreateTopicDialog';
+import { TopicCard } from '@/components/community/TopicCard';
+import { EditTopicDialog } from '@/components/community/EditTopicDialog';
 
 const ProducerCommunity = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
+  const [editTopicOpen, setEditTopicOpen] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<CommunityTopic | null>(null);
 
   const { data: topics = [], isLoading, error } = useCommunityTopics();
-  const { mutate: togglePin } = useToggleTopicPin();
-  const { mutate: toggleLock } = useToggleTopicLock();
-  const { mutate: deleteTopic } = useDeleteCommunityTopic();
 
-  const handleTogglePin = (topic: CommunityTopic) => {
-    togglePin({ topicId: topic.id, isPinned: !topic.is_pinned });
-  };
-
-  const handleToggleLock = (topic: CommunityTopic) => {
-    toggleLock({ topicId: topic.id, isLocked: !topic.is_locked });
-  };
-
-  const handleDeleteTopic = (topicId: string) => {
-    deleteTopic(topicId);
+  const handleEditTopic = (topic: CommunityTopic) => {
+    setSelectedTopic(topic);
+    setEditTopicOpen(true);
   };
 
   const filteredTopics = topics.filter(topic => {
@@ -223,100 +206,12 @@ const ProducerCommunity = () => {
             <TabsContent value="all" className="space-y-4">
               {filteredTopics.length > 0 ? (
                 filteredTopics.map((topic) => (
-                  <Card key={topic.id} className={topic.is_pinned ? 'border-purple-200 bg-purple-50' : ''}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <CardTitle className="text-lg">{topic.title}</CardTitle>
-                            {topic.is_pinned && (
-                              <Badge className="bg-purple-100 text-purple-800">
-                                <Pin className="w-3 h-3 mr-1" />
-                                Fixado
-                              </Badge>
-                            )}
-                            {topic.is_locked && (
-                              <Badge variant="outline" className="border-red-200 text-red-700">
-                                <Lock className="w-3 h-3 mr-1" />
-                                Bloqueado
-                              </Badge>
-                            )}
-                            <Badge variant="outline">{topic.category}</Badge>
-                          </div>
-                          <p className="text-gray-600 mb-3">{topic.content.substring(0, 200)}...</p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span>Por {topic.author_name}</span>
-                            {topic.company_name && <span>• {topic.company_name}</span>}
-                            <span>• {new Date(topic.created_at).toLocaleDateString('pt-BR')}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 ml-4">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleTogglePin(topic)}
-                          >
-                            {topic.is_pinned ? (
-                              <PinOff className="h-4 w-4" />
-                            ) : (
-                              <Pin className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleToggleLock(topic)}
-                          >
-                            {topic.is_locked ? (
-                              <Unlock className="h-4 w-4" />
-                            ) : (
-                              <Lock className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Deletar tópico</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tem certeza que deseja deletar este tópico? Esta ação não pode ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteTopic(topic.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Deletar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-6 text-sm text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <MessageCircle className="h-4 w-4" />
-                          <span>{topic.replies_count} respostas</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <ThumbsUp className="h-4 w-4" />
-                          <span>{topic.likes_count} curtidas</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-4 w-4" />
-                          <span>{topic.views_count} visualizações</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <TopicCard 
+                    key={topic.id} 
+                    topic={topic} 
+                    onEdit={handleEditTopic}
+                    showModeratorActions={true}
+                  />
                 ))
               ) : (
                 <Card>
@@ -336,9 +231,12 @@ const ProducerCommunity = () => {
             <TabsContent value="pinned" className="space-y-4">
               {filteredTopics.filter(topic => topic.is_pinned).length > 0 ? (
                 filteredTopics.filter(topic => topic.is_pinned).map((topic) => (
-                  <Card key={topic.id} className="border-purple-200 bg-purple-50">
-                    {/* Same card content as above */}
-                  </Card>
+                  <TopicCard 
+                    key={topic.id} 
+                    topic={topic} 
+                    onEdit={handleEditTopic}
+                    showModeratorActions={true}
+                  />
                 ))
               ) : (
                 <Card>
@@ -356,7 +254,6 @@ const ProducerCommunity = () => {
             </TabsContent>
 
             <TabsContent value="recent" className="space-y-4">
-              {/* Recent topics implementation */}
               <Card>
                 <CardContent className="p-8 text-center">
                   <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -371,7 +268,6 @@ const ProducerCommunity = () => {
             </TabsContent>
 
             <TabsContent value="trending" className="space-y-4">
-              {/* Trending topics implementation */}
               <Card>
                 <CardContent className="p-8 text-center">
                   <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -391,6 +287,12 @@ const ProducerCommunity = () => {
       <CreateTopicDialog 
         open={createTopicOpen} 
         onOpenChange={setCreateTopicOpen} 
+      />
+      
+      <EditTopicDialog 
+        open={editTopicOpen} 
+        onOpenChange={setEditTopicOpen} 
+        topic={selectedTopic}
       />
     </div>
   );
