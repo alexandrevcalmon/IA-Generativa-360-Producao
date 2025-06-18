@@ -26,7 +26,12 @@ export default function Auth() {
   } = useAuthForm();
 
   // Handle redirects for authenticated users
-  useAuthRedirects({ user, userRole, authLoading, needsPasswordChange });
+  useAuthRedirects({ 
+    user, 
+    userRole, 
+    loading: authLoading, 
+    needsPasswordChange 
+  });
 
   // Priority 1: Show password change dialog if user needs to change password
   if (!authLoading && user && needsPasswordChange) {

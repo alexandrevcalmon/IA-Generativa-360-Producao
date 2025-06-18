@@ -8,20 +8,27 @@ interface UseAuthRedirectsProps {
   userRole: string;
   loading: boolean;
   targetRole?: string;
+  needsPasswordChange?: boolean;
 }
 
-export function useAuthRedirects({ user, userRole, loading, targetRole }: UseAuthRedirectsProps) {
+export function useAuthRedirects({ user, userRole, loading, targetRole, needsPasswordChange }: UseAuthRedirectsProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
     if (loading) return;
 
-    console.log('Auth redirect check:', { user: !!user, userRole, targetRole, loading });
+    console.log('Auth redirect check:', { user: !!user, userRole, targetRole, loading, needsPasswordChange });
 
     // If no user, redirect to auth
     if (!user) {
       console.log('No user, redirecting to auth');
       navigate('/auth');
+      return;
+    }
+
+    // If password change is needed, don't redirect - let the component handle it
+    if (needsPasswordChange) {
+      console.log('Password change needed, staying on current page');
       return;
     }
 
@@ -77,5 +84,5 @@ export function useAuthRedirects({ user, userRole, loading, targetRole }: UseAut
           break;
       }
     }
-  }, [user, userRole, loading, targetRole, navigate]);
+  }, [user, userRole, loading, targetRole, needsPasswordChange, navigate]);
 }
