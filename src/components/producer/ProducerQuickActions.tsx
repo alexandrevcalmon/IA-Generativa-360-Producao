@@ -7,7 +7,8 @@ import {
   CreditCard,
   MessageCircle,
   Upload,
-  FileText
+  FileText,
+  Users
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -22,6 +23,12 @@ export const ProducerQuickActions = () => {
           <Button className="w-full justify-start bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white">
             <Plus className="h-4 w-4 mr-2" />
             Criar Novo Curso
+          </Button>
+        </Link>
+        <Link to="/producer/mentorship" className="block">
+          <Button className="w-full justify-start bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white">
+            <Users className="h-4 w-4 mr-2" />
+            Gerenciar Mentoria
           </Button>
         </Link>
         <Link to="/producer/companies" className="block">
