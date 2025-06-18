@@ -1,124 +1,97 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/hooks/auth/AuthProvider';
+import { AuthGuard } from '@/components/AuthGuard';
 
-import React from 'react';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/hooks/auth/AuthProvider";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import Analytics from "./pages/Analytics";
-import Learning from "./pages/Learning";
-import Community from "./pages/Community";
-import LoginProdutor from "./pages/LoginProdutor";
-import ProducerDashboard from "./pages/ProducerDashboard";
-import ProducerProfile from "./pages/ProducerProfile";
-import ProducerCourses from "./pages/ProducerCourses";
-import ProducerCompanies from "./pages/ProducerCompanies";
-import ProducerCompanyDetails from "./pages/ProducerCompanyDetails";
-import ProducerPlans from "./pages/ProducerPlans";
-import ProducerMentorship from "./pages/ProducerMentorship";
-import ProducerCommunity from "./pages/ProducerCommunity";
-import CourseDetails from "./pages/CourseDetails";
-import Courses from "./pages/Courses";
-import CompanyDashboard from "./pages/CompanyDashboard";
-import CompanyProfile from "./pages/CompanyProfile";
-import StudentDashboard from "./pages/StudentDashboard";
-import StudentProfile from "./pages/StudentProfile";
-import StudentCourses from "./pages/StudentCourses";
-import StudentCourseDetail from "./pages/StudentCourseDetail";
-import StudentLessonView from "./pages/StudentLessonView";
-import StudentGamification from "./pages/StudentGamification";
-import StudentMentorship from "./pages/StudentMentorship";
-import StudentCalendar from "./pages/StudentCalendar";
-import StudentCommunity from "./pages/StudentCommunity";
-import NotFound from "./pages/NotFound";
-import { AuthGuard } from "@/components/AuthGuard";
-import StudentLayout from "@/components/StudentLayout";
-import ProdutorLayout from "@/components/ProdutorLayout";
-import ProducerCollaboratorsAnalytics from "./pages/ProducerCollaboratorsAnalytics";
-
-// Create QueryClient instance outside of the component to avoid recreation
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    },
-  },
-});
+import Index from '@/pages/Index';
+import Auth from '@/pages/Auth';
+import LoginProdutor from '@/pages/LoginProdutor';
+import Dashboard from '@/pages/Dashboard';
+import StudentDashboard from '@/pages/StudentDashboard';
+import ProducerDashboard from '@/pages/ProducerDashboard';
+import CompanyDashboard from '@/pages/CompanyDashboard';
+import Profile from '@/pages/Profile';
+import StudentProfile from '@/pages/StudentProfile';
+import ProducerProfile from '@/pages/ProducerProfile';
+import CompanyProfile from '@/pages/CompanyProfile';
+import Courses from '@/pages/Courses';
+import StudentCourses from '@/pages/StudentCourses';
+import ProducerCourses from '@/pages/ProducerCourses';
+import StudentCourseDetail from '@/pages/StudentCourseDetail';
+import StudentLessonView from '@/pages/StudentLessonView';
+import CourseDetails from '@/pages/CourseDetails';
+import Learning from '@/pages/Learning';
+import Community from '@/pages/Community';
+import StudentCommunity from '@/pages/StudentCommunity';
+import ProducerCommunity from '@/pages/ProducerCommunity';
+import Analytics from '@/pages/Analytics';
+import StudentAnalytics from '@/pages/StudentAnalytics';
+import ProducerCollaboratorsAnalytics from '@/pages/ProducerCollaboratorsAnalytics';
+import StudentCalendar from '@/pages/StudentCalendar';
+import StudentMentorship from '@/pages/StudentMentorship';
+import ProducerMentorship from '@/pages/ProducerMentorship';
+import StudentGamification from '@/pages/StudentGamification';
+import ProducerCompanies from '@/pages/ProducerCompanies';
+import ProducerCompanyDetails from '@/pages/ProducerCompanyDetails';
+import ProducerPlans from '@/pages/ProducerPlans';
+import NotFound from '@/pages/NotFound';
+import { TopicView } from '@/components/community/TopicView';
 
 function App() {
+  const queryClient = new QueryClient();
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <Router>
+          <div className="min-h-screen bg-background">
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/login-produtor" element={<LoginProdutor />} />
-
-              {/* Producer routes with ProdutorLayout */}
-              <Route path="/producer" element={<AuthGuard />}>
-                <Route index element={<Navigate to="/producer/dashboard" replace />} />
-                <Route element={<ProdutorLayout />}>
-                  <Route path="dashboard" element={<ProducerDashboard />} />
-                  <Route path="profile" element={<ProducerProfile />} />
-                  <Route path="courses" element={<ProducerCourses />} />
-                  <Route path="courses/:courseId" element={<CourseDetails />} />
-                  <Route path="companies" element={<ProducerCompanies />} />
-                  <Route path="companies/:companyId" element={<ProducerCompanyDetails />} />
-                  <Route path="collaborators-analytics" element={<ProducerCollaboratorsAnalytics />} />
-                  <Route path="plans" element={<ProducerPlans />} />
-                  <Route path="mentorship" element={<ProducerMentorship />} />
-                  <Route path="community" element={<ProducerCommunity />} />
-                </Route>
-              </Route>
-
-              {/* Company routes */}
-              <Route path="/company" element={<AuthGuard />}>
-                <Route index element={<Navigate to="/company/dashboard" replace />} />
-                <Route path="dashboard" element={<CompanyDashboard />} />
-                <Route path="profile" element={<CompanyProfile />} />
-                <Route path="courses" element={<Courses />} />
-                <Route path="analytics" element={<Analytics />} />
-                <Route path="learning" element={<Learning />} />
-                <Route path="community" element={<Community />} />
-              </Route>
-
-              {/* Student routes with StudentLayout */}
-              <Route path="/student" element={<AuthGuard requiredRole="student" />}>
-                <Route index element={<Navigate to="/student/dashboard" replace />} />
-                <Route element={<StudentLayout />}>
-                  <Route path="dashboard" element={<StudentDashboard />} />
-                  <Route path="profile" element={<StudentProfile />} />
-                  <Route path="courses" element={<StudentCourses />} />
-                  <Route path="courses/:courseId" element={<StudentCourseDetail />} />
-                  <Route path="gamification" element={<StudentGamification />} />
-                  <Route path="mentorship" element={<StudentMentorship />} />
-                  <Route path="calendar" element={<StudentCalendar />} />
-                  <Route path="community" element={<StudentCommunity />} />
-                </Route>
-                {/* Lesson view without sidebar for better video viewing */}
-                <Route path="courses/:courseId/lessons/:lessonId" element={<StudentLessonView />} />
-              </Route>
-
-              {/* Fallback routes for backward compatibility */}
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-
-              {/* 404 */}
+              
+              {/* Protected routes */}
+              <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+              <Route path="/student" element={<AuthGuard><StudentDashboard /></AuthGuard>} />
+              <Route path="/student/profile" element={<AuthGuard><StudentProfile /></AuthGuard>} />
+              <Route path="/student/courses" element={<AuthGuard><StudentCourses /></AuthGuard>} />
+              <Route path="/student/courses/:courseId" element={<AuthGuard><StudentCourseDetail /></AuthGuard>} />
+              <Route path="/student/courses/:courseId/:moduleId/:lessonId" element={<AuthGuard><StudentLessonView /></AuthGuard>} />
+              <Route path="/student/community" element={<AuthGuard><StudentCommunity /></AuthGuard>} />
+              <Route path="/student/analytics" element={<AuthGuard><StudentAnalytics /></AuthGuard>} />
+              <Route path="/student/calendar" element={<AuthGuard><StudentCalendar /></AuthGuard>} />
+              <Route path="/student/mentorship" element={<AuthGuard><StudentMentorship /></AuthGuard>} />
+              <Route path="/student/gamification" element={<AuthGuard><StudentGamification /></AuthGuard>} />
+              
+              <Route path="/producer" element={<AuthGuard><ProducerDashboard /></AuthGuard>} />
+              <Route path="/producer/profile" element={<AuthGuard><ProducerProfile /></AuthGuard>} />
+              <Route path="/producer/courses" element={<AuthGuard><ProducerCourses /></AuthGuard>} />
+              <Route path="/producer/courses/:courseId" element={<AuthGuard><CourseDetails /></AuthGuard>} />
+              <Route path="/producer/community" element={<AuthGuard><ProducerCommunity /></AuthGuard>} />
+              <Route path="/producer/analytics" element={<AuthGuard><ProducerCollaboratorsAnalytics /></AuthGuard>} />
+              <Route path="/producer/mentorship" element={<AuthGuard><ProducerMentorship /></AuthGuard>} />
+              <Route path="/producer/companies" element={<AuthGuard><ProducerCompanies /></AuthGuard>} />
+              <Route path="/producer/companies/:companyId" element={<AuthGuard><ProducerCompanyDetails /></AuthGuard>} />
+              <Route path="/producer/plans" element={<AuthGuard><ProducerPlans /></AuthGuard>} />
+              
+              <Route path="/company" element={<AuthGuard><CompanyDashboard /></AuthGuard>} />
+              <Route path="/company/profile" element={<AuthGuard><CompanyProfile /></AuthGuard>} />
+              
+              <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
+              <Route path="/courses" element={<AuthGuard><Courses /></AuthGuard>} />
+              <Route path="/learning" element={<AuthGuard><Learning /></AuthGuard>} />
+              <Route path="/community" element={<AuthGuard><Community /></AuthGuard>} />
+              <Route path="/community/topic/:topicId" element={<AuthGuard><TopicView /></AuthGuard>} />
+              <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
+              
+              {/* 404 page */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+            <Toaster />
+          </div>
+        </Router>
       </AuthProvider>
     </QueryClientProvider>
   );

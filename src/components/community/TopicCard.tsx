@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ interface TopicCardProps {
 }
 
 export const TopicCard = ({ topic, onEdit, showModeratorActions = false }: TopicCardProps) => {
+  const navigate = useNavigate();
   const { user, userRole } = useAuth();
   const { data: likesData } = useGetTopicLikes(topic.id);
   const { mutate: toggleLike } = useToggleTopicLike();
@@ -75,13 +77,22 @@ export const TopicCard = ({ topic, onEdit, showModeratorActions = false }: Topic
     toggleLock({ topicId: topic.id, isLocked: !topic.is_locked });
   };
 
+  const handleViewTopic = () => {
+    navigate(`/community/topic/${topic.id}`);
+  };
+
   return (
     <Card className={topic.is_pinned ? 'border-purple-200 bg-purple-50' : ''}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <CardTitle className="text-lg">{topic.title}</CardTitle>
+              <CardTitle 
+                className="text-lg cursor-pointer hover:text-purple-600 transition-colors"
+                onClick={handleViewTopic}
+              >
+                {topic.title}
+              </CardTitle>
               {topic.is_pinned && (
                 <Badge className="bg-purple-100 text-purple-800">
                   <Pin className="w-3 h-3 mr-1" />
@@ -96,7 +107,12 @@ export const TopicCard = ({ topic, onEdit, showModeratorActions = false }: Topic
               )}
               <Badge variant="outline">{topic.category}</Badge>
             </div>
-            <p className="text-gray-600 mb-3">{topic.content.substring(0, 200)}...</p>
+            <p 
+              className="text-gray-600 mb-3 cursor-pointer hover:text-gray-800 transition-colors"
+              onClick={handleViewTopic}
+            >
+              {topic.content.substring(0, 200)}...
+            </p>
             <div className="flex items-center gap-2 mb-2">
               <Avatar className="h-6 w-6">
                 <AvatarFallback className="text-xs">
@@ -168,10 +184,15 @@ export const TopicCard = ({ topic, onEdit, showModeratorActions = false }: Topic
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-6 text-sm text-gray-600">
-          <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleViewTopic}
+            className="flex items-center gap-1 p-0 h-auto font-normal text-gray-600 hover:text-purple-600"
+          >
             <MessageCircle className="h-4 w-4" />
             <span>{topic.replies_count} respostas</span>
-          </div>
+          </Button>
           <Button
             variant="ghost"
             size="sm"
