@@ -1,12 +1,13 @@
 
 import { useToast } from '@/hooks/use-toast';
 import { createAuthService } from './authService';
-import { fetchUserRole } from './userRoleService';
+import { fetchUserRoleAuxiliaryData } from './userRoleService';
 import { createSessionValidationService } from './sessionValidationService';
 import { createSessionCleanupService } from './sessionCleanupService';
+import { User } from '@supabase/supabase-js';
 
 interface UseAuthMethodsProps {
-  user: any;
+  user: User | null; // Updated to use User type
   companyUserData: any;
   setUser: (user: any) => void;
   setSession: (session: any) => void;
@@ -39,26 +40,32 @@ export function useAuthMethods({
     
     console.log('🔄 Refreshing user role for:', user.email);
     try {
-      const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(user.id);
-      setUserRole(role);
-      setNeedsPasswordChange(needsChange);
-      setCompanyUserData(userData);
-      console.log('✅ User role refreshed:', { role, needsChange, hasUserData: !!userData });
+      const primaryRole = user.user_metadata?.role || 'student';
+      setUserRole(primaryRole);
+      // needsPasswordChange state is managed by direct results from signIn or changePassword.
+
+      const auxData = await fetchUserRoleAuxiliaryData(user);
+      if (primaryRole === 'company') {
+        setCompanyUserData(auxData.companyData);
+      } else if (primaryRole === 'collaborator') {
+        setCompanyUserData(auxData.collaboratorData);
+      } else {
+        setCompanyUserData(null);
+      }
+      console.log('✅ User auxiliary data refreshed for role:', primaryRole, { hasCompanyData: !!auxData.companyData, hasCollaboratorData: !!auxData.collaboratorData });
     } catch (error) {
-      console.error('❌ Error refreshing user role:', error);
-      // Set default role on error
-      setUserRole('student');
-      setNeedsPasswordChange(false);
+      console.error('❌ Error refreshing user auxiliary data:', error);
+      // Role is already set from metadata, set companyUserData to null on error
       setCompanyUserData(null);
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    console.log('🔑 Starting enhanced sign in for:', email);
+  const signIn = async (email: string, password: string, role?: string) => {
+    console.log('🔑 Starting enhanced sign in for:', email, 'with role:', role);
     setLoading(true);
     
     try {
-      const result = await authService.signIn(email, password);
+      const result = await authService.signIn(email, password, role);
       
       if (result.user && !result.error) {
         console.log('✅ Sign in successful, validating session...');
@@ -76,31 +83,53 @@ export function useAuthMethods({
         if (result.needsPasswordChange) {
           console.log('🔐 Password change required from authService');
           
-          // Fetch user role for proper setup
-          const { role, companyUserData: userData } = await fetchUserRole(result.user.id);
+          // Role and auxiliary data setup
+          const authUser = result.user as User;
+          const primaryRole = authUser.user_metadata?.role || 'student';
+          setUserRole(primaryRole);
           
-          setUser(result.user);
+          const auxData = await fetchUserRoleAuxiliaryData(authUser);
+          if (primaryRole === 'company') {
+            setCompanyUserData(auxData.companyData);
+          } else if (primaryRole === 'collaborator') {
+            setCompanyUserData(auxData.collaboratorData);
+          } else {
+            setCompanyUserData(null);
+          }
+
+          setUser(authUser);
           setSession(result.session);
-          setUserRole(role);
-          setNeedsPasswordChange(true);
-          setCompanyUserData(userData);
+          setNeedsPasswordChange(true); // This is from signIn result
           
           setLoading(false);
           return { error: null, needsPasswordChange: true };
         } else {
-          // Normal login flow - fetch role and check for password change requirement
-          const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(result.user.id);
+          // Normal login flow - set role from metadata, fetch auxiliary data
+          const authUser = result.user as User;
+          const primaryRole = authUser.user_metadata?.role || 'student';
+          setUserRole(primaryRole);
+
+          // needsPasswordChange from signIn result is false here, or not present.
+          // Rely on the needsPasswordChange from the signIn result (which should be false or undefined)
+          setNeedsPasswordChange(result.needsPasswordChange || false);
+
+
+          const auxData = await fetchUserRoleAuxiliaryData(authUser);
+          if (primaryRole === 'company') {
+            setCompanyUserData(auxData.companyData);
+          } else if (primaryRole === 'collaborator') {
+            setCompanyUserData(auxData.collaboratorData);
+          } else {
+            setCompanyUserData(null);
+          }
           
-          setUser(result.user);
+          setUser(authUser);
           setSession(result.session);
-          setUserRole(role);
-          setNeedsPasswordChange(needsChange);
-          setCompanyUserData(userData);
           
-          console.log('✅ Sign in complete:', { role, needsChange, hasUserData: !!userData });
+          console.log('✅ Sign in complete. Role:', primaryRole, { needsPasswordChange: result.needsPasswordChange, hasCompanyData: !!auxData.companyData, hasCollaboratorData: !!auxData.collaboratorData });
           
           setLoading(false);
-          return { error: null, needsPasswordChange: needsChange };
+          return { error: null, needsPasswordChange: result.needsPasswordChange || false };
         }
       }
       

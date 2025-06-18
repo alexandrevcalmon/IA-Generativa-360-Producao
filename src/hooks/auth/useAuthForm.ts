@@ -25,8 +25,8 @@ export function useAuthForm() {
     setLoading(true);
 
     try {
-      console.log('Attempting login for:', email);
-      const { error } = await signIn(email, password);
+      console.log('Attempting login for:', email, 'with role:', role);
+      const { error } = await signIn(email, password, role);
       
       if (error) {
         console.error('Login error:', error);

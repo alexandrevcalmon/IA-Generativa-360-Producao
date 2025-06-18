@@ -123,7 +123,12 @@ serve(async (req) => {
     const { data: authData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       password: defaultPassword,
-      email_confirm: true // Auto-confirm email
+      email_confirm: true, // Auto-confirm email
+      user_metadata: {
+        role: 'collaborator',
+        company_id: company_id,
+        name: name
+      }
     });
 
     if (createAuthError) {
