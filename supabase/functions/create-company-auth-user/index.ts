@@ -37,9 +37,9 @@ serve(async (req) => {
       .single()
 
     if (companyError || !company) {
-      console.error('Company not found:', companyError)
+      console.error('Company not found or email mismatch:', companyError)
       return new Response(
-        JSON.stringify({ error: 'Company not found' }),
+        JSON.stringify({ error: 'Company not found or email mismatch' }),
         { 
           status: 404, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -117,19 +117,20 @@ serve(async (req) => {
       console.log('Successfully created new auth user:', authUserId)
     }
 
-    // Update company with auth_user_id
+    // Update company with auth_user_id and needs_password_change
     const { error: updateCompanyError } = await supabaseAdmin
       .from('companies')
       .update({ 
         auth_user_id: authUserId,
-        needs_password_change: true 
+        needs_password_change: true,
+        updated_at: new Date().toISOString()
       })
       .eq('id', companyId)
 
     if (updateCompanyError) {
       console.error('Error updating company:', updateCompanyError)
       return new Response(
-        JSON.stringify({ error: 'Failed to update company' }),
+        JSON.stringify({ error: 'Failed to update company with auth user' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -137,39 +138,31 @@ serve(async (req) => {
       )
     }
 
-    // Add or update record in users table
-    const { error: upsertUserError } = await supabaseAdmin
-      .from('users')
+    // Create or update profile record
+    const { error: upsertProfileError } = await supabaseAdmin
+      .from('profiles')
       .upsert({
         id: authUserId,
-        name: contactName || company.contact_name || 'Administrador',
-        email: email,
         role: 'company',
-        company_id: companyId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, { 
         onConflict: 'id'
       })
 
-    if (upsertUserError) {
-      console.error('Error upserting user record:', upsertUserError)
+    if (upsertProfileError) {
+      console.error('Error upserting profile record:', upsertProfileError)
       // Don't fail the entire process for this, just log the error
     } else {
-      console.log('Successfully upserted user record')
+      console.log('Successfully upserted profile record')
     }
 
-    // Send welcome email notification (placeholder - would need email service)
-    try {
-      // This would integrate with an email service like Resend
-      console.log(`Would send welcome email to ${email} for company ${companyName || company.name}`)
-      console.log('Email content would include login instructions and temporary password info')
-    } catch (emailError) {
-      console.error('Error sending welcome email:', emailError)
-      // Don't fail the process for email errors
-    }
-
-    console.log('Successfully completed company auth user creation process:', { authUserId, companyId, isNewUser })
+    console.log('Successfully completed company auth user creation process:', { 
+      authUserId, 
+      companyId, 
+      isNewUser,
+      needsPasswordChange: true
+    })
 
     return new Response(
       JSON.stringify({ 

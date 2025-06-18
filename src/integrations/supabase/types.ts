@@ -479,6 +479,7 @@ export type Database = {
           logo_url: string | null
           max_students: number | null
           name: string
+          needs_password_change: boolean
           notes: string | null
           official_name: string | null
           phone: string | null
@@ -508,6 +509,7 @@ export type Database = {
           logo_url?: string | null
           max_students?: number | null
           name: string
+          needs_password_change?: boolean
           notes?: string | null
           official_name?: string | null
           phone?: string | null
@@ -537,6 +539,7 @@ export type Database = {
           logo_url?: string | null
           max_students?: number | null
           name?: string
+          needs_password_change?: boolean
           notes?: string | null
           official_name?: string | null
           phone?: string | null
@@ -1695,6 +1698,10 @@ export type Database = {
       get_user_role: {
         Args: { user_id: string }
         Returns: string
+      }
+      is_company_user: {
+        Args: { user_id: string }
+        Returns: boolean
       }
       is_producer: {
         Args: { user_id: string }

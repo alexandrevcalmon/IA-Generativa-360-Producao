@@ -67,19 +67,24 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             .maybeSingle();
           
           if (company) {
-            // Only update the updated_at timestamp since needs_password_change doesn't exist
+            // Update the needs_password_change flag for companies
             const { error: updateError } = await supabase
               .from('companies')
-              .update({ updated_at: new Date().toISOString() })
+              .update({ 
+                needs_password_change: false,
+                updated_at: new Date().toISOString() 
+              })
               .eq('auth_user_id', userId);
             
             if (updateError) {
-              console.warn('Could not update company record:', updateError);
+              console.warn('Could not update company password change flag:', updateError);
+            } else {
+              console.log('✅ Company password change flag updated successfully');
             }
           }
         }
         
-        // Handle company_users (collaborators) - only update timestamp
+        // Handle company_users (collaborators)
         if (companyUserData && userId) {
           const { error: updateError } = await supabase
             .from('company_users')
@@ -91,6 +96,8 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           
           if (updateError) {
             console.warn('Could not update company_users record:', updateError);
+          } else {
+            console.log('✅ Company user password change flag updated successfully');
           }
         }
         
