@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,7 +10,7 @@ import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import Auth from "./pages/Auth";
-import Home from "./pages/Home";
+import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import CompanyCollaborators from "./pages/CompanyCollaborators";
@@ -33,7 +34,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/change-password" element={<ChangePassword />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />

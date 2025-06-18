@@ -38,7 +38,7 @@ export const useCompanyCourses = () => {
       return (courses || []).map(course => ({
         ...course,
         enrolled_students: course.enrollments?.[0]?.count || 0,
-        completed_students: course.enrollments?.filter(e => e.completed_at).length || 0
+        completed_students: course.enrollments?.filter((e: any) => e.completed_at).length || 0
       })) as CompanyCourse[];
     },
   });
