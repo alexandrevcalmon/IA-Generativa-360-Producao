@@ -1,10 +1,13 @@
+
 import { useAuthState } from './useAuthState';
 import { useAuthMethods } from './useAuthMethods';
 import { useAuthRedirects } from './useAuthRedirects';
 
 export function useAuth() {
-  const { user, userRole, userRoleInfo, loading } = useAuthState();
-  const authMethods = useAuthMethods();
+  const authState = useAuthState();
+  const { user, userRole, userRoleInfo, loading } = authState;
+  
+  const authMethods = useAuthMethods(authState);
 
   // Use auth redirects for general navigation
   useAuthRedirects({ user, userRole, loading });
@@ -14,6 +17,12 @@ export function useAuth() {
     userRole,
     userRoleInfo,
     loading,
+    session: authState.session,
+    needsPasswordChange: authState.needsPasswordChange,
+    companyUserData: authState.companyUserData,
+    isProducer: userRole === 'producer',
+    isCompany: userRole === 'company',
+    isStudent: userRole === 'student',
     ...authMethods,
   };
 }
