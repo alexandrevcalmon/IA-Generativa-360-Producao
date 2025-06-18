@@ -29,6 +29,12 @@ import StudentDashboard from "./pages/StudentDashboard";
 import StudentCourses from "./pages/StudentCourses";
 import StudentCourseDetail from "./pages/StudentCourseDetail";
 import StudentLessonView from "./pages/StudentLessonView";
+import StudentCalendar from "./pages/StudentCalendar";
+import StudentCommunity from "./pages/StudentCommunity";
+import StudentMentorship from "./pages/StudentMentorship";
+import StudentGamification from "./pages/StudentGamification";
+import StudentAnalytics from "./pages/StudentAnalytics";
+import StudentProfile from "./pages/StudentProfile";
 import CourseDetails from "./pages/CourseDetails";
 
 import { ChangePassword } from "./components/auth/ChangePassword";
@@ -107,6 +113,12 @@ function App() {
               <Route path="courses" element={<StudentCourses />} />
               <Route path="courses/:courseId" element={<StudentCourseDetail />} />
               <Route path="courses/:courseId/lessons/:lessonId" element={<StudentLessonView />} />
+              <Route path="calendar" element={<StudentCalendar />} />
+              <Route path="community" element={<StudentCommunity />} />
+              <Route path="mentorship" element={<StudentMentorship />} />
+              <Route path="gamification" element={<StudentGamification />} />
+              <Route path="analytics" element={<StudentAnalytics />} />
+              <Route path="profile" element={<StudentProfile />} />
             </Route>
             
             {/* Default Route */}
