@@ -1,5 +1,5 @@
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
 import { PasswordChangeDialog } from '@/components/PasswordChangeDialog';
 import { Button } from '@/components/ui/button';
@@ -9,10 +9,12 @@ import { RoleIndicator } from '@/components/auth/RoleIndicator';
 import { AuthLoadingScreen } from '@/components/auth/AuthLoadingScreen';
 import { useAuthRedirects } from '@/hooks/auth/useAuthRedirects';
 import { useAuthForm } from '@/hooks/auth/useAuthForm';
+import { useEffect } from 'react';
 
 export default function Auth() {
   const { user, userRole, needsPasswordChange, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   const {
     email,
@@ -24,6 +26,14 @@ export default function Auth() {
     loading,
     handleSubmit
   } = useAuthForm();
+
+  // Set role from URL parameter if provided
+  useEffect(() => {
+    const urlRole = searchParams.get('role');
+    if (urlRole && ['producer', 'company', 'student'].includes(urlRole)) {
+      setRole(urlRole);
+    }
+  }, [searchParams, setRole]);
 
   // Handle redirects for authenticated users
   useAuthRedirects({ 

@@ -65,23 +65,25 @@ export function useAuthRedirects({ user, userRole, loading, targetRole, needsPas
         return;
       }
 
-      // Redirect to appropriate dashboard
-      switch (userRole) {
-        case 'producer':
-          if (currentPath === '/' || currentPath === '/auth') {
+      // For auth page, always redirect to appropriate dashboard
+      if (currentPath === '/auth' || currentPath === '/') {
+        switch (userRole) {
+          case 'producer':
+            console.log('Redirecting producer to dashboard');
             navigate('/producer/dashboard');
-          }
-          break;
-        case 'company':
-          if (currentPath === '/' || currentPath === '/auth') {
+            break;
+          case 'company':
+            console.log('Redirecting company to dashboard');
             navigate('/company-dashboard');
-          }
-          break;
-        case 'student':
-          if (currentPath === '/' || currentPath === '/auth') {
+            break;
+          case 'student':
+            console.log('Redirecting student to dashboard');
             navigate('/student/dashboard');
-          }
-          break;
+            break;
+          default:
+            console.log('Unknown role, staying on auth');
+            // Don't redirect for unknown roles to avoid loops
+        }
       }
     }
   }, [user, userRole, loading, targetRole, needsPasswordChange, navigate]);
