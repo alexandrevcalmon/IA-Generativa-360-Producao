@@ -8,20 +8,33 @@ export const useToggleTopicLike = () => {
 
   return useMutation({
     mutationFn: async ({ topicId, isLiked }: { topicId: string; isLiked: boolean }) => {
+      console.log('🔄 Toggling topic like:', { topicId, isLiked });
+      
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        console.error('❌ No authenticated user found');
+        throw new Error('User not authenticated');
+      }
+
+      console.log('✅ User authenticated:', user.email);
 
       if (isLiked) {
         // Remove like
+        console.log('➖ Removing like for topic:', topicId);
         const { error } = await supabase
           .from('community_topic_likes')
           .delete()
           .eq('topic_id', topicId)
           .eq('user_id', user.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Error removing like:', error);
+          throw error;
+        }
+        console.log('✅ Like removed successfully');
       } else {
         // Add like
+        console.log('➕ Adding like for topic:', topicId);
         const { error } = await supabase
           .from('community_topic_likes')
           .insert({
@@ -29,16 +42,21 @@ export const useToggleTopicLike = () => {
             user_id: user.id,
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Error adding like:', error);
+          throw error;
+        }
+        console.log('✅ Like added successfully');
       }
     },
     onSuccess: () => {
+      console.log('🔄 Invalidating queries after like toggle');
       queryClient.invalidateQueries({ queryKey: ['community-topics'] });
       queryClient.invalidateQueries({ queryKey: ['topic-likes'] });
     },
     onError: (error) => {
-      console.error('Error toggling topic like:', error);
-      toast.error('Erro ao curtir tópico');
+      console.error('❌ Error toggling topic like:', error);
+      toast.error('Erro ao curtir tópico. Verifique suas permissões.');
     },
   });
 };
@@ -47,6 +65,8 @@ export const useGetTopicLikes = (topicId: string) => {
   return useQuery({
     queryKey: ['topic-likes', topicId],
     queryFn: async () => {
+      console.log('📊 Fetching likes for topic:', topicId);
+      
       const { data: { user } } = await supabase.auth.getUser();
       
       const { data, error } = await supabase
@@ -54,9 +74,19 @@ export const useGetTopicLikes = (topicId: string) => {
         .select('*')
         .eq('topic_id', topicId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching topic likes:', error);
+        throw error;
+      }
 
       const isLiked = user ? data.some(like => like.user_id === user.id) : false;
+      
+      console.log('📊 Topic likes result:', { 
+        topicId, 
+        likesCount: data.length, 
+        isLiked, 
+        userEmail: user?.email 
+      });
       
       return {
         likes: data,

@@ -26,7 +26,7 @@ import { useLocation, Link } from 'react-router-dom';
 const studentMenuItems = [
   {
     title: 'Dashboard',
-    url: '/student',
+    url: '/student/dashboard',
     icon: Home,
   },
   {
