@@ -42,6 +42,8 @@ export const CreateMentorshipSessionDialog = ({
       duration_minutes: duration,
       max_participants: maxParticipants,
       google_meet_url: googleMeetUrl || undefined,
+      status: 'scheduled' as const,
+      is_active: true,
     };
 
     try {
@@ -146,12 +148,12 @@ export const CreateMentorshipSessionDialog = ({
           </div>
 
           <div>
-            <Label htmlFor="google_meet_url">URL do Google Meet</Label>
+            <Label htmlFor="google_meet_url">Link da Reunião (opcional)</Label>
             <Input
               id="google_meet_url"
               value={googleMeetUrl}
               onChange={(e) => setGoogleMeetUrl(e.target.value)}
-              placeholder="https://meet.google.com/..."
+              placeholder="https://meet.google.com/... ou outro link"
             />
           </div>
 
