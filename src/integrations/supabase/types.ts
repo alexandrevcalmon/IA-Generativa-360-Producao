@@ -1701,6 +1701,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      populate_test_collaborator_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_collaborator_stats: {
         Args: Record<PropertyKey, never>
         Returns: undefined

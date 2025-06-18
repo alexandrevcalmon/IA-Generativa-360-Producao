@@ -26,6 +26,8 @@ export const useCompanyMentorships = () => {
         throw new Error('User not authenticated');
       }
 
+      console.log('Fetching company mentorships for user:', user.id);
+
       // Buscar o company_id primeiro
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
@@ -38,12 +40,14 @@ export const useCompanyMentorships = () => {
         return [];
       }
 
+      console.log('Company ID found:', companyData.id);
+
       // Buscar as sessões de mentoria da empresa
       const { data: sessions, error: sessionsError } = await supabase
         .from('mentorship_sessions')
         .select(`
           *,
-          participants_count:mentorship_attendees(count)
+          attendees:mentorship_attendees(count)
         `)
         .eq('company_id', companyData.id)
         .order('scheduled_at', { ascending: true });
@@ -53,9 +57,11 @@ export const useCompanyMentorships = () => {
         throw sessionsError;
       }
 
+      console.log('Mentorship sessions fetched:', sessions);
+
       return (sessions || []).map(session => ({
         ...session,
-        participants_count: session.participants_count?.[0]?.count || 0
+        participants_count: session.attendees?.[0]?.count || 0
       })) as CompanyMentorship[];
     },
     enabled: !!user?.id,

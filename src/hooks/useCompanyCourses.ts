@@ -20,12 +20,14 @@ export const useCompanyCourses = () => {
   return useQuery({
     queryKey: ['company-courses'],
     queryFn: async () => {
+      console.log('Fetching published courses...');
+
       const { data: courses, error } = await supabase
         .from('courses')
         .select(`
           *,
-          enrollments(count),
-          enrollments!inner(completed_at)
+          enrollments_aggregate:enrollments(count),
+          completed_enrollments:enrollments!inner(completed_at)
         `)
         .eq('is_published', true)
         .order('created_at', { ascending: false });
@@ -35,10 +37,12 @@ export const useCompanyCourses = () => {
         throw error;
       }
 
+      console.log('Published courses fetched:', courses);
+
       return (courses || []).map(course => ({
         ...course,
-        enrolled_students: course.enrollments?.[0]?.count || 0,
-        completed_students: course.enrollments?.filter((e: any) => e.completed_at).length || 0
+        enrolled_students: course.enrollments_aggregate?.[0]?.count || 0,
+        completed_students: course.completed_enrollments?.filter((e: any) => e.completed_at).length || 0
       })) as CompanyCourse[];
     },
   });

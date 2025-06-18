@@ -36,11 +36,13 @@ export const useCompanyData = () => {
         throw new Error('User not authenticated');
       }
 
+      console.log('Fetching company data for user:', user.id);
+
       const { data, error } = await supabase
         .from('companies')
         .select(`
           *,
-          subscription_plan_data:subscription_plan_id (
+          subscription_plan_data:subscription_plans!companies_subscription_plan_id_fkey (
             id,
             name,
             price,
@@ -55,6 +57,7 @@ export const useCompanyData = () => {
         throw error;
       }
 
+      console.log('Company data fetched:', data);
       return data as CompanyData;
     },
     enabled: !!user?.id,
