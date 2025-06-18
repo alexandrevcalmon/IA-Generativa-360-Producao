@@ -62,16 +62,16 @@ const ProducerCollaboratorsAnalytics = () => {
           <p className="text-gray-600">Acompanhe o desempenho e engajamento dos colaboradores</p>
         </div>
         <div className="flex-1 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-4">
             {[...Array(6)].map((_, i) => (
               <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="h-3 bg-gray-200 rounded"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -164,12 +164,19 @@ const ProducerCollaboratorsAnalytics = () => {
             </CardContent>
           </Card>
 
-          {/* Collaborator Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredAndSortedAnalytics.map((stat) => (
-              <CollaboratorStatsCard key={stat.id} stats={stat} />
-            ))}
-          </div>
+          {/* Collaborator Stats List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Colaboradores ({filteredAndSortedAnalytics.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {filteredAndSortedAnalytics.map((stat) => (
+                  <CollaboratorStatsCard key={stat.id} stats={stat} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {filteredAndSortedAnalytics.length === 0 && analytics.length > 0 && (
             <Card>
