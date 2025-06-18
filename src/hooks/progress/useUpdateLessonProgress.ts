@@ -62,14 +62,20 @@ export const useUpdateLessonProgress = () => {
 
           console.log('📊 Existing progress:', existingProgress);
 
+          // Prepare update data with smart merging
           const updateData = {
             lesson_id: lessonId,
             user_id: user.id,
             completed: completed ?? existingProgress?.completed ?? false,
-            watch_time_seconds: watchTimeSeconds ?? existingProgress?.watch_time_seconds ?? 0,
+            watch_time_seconds: Math.max(
+              watchTimeSeconds ?? 0, 
+              existingProgress?.watch_time_seconds ?? 0
+            ), // Always keep the highest watch time
             completed_at: completed ? new Date().toISOString() : existingProgress?.completed_at,
             last_watched_at: new Date().toISOString(),
           };
+
+          console.log('💾 Upserting progress data:', updateData);
 
           // Use upsert with proper conflict resolution
           const { data, error } = await supabase
@@ -86,13 +92,12 @@ export const useUpdateLessonProgress = () => {
             throw error;
           }
 
+          console.log('✅ Progress update successful:', data);
           return data;
         });
 
-        console.log('✅ Lesson progress updated successfully:', result);
-        
         // Show toast when lesson is completed
-        if (completed) {
+        if (completed && result) {
           toast.success("Aula concluída!", {
             description: "Parabéns! Você completou esta aula.",
           });
@@ -106,20 +111,26 @@ export const useUpdateLessonProgress = () => {
     },
     onSuccess: (data) => {
       if (data) {
-        // Invalidate relevant queries
+        // Invalidate relevant queries to refresh UI
         queryClient.invalidateQueries({ queryKey: ['student-courses'] });
         queryClient.invalidateQueries({ queryKey: ['student-course'] });
         queryClient.invalidateQueries({ queryKey: ['student-points'] });
         queryClient.invalidateQueries({ queryKey: ['points-history'] });
+        
+        console.log('🔄 Invalidated relevant queries after progress update');
       }
     },
     onError: (error: any) => {
       console.error('❌ Progress update error:', error);
       
-      // Only show user-facing errors for non-conflict situations
-      if (error?.code !== '23505' && error?.status !== 409) {
+      // Show user-friendly error messages
+      if (error?.code === '42501') {
+        toast.error("Erro de permissão", {
+          description: "Você não tem permissão para atualizar o progresso desta aula.",
+        });
+      } else if (error?.code !== '23505' && error?.status !== 409) {
         toast.error("Erro ao atualizar progresso", {
-          description: "Não foi possível atualizar o progresso da aula.",
+          description: "Não foi possível atualizar o progresso da aula. Tente novamente.",
         });
       } else {
         console.log('🔄 Conflict error suppressed (expected during high concurrency)');

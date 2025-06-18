@@ -48,7 +48,7 @@ export const useStudentCourses = () => {
 
       console.log('Fetching courses for user:', user.id, 'with role:', userRole);
 
-      // Get courses that are published - this will now work with the updated RLS policies
+      // Get published courses with improved error handling
       const { data: courses, error: coursesError } = await supabase
         .from('courses')
         .select('*')
@@ -79,7 +79,7 @@ export const useStudentCourses = () => {
 
           const enrollment = enrollmentMap.get(course.id);
 
-          // Get modules - this will now work with updated RLS policies
+          // Get modules with better error handling
           const { data: modules, error: modulesError } = await supabase
             .from('course_modules')
             .select('*')
@@ -89,13 +89,14 @@ export const useStudentCourses = () => {
 
           if (modulesError) {
             console.error('Error fetching modules for course', course.id, ':', modulesError);
+            // Continue with empty modules rather than failing
           }
 
           const modulesWithLessons = await Promise.all(
             (modules || []).map(async (module) => {
               console.log('Processing module:', module.title);
 
-              // Get lessons - this will now work with updated RLS policies
+              // Get lessons with error handling
               const { data: lessons, error: lessonsError } = await supabase
                 .from('lessons')
                 .select('*')
@@ -104,27 +105,37 @@ export const useStudentCourses = () => {
 
               if (lessonsError) {
                 console.error('Error fetching lessons for module', module.id, ':', lessonsError);
+                // Continue with empty lessons rather than failing
               }
 
-              // Get progress for each lesson
+              // Get progress for each lesson with improved handling
               const lessonsWithProgress = await Promise.all(
                 (lessons || []).map(async (lesson) => {
-                  const { data: lessonProgress, error: progressError } = await supabase
-                    .from('lesson_progress')
-                    .select('completed, watch_time_seconds')
-                    .eq('lesson_id', lesson.id)
-                    .eq('user_id', user.id)
-                    .maybeSingle();
+                  try {
+                    const { data: lessonProgress, error: progressError } = await supabase
+                      .from('lesson_progress')
+                      .select('completed, watch_time_seconds')
+                      .eq('lesson_id', lesson.id)
+                      .eq('user_id', user.id)
+                      .maybeSingle();
 
-                  if (progressError) {
-                    console.error('Error fetching lesson progress:', progressError);
+                    if (progressError) {
+                      console.warn('Warning: Could not fetch lesson progress for lesson', lesson.id, ':', progressError);
+                    }
+
+                    return {
+                      ...lesson,
+                      completed: lessonProgress?.completed || false,
+                      watch_time_seconds: lessonProgress?.watch_time_seconds || 0,
+                    };
+                  } catch (error) {
+                    console.warn('Exception while fetching progress for lesson', lesson.id, ':', error);
+                    return {
+                      ...lesson,
+                      completed: false,
+                      watch_time_seconds: 0,
+                    };
                   }
-
-                  return {
-                    ...lesson,
-                    completed: lessonProgress?.completed || false,
-                    watch_time_seconds: lessonProgress?.watch_time_seconds || 0,
-                  };
                 })
               );
 
@@ -140,7 +151,7 @@ export const useStudentCourses = () => {
           const completedLessons = modulesWithLessons.reduce((total, module) => 
             total + module.lessons.filter(lesson => lesson.completed).length, 0
           );
-          const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+          const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
           return {
             ...course,
@@ -154,7 +165,9 @@ export const useStudentCourses = () => {
       console.log('Processed courses with modules and lessons:', coursesWithProgress.length);
       return coursesWithProgress as StudentCourse[];
     },
-    enabled: !!user && (userRole === 'student' || userRole === 'collaborator'),
+    enabled: !!user && (userRole === 'student' || userRole === 'collaborator' || userRole === 'company'),
+    staleTime: 30000, // Cache for 30 seconds
+    refetchOnWindowFocus: false, // Reduce unnecessary refetches
   });
 };
 
@@ -198,18 +211,31 @@ export const useStudentCourse = (courseId: string) => {
 
           const lessonsWithProgress = await Promise.all(
             (lessons || []).map(async (lesson) => {
-              const { data: lessonProgress } = await supabase
-                .from('lesson_progress')
-                .select('completed, watch_time_seconds')
-                .eq('lesson_id', lesson.id)
-                .eq('user_id', user.id)
-                .maybeSingle();
+              try {
+                const { data: lessonProgress, error: progressError } = await supabase
+                  .from('lesson_progress')
+                  .select('completed, watch_time_seconds')
+                  .eq('lesson_id', lesson.id)
+                  .eq('user_id', user.id)
+                  .maybeSingle();
 
-              return {
-                ...lesson,
-                completed: lessonProgress?.completed || false,
-                watch_time_seconds: lessonProgress?.watch_time_seconds || 0,
-              };
+                if (progressError) {
+                  console.warn('Warning: Could not fetch lesson progress:', progressError);
+                }
+
+                return {
+                  ...lesson,
+                  completed: lessonProgress?.completed || false,
+                  watch_time_seconds: lessonProgress?.watch_time_seconds || 0,
+                };
+              } catch (error) {
+                console.warn('Exception while fetching lesson progress:', error);
+                return {
+                  ...lesson,
+                  completed: false,
+                  watch_time_seconds: 0,
+                };
+              }
             })
           );
 
@@ -225,7 +251,7 @@ export const useStudentCourse = (courseId: string) => {
       const completedLessons = modulesWithLessons.reduce((total, module) => 
         total + module.lessons.filter(lesson => lesson.completed).length, 0
       );
-      const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+      const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
       return {
         ...course,
@@ -233,6 +259,7 @@ export const useStudentCourse = (courseId: string) => {
         modules: modulesWithLessons,
       } as StudentCourse;
     },
-    enabled: !!user && !!courseId && (userRole === 'student' || userRole === 'collaborator'),
+    enabled: !!user && !!courseId && (userRole === 'student' || userRole === 'collaborator' || userRole === 'company'),
+    staleTime: 30000, // Cache for 30 seconds
   });
 };
