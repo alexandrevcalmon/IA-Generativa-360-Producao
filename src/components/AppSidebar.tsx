@@ -14,6 +14,7 @@ import {
   BookOpen,
   BarChart3,
   Users,
+  MessageCircle,
   LogOut 
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -43,6 +44,11 @@ export function AppSidebar() {
       title: 'Cursos',
       icon: BookOpen,
       href: '/producer/courses'
+    },
+    {
+      title: 'Mentoria',
+      icon: MessageCircle,
+      href: '/producer/mentorship'
     },
     {
       title: 'Planos',
