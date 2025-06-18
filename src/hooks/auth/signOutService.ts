@@ -56,7 +56,7 @@ export const createSignOutService = (toast: ReturnType<typeof useToast>['toast']
       
       try {
         const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise<never>((_, reject) => 
           setTimeout(() => reject(new Error('Session check timeout')), 3000)
         );
         
