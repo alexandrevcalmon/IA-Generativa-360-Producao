@@ -20,10 +20,9 @@ export const useCreateCourse = () => {
       console.log('Current user:', user.id);
 
       // Ensure instructor_id is set to current user for producers
-      // The database trigger will handle this, but we can set it explicitly for clarity
       const courseDataWithInstructor = {
         ...courseData,
-        instructor_id: user.id, // Set the instructor_id to current user
+        instructor_id: user.id,
       };
 
       console.log('Course data with instructor:', courseDataWithInstructor);

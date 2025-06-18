@@ -1,143 +1,81 @@
 
-// src/hooks/auth/userRoleService.ts
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
 
-export interface UserRoleAuxiliaryData {
-  role: string | null;
-  companyData?: any;
-  collaboratorData?: any;
-  profileData?: any;
-}
-
-export const fetchUserRoleAuxiliaryData = async (user: User): Promise<UserRoleAuxiliaryData> => {
-  console.log(`[fetchUserRoleAuxiliaryData] Starting role determination for user: ${user.id}`);
-  
-  let companyData = null;
-  let collaboratorData = null;
-  let profileData = null;
-  let finalRole = 'student'; // Default role
-
-  try {
-    // First, ensure the user has a profile using the new safe function
-    const { error: ensureError } = await supabase.rpc('ensure_user_profile', {
-      user_id: user.id,
-      user_role: user.user_metadata?.role || 'student'
-    });
-
-    if (ensureError) {
-      console.error(`[fetchUserRoleAuxiliaryData] Error ensuring profile:`, ensureError.message);
-    }
-
-    // Now fetch the profile data
-    const { data: fetchedProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if (profileError) {
-      console.error(`[fetchUserRoleAuxiliaryData] Error fetching profile:`, profileError.message);
-      // Create profile manually if RPC failed
-      const { data: newProfile, error: createError } = await supabase
-        .from('profiles')
-        .insert({ 
-          id: user.id, 
-          role: user.user_metadata?.role || 'student' 
-        })
-        .select()
-        .maybeSingle();
+export const createUserRoleService = () => {
+  const getUserRole = async (userId: string) => {
+    try {
+      console.log(`[UserRoleService] Getting role for user: ${userId}`);
       
-      if (createError) {
-        console.error(`[fetchUserRoleAuxiliaryData] Error creating profile:`, createError.message);
-      } else {
-        profileData = newProfile;
-      }
-    } else {
-      profileData = fetchedProfile;
-    }
-
-    // Use profile role if available, otherwise use metadata
-    if (profileData?.role) {
-      finalRole = profileData.role;
-      console.log(`[fetchUserRoleAuxiliaryData] Role from profile: ${finalRole}`);
-    } else {
-      finalRole = user.user_metadata?.role || 'student';
-      console.log(`[fetchUserRoleAuxiliaryData] Role from metadata: ${finalRole}`);
-    }
-
-    // Check if user is a collaborator
-    const { data: collabResult, error: collabError } = await supabase
-      .from('company_users')
-      .select(`
-        *, 
-        companies:company_id(*)
-      `)
-      .eq('auth_user_id', user.id)
-      .maybeSingle();
-
-    if (collabError) {
-      console.error(`[fetchUserRoleAuxiliaryData] Error checking collaborator status:`, collabError.message);
-    } else if (collabResult) {
-      console.log(`[fetchUserRoleAuxiliaryData] User is a collaborator`);
-      finalRole = 'collaborator';
-      collaboratorData = collabResult;
-      companyData = collabResult.companies;
-    }
-
-    // If not a collaborator, check if user is a company owner
-    if (!collabResult) {
-      const { data: companyResult, error: companyError } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
-
-      if (companyError) {
-        console.error(`[fetchUserRoleAuxiliaryData] Error checking company ownership:`, companyError.message);
-      } else if (companyResult) {
-        console.log(`[fetchUserRoleAuxiliaryData] User is a company owner`);
-        finalRole = 'company';
-        companyData = companyResult;
-      }
-    }
-
-    // Update profile role if it has changed
-    if (profileData && profileData.role !== finalRole) {
-      console.log(`[fetchUserRoleAuxiliaryData] Updating profile role from ${profileData.role} to ${finalRole}`);
-      const { error: updateError } = await supabase
+      // Direct query to profiles table - this is now safe with our new RLS policies
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .update({ role: finalRole })
-        .eq('id', user.id);
-      
-      if (updateError) {
-        console.error(`[fetchUserRoleAuxiliaryData] Error updating profile role:`, updateError.message);
-      } else {
-        // Update local profile data
-        profileData = { ...profileData, role: finalRole };
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('[UserRoleService] Error fetching user role from profiles:', profileError);
+        
+        // Check if it's a company user
+        const { data: companyData, error: companyError } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('auth_user_id', userId)
+          .single();
+
+        if (!companyError && companyData) {
+          console.log('[UserRoleService] User is a company owner');
+          return 'company';
+        }
+
+        // Check if it's a company collaborator
+        const { data: collaboratorData, error: collaboratorError } = await supabase
+          .from('company_users')
+          .select('id')
+          .eq('auth_user_id', userId)
+          .single();
+
+        if (!collaboratorError && collaboratorData) {
+          console.log('[UserRoleService] User is a company collaborator');
+          return 'student';
+        }
+
+        console.log('[UserRoleService] Defaulting to student role');
+        return 'student';
       }
+
+      const role = profileData?.role || 'student';
+      console.log(`[UserRoleService] User role from profiles: ${role}`);
+      return role;
+    } catch (error) {
+      console.error('[UserRoleService] Unexpected error getting user role:', error);
+      return 'student';
     }
+  };
 
-    console.log(`[fetchUserRoleAuxiliaryData] Final role determination: ${finalRole}`, {
-      hasCompanyData: !!companyData,
-      hasCollaboratorData: !!collaboratorData,
-      hasProfileData: !!profileData
-    });
+  const updateUserRole = async (userId: string, role: string) => {
+    try {
+      console.log(`[UserRoleService] Updating role for user ${userId} to ${role}`);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role })
+        .eq('id', userId);
 
-    return {
-      role: finalRole,
-      companyData,
-      collaboratorData,
-      profileData,
-    };
+      if (error) {
+        console.error('[UserRoleService] Error updating user role:', error);
+        throw error;
+      }
 
-  } catch (error: any) {
-    console.error(`[fetchUserRoleAuxiliaryData] Unexpected error for user ${user.id}:`, error.message);
-    return {
-      role: finalRole,
-      companyData: null,
-      collaboratorData: null,
-      profileData: null,
-    };
-  }
+      console.log('[UserRoleService] User role updated successfully');
+    } catch (error) {
+      console.error('[UserRoleService] Failed to update user role:', error);
+      throw error;
+    }
+  };
+
+  return {
+    getUserRole,
+    updateUserRole,
+  };
 };
