@@ -1,3 +1,4 @@
+
 // src/hooks/auth/signInService.ts
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -99,7 +100,6 @@ export const createSignInService = (toast: ReturnType<typeof useToast>['toast'])
 
       // Login successful, data.user is available (loginAttempt.user)
       if (loginAttempt.user) {
-        const user = loginAttempt.user;
         const user = loginAttempt.user;
         // userFinalRole and needsPwdChange will be determined by the specific path taken below.
 
