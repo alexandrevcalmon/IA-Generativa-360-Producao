@@ -39,6 +39,7 @@ export const useMentorshipSessions = () => {
       const { data, error } = await supabase
         .from('producer_mentorship_sessions')
         .select('*')
+        .eq('is_active', true)
         .order('scheduled_at', { ascending: true });
 
       if (error) throw error;
@@ -129,7 +130,7 @@ export const useRegisterForMentorship = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Get user profile to get name and email
+      // Get user profile to get name and company info
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
@@ -138,13 +139,26 @@ export const useRegisterForMentorship = () => {
 
       if (!profile) throw new Error('User profile not found');
 
+      // Get company user info for additional details
+      const { data: companyUser } = await supabase
+        .from('company_users')
+        .select(`
+          *,
+          companies (
+            name
+          )
+        `)
+        .eq('auth_user_id', user.id)
+        .single();
+
       const { data, error } = await supabase
         .from('producer_mentorship_participants')
         .insert({
           session_id: sessionId,
           participant_id: user.id,
-          participant_name: user.user_metadata?.name || user.email || 'User',
+          participant_name: companyUser?.name || user.user_metadata?.name || user.email || 'User',
           participant_email: user.email || '',
+          company_name: companyUser?.companies?.name || undefined,
         })
         .select()
         .single();
@@ -152,6 +166,7 @@ export const useRegisterForMentorship = () => {
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['session-participants', sessionId] });
+      queryClient.invalidateQueries({ queryKey: ['mentorship-sessions'] });
       return data;
     }
   };
