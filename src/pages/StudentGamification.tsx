@@ -1,4 +1,4 @@
-import { StudentLayout } from '@/components/StudentLayout';
+import StudentLayout from '@/components/StudentLayout';
 import { useStudentPoints, useStudentAchievements, useAvailableAchievements, usePointsHistory } from '@/hooks/useStudentGamification';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
