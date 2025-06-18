@@ -13,6 +13,56 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
       });
       
       if (error) {
+        // If login fails, check if this is a company trying to log in for the first time
+        if (error.message.includes('Invalid login credentials') && password === 'ia360graus') {
+          console.log('Attempting to create company auth user...');
+          
+          // Try to find a company with this email
+          const { data: companies, error: companySearchError } = await supabase
+            .from('companies')
+            .select('id, contact_email')
+            .eq('contact_email', email)
+            .is('auth_user_id', null);
+          
+          if (!companySearchError && companies && companies.length > 0) {
+            const company = companies[0];
+            
+            // Call edge function to create auth user
+            const { data: createResult, error: createError } = await supabase.functions.invoke(
+              'create-company-auth-user',
+              {
+                body: { email, companyId: company.id }
+              }
+            );
+            
+            if (!createError && createResult?.success) {
+              console.log('Company auth user created, attempting login again...');
+              
+              // Try login again
+              const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+              });
+              
+              if (!retryError && retryData.user) {
+                console.log('Company login successful after auth user creation');
+                
+                toast({
+                  title: "Login realizado com sucesso!",
+                  description: "Bem-vindo! Você precisa alterar sua senha.",
+                });
+                
+                return { 
+                  error: null, 
+                  user: retryData.user, 
+                  session: retryData.session,
+                  needsPasswordChange: true 
+                };
+              }
+            }
+          }
+        }
+        
         console.error('Sign in error:', error);
         toast({
           title: "Erro no login",
@@ -81,11 +131,30 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
         password: newPassword
       });
 
-      if (!error && companyUserData) {
-        await supabase
-          .from('company_users')
-          .update({ needs_password_change: false })
-          .eq('auth_user_id', userId);
+      if (!error) {
+        // Check if it's a company user and update their password change flag
+        if (userId) {
+          const { data: company } = await supabase
+            .from('companies')
+            .select('id')
+            .eq('auth_user_id', userId)
+            .maybeSingle();
+          
+          if (company) {
+            await supabase
+              .from('companies')
+              .update({ needs_password_change: false })
+              .eq('auth_user_id', userId);
+          }
+        }
+        
+        // Handle company_users (collaborators)
+        if (companyUserData) {
+          await supabase
+            .from('company_users')
+            .update({ needs_password_change: false })
+            .eq('auth_user_id', userId);
+        }
         
         toast({
           title: "Senha alterada com sucesso!",

@@ -26,8 +26,41 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       };
     }
     
+    // Check if user is a company
+    console.log('🏢 Checking companies table...');
+    const { data: company, error: companyError } = await supabase
+      .from('companies')
+      .select('*')
+      .eq('auth_user_id', userId)
+      .maybeSingle();
+    
+    console.log('Company query result:', {
+      hasData: !!company,
+      error: companyError,
+      companyId: company?.id,
+      needsPasswordChange: company?.needs_password_change
+    });
+    
+    if (!companyError && company) {
+      console.log('✅ User found as company user');
+      console.log('- Company Name:', company.name);
+      console.log('- Company Email:', company.contact_email);
+      console.log('- Needs Password Change:', company.needs_password_change);
+      
+      const needsChange = company.needs_password_change === true;
+      console.log('🔐 Password change required:', needsChange);
+      
+      console.groupEnd();
+      
+      return { 
+        role: 'company', 
+        needsPasswordChange: needsChange, 
+        companyUserData: company 
+      };
+    }
+    
     // Check company_users table for student role
-    console.log('🏢 Checking company_users table...');
+    console.log('👥 Checking company_users table...');
     const { data: companyUser, error: companyUserError } = await supabase
       .from('company_users')
       .select('*')
@@ -54,24 +87,24 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       let companyData = null;
       if (companyUser.company_id) {
         console.log('📢 Fetching company data for ID:', companyUser.company_id);
-        const { data: company, error: companyError } = await supabase
+        const { data: companyInfo, error: companyInfoError } = await supabase
           .from('companies')
           .select('id, name, official_name')
           .eq('id', companyUser.company_id)
           .maybeSingle();
         
         console.log('Company query result:', {
-          hasCompany: !!company,
-          error: companyError,
-          companyName: company?.name,
-          officialName: company?.official_name
+          hasCompany: !!companyInfo,
+          error: companyInfoError,
+          companyName: companyInfo?.name,
+          officialName: companyInfo?.official_name
         });
         
-        if (!companyError && company) {
-          companyData = company;
-          console.log('✅ Company data fetched successfully:', company.name);
+        if (!companyInfoError && companyInfo) {
+          companyData = companyInfo;
+          console.log('✅ Company data fetched successfully:', companyInfo.name);
         } else {
-          console.warn('❌ Failed to fetch company data:', companyError);
+          console.warn('❌ Failed to fetch company data:', companyInfoError);
         }
       }
       
@@ -106,7 +139,11 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       console.error('❌ Error fetching company user data:', companyUserError);
     }
     
-    // If user exists in profiles but not in company_users, respect the profile role
+    if (companyError) {
+      console.error('❌ Error fetching company data:', companyError);
+    }
+    
+    // If user exists in profiles but not in company_users or companies, respect the profile role
     if (profile?.role) {
       console.log('✅ Using profile role as fallback:', profile.role);
       console.groupEnd();
