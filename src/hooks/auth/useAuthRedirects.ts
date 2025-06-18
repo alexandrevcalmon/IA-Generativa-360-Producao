@@ -14,23 +14,27 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
   const location = useLocation();
 
   useEffect(() => {
-    console.log('🔄 Enhanced auth redirect check:', {
+    console.log('🔄 Enhanced auth redirect evaluation:', {
       authLoading,
       user: user?.email,
       userRole,
       needsPasswordChange,
-      currentPath: location.pathname
+      currentPath: location.pathname,
+      timestamp: new Date().toISOString()
     });
 
     // Don't redirect if loading, no user, or user needs password change
     if (authLoading || !user || needsPasswordChange) {
+      console.log('⏸️ Skipping redirect:', {
+        reason: authLoading ? 'loading' : !user ? 'no user' : 'needs password change'
+      });
       return;
     }
 
     // Don't redirect if user is already on the correct dashboard
     const isOnCorrectDashboard = 
       (userRole === 'producer' && location.pathname.startsWith('/producer')) ||
-      (userRole === 'company' && location.pathname.startsWith('/company')) ||
+      (userRole === 'company' && (location.pathname.startsWith('/company') || location.pathname === '/company-dashboard')) ||
       (userRole === 'student' && location.pathname.startsWith('/student'));
 
     if (isOnCorrectDashboard) {
@@ -38,38 +42,41 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
       return;
     }
 
-    // Only redirect if user is on auth pages or root page
+    // Only redirect from specific "entry" pages
     const shouldRedirect = 
       location.pathname === '/' || 
       location.pathname === '/auth' || 
       location.pathname === '/login-produtor';
 
     if (!shouldRedirect) {
-      console.log('ℹ️ User not on redirect-eligible page, skipping redirect');
+      console.log('ℹ️ Not on redirect-eligible page, skipping redirect. Current:', location.pathname);
       return;
     }
 
-    // Only redirect if all conditions are met and user has a role
-    if (!authLoading && user && userRole) {
-      console.log('🚀 Redirecting authenticated user. Role:', userRole);
+    // Perform role-based redirect
+    if (userRole) {
+      console.log('🚀 Performing role-based redirect. Role:', userRole);
       
       switch (userRole) {
         case 'producer':
-          console.log('📊 Redirecting to producer dashboard');
+          console.log('📊 Redirecting producer to dashboard');
           navigate('/producer/dashboard', { replace: true });
           break;
         case 'company':
-          console.log('🏢 Redirecting to company dashboard');
+          console.log('🏢 Redirecting company to dashboard');
           navigate('/company-dashboard', { replace: true });
           break;
         case 'student':
-          console.log('🎓 Redirecting to student dashboard');
+          console.log('🎓 Redirecting student to dashboard');
           navigate('/student/dashboard', { replace: true });
           break;
         default:
-          console.log('❓ Unknown role, redirecting to auth');
+          console.warn('❓ Unknown role, redirecting to auth. Role:', userRole);
           navigate('/auth', { replace: true });
       }
+    } else {
+      console.warn('⚠️ User has no role assigned, redirecting to auth');
+      navigate('/auth', { replace: true });
     }
   }, [user, userRole, authLoading, needsPasswordChange, navigate, location.pathname]);
 }
