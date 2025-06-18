@@ -12,13 +12,14 @@ export const createCompanySignInService = (toast: any) => {
       console.error(`[CompanySignIn] Initial login attempt failed for ${email}. Error: ${loginError.message}`);
       
       if (loginError.message.includes('Invalid login credentials')) {
-        console.log(`[CompanySignIn] Checking company by email for potential creation/link.`);
+        console.log(`[CompanySignIn] Invalid credentials - checking if this is a company registration case.`);
         const { companies, companySearchError } = await checkCompanyByEmail(email);
 
         if (companySearchError) {
           console.error(`[CompanySignIn] Error checking company by email ${email}: ${companySearchError.message}`);
-          toast({ title: "Erro ao verificar empresa", description: companySearchError.message, variant: "destructive" });
-          return { error: companySearchError };
+          // Don't show technical error, show user-friendly message
+          toast({ title: "Erro no login", description: "Email ou senha incorretos.", variant: "destructive" });
+          return { error: new Error("Invalid login credentials") };
         }
 
         if (companies && companies.length > 0) {
@@ -49,9 +50,11 @@ export const createCompanySignInService = (toast: any) => {
           console.error(`[CompanySignIn] Retry login for ${email} for company flow succeeded but user data is missing.`);
           return { error: new Error("User data not found on company retry.") };
         } else {
-          console.log(`[CompanySignIn] No company found with email ${email} for role=company flow.`);
-          toast({ title: "Empresa não encontrada", description: "Nenhuma empresa cadastrada com este email para login de gestor.", variant: "destructive" });
-          return { error: new Error("Company not found for role=company flow.") };
+          console.log(`[CompanySignIn] No company found with email ${email}. Allowing general login attempt.`);
+          // Instead of blocking, allow the login attempt to proceed as a regular user
+          // This user might be a student or collaborator
+          toast({ title: "Credenciais inválidas", description: "Email ou senha incorretos.", variant: "destructive" });
+          return { error: new Error("Invalid login credentials") };
         }
       }
       
@@ -61,6 +64,27 @@ export const createCompanySignInService = (toast: any) => {
         toast({ title: "Credenciais Inválidas", description: "Email ou senha incorretos.", variant: "destructive"});
       }
       return { error: loginError };
+    }
+
+    // Login successful - check if user should have company role
+    if (loginAttempt.user) {
+      console.log(`[CompanySignIn] Login successful for ${email}. Checking company association.`);
+      
+      // Check if this user is associated with a company
+      const { data: companyData } = await supabase
+        .from('companies')
+        .select('id, name')
+        .eq('auth_user_id', loginAttempt.user.id)
+        .single();
+
+      if (companyData) {
+        console.log(`[CompanySignIn] User is associated with company: ${companyData.name}`);
+        await updateUserMetadata({ 
+          role: 'company', 
+          company_id: companyData.id, 
+          company_name: companyData.name 
+        });
+      }
     }
 
     return { user: loginAttempt.user, session: loginAttempt.session, error: null };

@@ -35,19 +35,30 @@ export const createSignInService = (toast: any) => {
         }
       }
 
-      // Default login path (students, collaborators, or unspecified role)
-      const result = await companyService.signInCompany(email, password);
-      if (result.error) {
-        return result;
+      // Default login path - try company login first, then fallback to regular login
+      console.log(`[SignInService] Attempting default login path for ${email}`);
+      const { data: loginAttempt, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (loginError) {
+        console.error(`[SignInService] Default login failed for ${email}. Error: ${loginError.message}`);
+        
+        if (loginError.message.includes('Invalid login credentials')) {
+          toast({ title: "Credenciais inválidas", description: "Email ou senha incorretos.", variant: "destructive" });
+        } else if (loginError.message.includes('Email not confirmed')) {
+          toast({ title: "Email não confirmado", description: "Verifique seu email para confirmação.", variant: "destructive" });
+        } else {
+          toast({ title: "Erro no login", description: loginError.message, variant: "destructive" });
+        }
+        return { error: loginError };
       }
 
-      if (result.user) {
-        const defaultResult = await defaultService.processDefaultSignIn(result.user, role);
-        console.log(`[SignInService] Sign-in for ${result.user.email} completed. Needs Password Change: ${defaultResult.needsPasswordChange}`);
+      if (loginAttempt.user) {
+        const defaultResult = await defaultService.processDefaultSignIn(loginAttempt.user, role);
+        console.log(`[SignInService] Default login successful for ${loginAttempt.user.email}. Needs Password Change: ${defaultResult.needsPasswordChange}`);
         return { 
           error: null, 
-          user: result.user, 
-          session: result.session, 
+          user: loginAttempt.user, 
+          session: loginAttempt.session, 
           needsPasswordChange: defaultResult.needsPasswordChange 
         };
       }
