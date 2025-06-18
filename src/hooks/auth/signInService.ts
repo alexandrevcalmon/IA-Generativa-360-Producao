@@ -20,13 +20,27 @@ export const createSignInService = (toast: any) => {
 
       // Company login path (explicit role=company)
       if (role === 'company') {
+        console.log(`[SignInService] Processing explicit company login for ${email}`);
         const result = await companyService.signInCompany(email, password);
+        
         if (result.error) {
           return result;
         }
         
         if (result.user) {
-          const defaultResult = await defaultService.processDefaultSignIn(result.user, role);
+          // If company login was successful and we have company flag, ensure role is set
+          if (result.isCompany) {
+            console.log(`[SignInService] Company login confirmed for ${email}`);
+            return { 
+              error: null, 
+              user: result.user, 
+              session: result.session, 
+              needsPasswordChange: false
+            };
+          }
+          
+          // Process through default service but with company role intent
+          const defaultResult = await defaultService.processDefaultSignIn(result.user, 'company');
           return { 
             error: null, 
             user: result.user, 
@@ -36,7 +50,7 @@ export const createSignInService = (toast: any) => {
         }
       }
 
-      // Default login path - try company login first, then fallback to regular login
+      // Default login path - try to determine role automatically
       console.log(`[SignInService] Attempting default login path for ${email}`);
       const { data: loginAttempt, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
 

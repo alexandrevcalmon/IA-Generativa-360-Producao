@@ -7,47 +7,51 @@ export const createUserRoleService = () => {
     try {
       console.log(`[UserRoleService] Getting role for user: ${userId}`);
       
-      // Direct query to profiles table - this is now safe with our new RLS policies
+      // First check if user is a company owner
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('id, name')
+        .eq('auth_user_id', userId)
+        .single();
+
+      if (!companyError && companyData) {
+        console.log(`[UserRoleService] User is a company owner: ${companyData.name}`);
+        return 'company';
+      }
+
+      // Then check profiles table for explicit role
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .single();
 
-      if (profileError) {
-        console.error('[UserRoleService] Error fetching user role from profiles:', profileError);
+      if (!profileError && profileData?.role) {
+        console.log(`[UserRoleService] User role from profiles: ${profileData.role}`);
         
-        // Check if it's a company user
-        const { data: companyData, error: companyError } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('auth_user_id', userId)
-          .single();
-
-        if (!companyError && companyData) {
-          console.log('[UserRoleService] User is a company owner');
+        // If profiles says student but user is company owner, override to company
+        if (profileData.role === 'student' && companyData) {
+          console.log(`[UserRoleService] Overriding student role to company for company owner`);
           return 'company';
         }
-
-        // Check if it's a company collaborator
-        const { data: collaboratorData, error: collaboratorError } = await supabase
-          .from('company_users')
-          .select('id')
-          .eq('auth_user_id', userId)
-          .single();
-
-        if (!collaboratorError && collaboratorData) {
-          console.log('[UserRoleService] User is a company collaborator');
-          return 'student';
-        }
-
-        console.log('[UserRoleService] Defaulting to student role');
-        return 'student';
+        
+        return profileData.role;
       }
 
-      const role = profileData?.role || 'student';
-      console.log(`[UserRoleService] User role from profiles: ${role}`);
-      return role;
+      // Check if it's a company collaborator
+      const { data: collaboratorData, error: collaboratorError } = await supabase
+        .from('company_users')
+        .select('id')
+        .eq('auth_user_id', userId)
+        .single();
+
+      if (!collaboratorError && collaboratorData) {
+        console.log('[UserRoleService] User is a company collaborator');
+        return 'collaborator';
+      }
+
+      console.log('[UserRoleService] Defaulting to student role');
+      return 'student';
     } catch (error) {
       console.error('[UserRoleService] Unexpected error getting user role:', error);
       return 'student';
@@ -60,8 +64,7 @@ export const createUserRoleService = () => {
       
       const { error } = await supabase
         .from('profiles')
-        .update({ role })
-        .eq('id', userId);
+        .upsert({ id: userId, role });
 
       if (error) {
         console.error('[UserRoleService] Error updating user role:', error);
@@ -81,19 +84,42 @@ export const createUserRoleService = () => {
   };
 };
 
-// New function that was missing - this fetches auxiliary data for role determination
+// Enhanced function that prioritizes company ownership
 export const fetchUserRoleAuxiliaryData = async (user: User) => {
   console.log(`[fetchUserRoleAuxiliaryData] Fetching auxiliary data for user: ${user.email}`);
   
   try {
-    // First try to get role from profiles table
+    // First priority: Check if user is a company owner
+    const { data: companyData, error: companyError } = await supabase
+      .from('companies')
+      .select('*')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!companyError && companyData) {
+      console.log('[fetchUserRoleAuxiliaryData] User is a company owner');
+      
+      // Update profiles table to ensure consistency
+      await supabase
+        .from('profiles')
+        .upsert({ id: user.id, role: 'company' });
+      
+      return {
+        role: 'company',
+        profileData: { role: 'company' },
+        companyData,
+        collaboratorData: null
+      };
+    }
+
+    // Second priority: Check profiles table
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    if (!profileError && profileData?.role) {
+    if (!profileError && profileData?.role && profileData.role !== 'student') {
       console.log(`[fetchUserRoleAuxiliaryData] Found role in profiles: ${profileData.role}`);
       return {
         role: profileData.role,
@@ -103,24 +129,7 @@ export const fetchUserRoleAuxiliaryData = async (user: User) => {
       };
     }
 
-    // Check if user is a company owner
-    const { data: companyData, error: companyError } = await supabase
-      .from('companies')
-      .select('*')
-      .eq('auth_user_id', user.id)
-      .single();
-
-    if (!companyError && companyData) {
-      console.log('[fetchUserRoleAuxiliaryData] User is a company owner');
-      return {
-        role: 'company',
-        profileData,
-        companyData,
-        collaboratorData: null
-      };
-    }
-
-    // Check if user is a company collaborator
+    // Third priority: Check if user is a company collaborator
     const { data: collaboratorData, error: collaboratorError } = await supabase
       .from('company_users')
       .select(`

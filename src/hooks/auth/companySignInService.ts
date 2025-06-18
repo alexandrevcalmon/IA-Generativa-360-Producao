@@ -17,7 +17,6 @@ export const createCompanySignInService = (toast: any) => {
 
         if (companySearchError) {
           console.error(`[CompanySignIn] Error checking company by email ${email}: ${companySearchError.message}`);
-          // Don't show technical error, show user-friendly message
           toast({ title: "Erro no login", description: "Email ou senha incorretos.", variant: "destructive" });
           return { error: new Error("Invalid login credentials") };
         }
@@ -51,8 +50,6 @@ export const createCompanySignInService = (toast: any) => {
           return { error: new Error("User data not found on company retry.") };
         } else {
           console.log(`[CompanySignIn] No company found with email ${email}. Allowing general login attempt.`);
-          // Instead of blocking, allow the login attempt to proceed as a regular user
-          // This user might be a student or collaborator
           toast({ title: "Credenciais inválidas", description: "Email ou senha incorretos.", variant: "destructive" });
           return { error: new Error("Invalid login credentials") };
         }
@@ -78,12 +75,27 @@ export const createCompanySignInService = (toast: any) => {
         .single();
 
       if (companyData) {
-        console.log(`[CompanySignIn] User is associated with company: ${companyData.name}`);
+        console.log(`[CompanySignIn] User is associated with company: ${companyData.name}. Setting role to 'company'.`);
+        
+        // Update user metadata to company role
         await updateUserMetadata({ 
           role: 'company', 
           company_id: companyData.id, 
           company_name: companyData.name 
         });
+
+        // Also update the profiles table to ensure consistency
+        await supabase
+          .from('profiles')
+          .upsert({ 
+            id: loginAttempt.user.id, 
+            role: 'company' 
+          });
+
+        console.log(`[CompanySignIn] Company role set successfully for user ${email}`);
+        return { user: loginAttempt.user, session: loginAttempt.session, error: null, isCompany: true };
+      } else {
+        console.log(`[CompanySignIn] No company association found for user ${email}`);
       }
     }
 
