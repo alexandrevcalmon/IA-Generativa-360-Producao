@@ -14,19 +14,25 @@ interface VideoPlayerProps {
 export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const updateProgress = useUpdateLessonProgress();
+  const [lastProgressUpdate, setLastProgressUpdate] = useState(0);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const updateTime = () => {
-      onTimeUpdate(video.currentTime, video.duration);
+      const currentTime = video.currentTime;
+      const duration = video.duration;
       
-      // Update progress every 10 seconds
-      if (Math.floor(video.currentTime) % 10 === 0 && currentLesson) {
+      onTimeUpdate(currentTime, duration);
+      
+      // Update progress every 10 seconds to avoid too many API calls
+      const currentTimestamp = Math.floor(currentTime);
+      if (currentTimestamp > 0 && currentTimestamp % 10 === 0 && currentTimestamp !== lastProgressUpdate) {
+        setLastProgressUpdate(currentTimestamp);
         updateProgress.mutate({
           lessonId: currentLesson.id,
-          watchTimeSeconds: Math.floor(video.currentTime)
+          watchTimeSeconds: currentTimestamp
         });
       }
     };
@@ -42,7 +48,7 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
       video.removeEventListener('timeupdate', updateTime);
       video.removeEventListener('loadedmetadata', updateDuration);
     };
-  }, [currentLesson, updateProgress, onTimeUpdate]);
+  }, [currentLesson, updateProgress, onTimeUpdate, lastProgressUpdate]);
 
   return (
     <Card>

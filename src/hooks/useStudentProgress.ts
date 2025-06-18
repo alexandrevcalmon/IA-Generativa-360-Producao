@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 export const useUpdateLessonProgress = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ 
@@ -47,6 +48,15 @@ export const useUpdateLessonProgress = () => {
       }
 
       console.log('Lesson progress updated successfully:', data);
+      
+      // Show toast when lesson is completed
+      if (completed) {
+        toast({
+          title: "Aula concluída!",
+          description: "Parabéns! Você completou esta aula.",
+        });
+      }
+
       return data;
     },
     onSuccess: () => {
