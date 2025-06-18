@@ -9,9 +9,10 @@ interface ModulesTabContentProps {
   modules: CourseModule[];
   onCreateModule: () => void;
   onEditModule: (module: CourseModule) => void;
+  onCreateLesson: (moduleId: string) => void;
 }
 
-export const ModulesTabContent = ({ modules, onCreateModule, onEditModule }: ModulesTabContentProps) => {
+export const ModulesTabContent = ({ modules, onCreateModule, onEditModule, onCreateLesson }: ModulesTabContentProps) => {
   console.log('[ModulesTabContent] Modules received:', modules);
 
   if (modules.length === 0) {
@@ -74,7 +75,7 @@ export const ModulesTabContent = ({ modules, onCreateModule, onEditModule }: Mod
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                   <div className="flex items-center gap-1">
                     <Play className="h-4 w-4" />
                     <span>{lessonsCount} aulas</span>
@@ -84,23 +85,38 @@ export const ModulesTabContent = ({ modules, onCreateModule, onEditModule }: Mod
                 
                 {/* Exibir as aulas do módulo se existirem */}
                 {lessonsCount > 0 && (
-                  <div className="mt-3 pt-3 border-t">
-                    <h5 className="text-sm font-medium mb-2">Aulas:</h5>
-                    <div className="space-y-1">
+                  <div className="mb-4 pt-3 border-t">
+                    <h5 className="text-sm font-medium mb-3">Aulas:</h5>
+                    <div className="space-y-2">
                       {module.lessons?.map((lesson, index) => (
-                        <div key={lesson.id} className="text-xs text-muted-foreground flex items-center gap-2">
-                          <span className="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium">
+                        <div key={lesson.id} className="text-sm text-muted-foreground flex items-center gap-3 p-2 bg-gray-50 rounded-md">
+                          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-medium flex-shrink-0">
                             {index + 1}
                           </span>
-                          <span className="truncate">{lesson.title}</span>
+                          <span className="flex-1 truncate">{lesson.title}</span>
                           {lesson.duration_minutes && (
-                            <span className="text-xs">({lesson.duration_minutes}min)</span>
+                            <span className="text-xs text-gray-500 flex-shrink-0">
+                              {lesson.duration_minutes}min
+                            </span>
                           )}
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
+                
+                {/* Botão para criar nova aula no módulo */}
+                <div className="pt-3 border-t">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => onCreateLesson(module.id)}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova Aula
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );

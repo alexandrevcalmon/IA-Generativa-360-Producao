@@ -127,6 +127,7 @@ const CourseDetails = () => {
                 modules={modules}
                 onCreateModule={handleCreateModule}
                 onEditModule={handleEditModule}
+                onCreateLesson={handleCreateLesson}
               />
             </TabsContent>
             
