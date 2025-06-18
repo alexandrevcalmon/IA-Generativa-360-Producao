@@ -1,5 +1,5 @@
 
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, TrendingUp } from 'lucide-react';
 
