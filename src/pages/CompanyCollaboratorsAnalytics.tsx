@@ -37,7 +37,7 @@ const CompanyCollaboratorsAnalytics = () => {
   }
 
   const hasData = analytics && analytics.length > 0;
-  const hasFiltered = searchTerm || filterStatus !== "all";
+  const hasFiltered = Boolean(searchTerm || filterStatus !== "all");
 
   return (
     <div className="flex flex-col h-full">

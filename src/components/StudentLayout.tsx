@@ -1,19 +1,16 @@
 
 import { ReactNode } from 'react';
+import { Outlet } from 'react-router-dom';
 import { StudentSidebar } from './StudentSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
-interface StudentLayoutProps {
-  children: ReactNode;
-}
-
-const StudentLayout = ({ children }: StudentLayoutProps) => {
+const StudentLayout = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <StudentSidebar />
         <main className="flex-1 overflow-auto">
-          {children}
+          <Outlet />
         </main>
       </div>
     </SidebarProvider>
