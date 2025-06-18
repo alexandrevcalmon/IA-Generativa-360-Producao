@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCompanyData } from "@/hooks/useCompanyData";
 import { useCompanyCourses } from "@/hooks/useCompanyCourses";
 import { useCompanyMentorships } from "@/hooks/useCompanyMentorships";
+import { useGetCompanyCollaborators } from "@/hooks/useCompanyCollaborators";
 import { 
   Users, 
   BookOpen, 
@@ -23,14 +24,19 @@ const CompanyDashboard = () => {
   const { data: companyData, isLoading: companyLoading } = useCompanyData();
   const { data: courses = [], isLoading: coursesLoading } = useCompanyCourses();
   const { data: mentorships = [], isLoading: mentorshipsLoading } = useCompanyMentorships();
+  const { data: collaborators = [], isLoading: collaboratorsLoading } = useGetCompanyCollaborators(companyData?.id);
 
-  const isLoading = companyLoading || coursesLoading || mentorshipsLoading;
+  const isLoading = companyLoading || coursesLoading || mentorshipsLoading || collaboratorsLoading;
 
   // Calculate stats
   const totalEnrollments = courses.reduce((sum, course) => sum + course.enrolled_students, 0);
   const totalCompletions = courses.reduce((sum, course) => sum + course.completed_students, 0);
   const completionRate = totalEnrollments > 0 ? Math.round((totalCompletions / totalEnrollments) * 100) : 0;
   const upcomingMentorships = mentorships.filter(m => m.status === 'scheduled').length;
+
+  // Get plan limits from subscription plan data or fallback to company data
+  const maxStudents = companyData?.subscription_plan_data?.max_students || companyData?.max_students || 50;
+  const currentStudents = collaborators.length;
 
   const stats = [
     {
@@ -158,7 +164,7 @@ const CompanyDashboard = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-600">Colaboradores</p>
                     <p className="text-lg font-semibold">
-                      {companyData.current_students} / {companyData.max_students}
+                      {currentStudents} / {maxStudents}
                     </p>
                   </div>
                   <div className="space-y-2">
