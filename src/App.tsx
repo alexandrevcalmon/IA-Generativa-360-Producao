@@ -21,11 +21,13 @@ import CourseProgressPage from "./components/company/CourseProgressPage";
 import LoginProdutor from "./pages/LoginProdutor";
 import ProducerDashboard from "./pages/ProducerDashboard";
 import ProducerCompanies from "./pages/ProducerCompanies";
+import StudentDashboard from "./pages/StudentDashboard";
 
 import { ChangePassword } from "./components/auth/ChangePassword";
 import { ResetPassword } from "./components/auth/ResetPassword";
 import CompanyLayout from "./components/CompanyLayout";
 import ProdutorLayout from "./components/ProdutorLayout";
+import StudentLayout from "./components/StudentLayout";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import CompanyCourses from "./pages/CompanyCourses";
 import CompanyMentorships from "./pages/CompanyMentorships";
@@ -82,6 +84,11 @@ function App() {
               <Route path="course-progress" element={<CourseProgressPage />} />
               <Route path="mentorships" element={<CompanyMentorships />} />
               <Route path="profile" element={<CompanyProfile />} />
+            </Route>
+            
+            {/* Student Routes */}
+            <Route path="/student" element={<StudentLayout />}>
+              <Route path="dashboard" element={<StudentDashboard />} />
             </Route>
             
             {/* Default Route */}

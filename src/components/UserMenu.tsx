@@ -32,38 +32,38 @@ export function UserMenu() {
   }
 
   const handleSignOut = async () => {
-    console.log('🚪 Starting logout process...');
+    console.log('🚪 UserMenu logout clicked...');
     
     try {
       const { error } = await signOut();
       
       if (error) {
         console.error('❌ Logout error:', error);
-        toast({
-          title: "Erro ao sair",
-          description: "Ocorreu um erro ao fazer logout. Tente novamente.",
-          variant: "destructive",
-        });
         return;
       }
       
       console.log('✅ Logout successful, navigating to home...');
       
-      // Navigate to home and force a page reload to clear any cached state
+      // Navigate to home immediately
       navigate('/', { replace: true });
       
-      // Force reload after a short delay to ensure navigation completes
+      // Force a page reload to clear all state
       setTimeout(() => {
-        window.location.reload();
+        window.location.href = '/';
       }, 100);
       
     } catch (error) {
       console.error('💥 Unexpected logout error:', error);
       toast({
         title: "Erro ao sair",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
+        description: "Ocorreu um erro inesperado. Recarregando a página...",
         variant: "destructive",
       });
+      
+      // Force reload as fallback
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
     }
   };
 

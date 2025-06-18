@@ -18,7 +18,6 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       hasData: !!company,
       error: companyError,
       companyId: company?.id,
-      needsPasswordChange: company?.needs_password_change,
       companyEmail: company?.contact_email
     });
     
@@ -26,16 +25,12 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       console.log('✅ User found as company owner');
       console.log('- Company Name:', company.name);
       console.log('- Company Email:', company.contact_email);
-      console.log('- Needs Password Change:', company.needs_password_change);
-      
-      const needsChange = company.needs_password_change === true;
-      console.log('🔐 Password change required:', needsChange);
       
       console.groupEnd();
       
       return { 
         role: 'company', 
-        needsPasswordChange: needsChange, 
+        needsPasswordChange: false, 
         companyUserData: company 
       };
     }
@@ -72,8 +67,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       hasData: !!companyUser,
       error: companyUserError,
       companyId: companyUser?.company_id,
-      isActive: companyUser?.is_active,
-      needsPasswordChange: companyUser?.needs_password_change
+      isActive: companyUser?.is_active
     });
     
     if (!companyUserError && companyUser) {
@@ -82,7 +76,6 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       console.log('- Email:', companyUser.email);
       console.log('- Company ID:', companyUser.company_id);
       console.log('- Is Active:', companyUser.is_active);
-      console.log('- Needs Password Change:', companyUser.needs_password_change);
       
       // Fetch company data separately for better reliability
       let companyData = null;
@@ -109,10 +102,6 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
         }
       }
       
-      // Ensure proper boolean handling for needs_password_change
-      const needsChange = companyUser.needs_password_change === true;
-      console.log('🔐 Password change required:', needsChange);
-      
       // Structure the data properly
       const companyUserWithCompany = {
         ...companyUser,
@@ -130,7 +119,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
       
       return { 
         role: 'student', 
-        needsPasswordChange: needsChange, 
+        needsPasswordChange: false, 
         companyUserData: companyUserWithCompany 
       };
     }
