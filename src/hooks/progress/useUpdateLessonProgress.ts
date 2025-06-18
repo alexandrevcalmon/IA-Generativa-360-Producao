@@ -57,7 +57,7 @@ export const useUpdateLessonProgress = () => {
             .from('lesson_progress')
             .select('*')
             .eq('lesson_id', lessonId)
-            .eq('user_id', user.id)
+            .eq('user_id', user.id) // Using auth user ID directly
             .maybeSingle();
 
           console.log('📊 Existing progress:', existingProgress);
@@ -65,7 +65,7 @@ export const useUpdateLessonProgress = () => {
           // Prepare update data with smart merging
           const updateData = {
             lesson_id: lessonId,
-            user_id: user.id,
+            user_id: user.id, // Using auth user ID directly - this now references auth.users
             completed: completed ?? existingProgress?.completed ?? false,
             watch_time_seconds: Math.max(
               watchTimeSeconds ?? 0, 

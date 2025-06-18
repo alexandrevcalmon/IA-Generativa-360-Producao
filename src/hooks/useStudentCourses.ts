@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 
 export interface StudentCourse {
   id: string;
@@ -62,7 +62,7 @@ export const useStudentCourses = () => {
 
       console.log('Found published courses:', courses?.length || 0);
 
-      // Get enrollment data for the current user
+      // Get enrollment data for the current user using auth.uid()
       const { data: enrollments } = await supabase
         .from('enrollments')
         .select('course_id, enrolled_at, progress_percentage')
@@ -108,7 +108,7 @@ export const useStudentCourses = () => {
                 // Continue with empty lessons rather than failing
               }
 
-              // Get progress for each lesson with improved handling
+              // Get progress for each lesson with improved handling - using auth user ID directly
               const lessonsWithProgress = await Promise.all(
                 (lessons || []).map(async (lesson) => {
                   try {
@@ -116,7 +116,7 @@ export const useStudentCourses = () => {
                       .from('lesson_progress')
                       .select('completed, watch_time_seconds')
                       .eq('lesson_id', lesson.id)
-                      .eq('user_id', user.id)
+                      .eq('user_id', user.id) // Use auth user ID directly
                       .maybeSingle();
 
                     if (progressError) {
@@ -216,7 +216,7 @@ export const useStudentCourse = (courseId: string) => {
                   .from('lesson_progress')
                   .select('completed, watch_time_seconds')
                   .eq('lesson_id', lesson.id)
-                  .eq('user_id', user.id)
+                  .eq('user_id', user.id) // Use auth user ID directly
                   .maybeSingle();
 
                 if (progressError) {

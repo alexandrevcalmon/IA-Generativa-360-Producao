@@ -18,7 +18,7 @@ export const useEnrollInCourse = () => {
         .from('enrollments')
         .insert({
           course_id: courseId,
-          user_id: user.id,
+          user_id: user.id, // Using auth user ID directly - this now references auth.users
           enrolled_at: new Date().toISOString(),
           progress_percentage: 0
         })
