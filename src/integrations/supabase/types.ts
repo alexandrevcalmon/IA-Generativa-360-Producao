@@ -1685,10 +1685,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       get_user_role: {
         Args: { user_id: string }
         Returns: string
@@ -1699,10 +1695,6 @@ export type Database = {
       }
       is_company_user: {
         Args: { user_id: string }
-        Returns: boolean
-      }
-      is_current_user_producer: {
-        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       is_producer: {

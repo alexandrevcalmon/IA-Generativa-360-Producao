@@ -1,40 +1,10 @@
-
-import { useEffect } from 'react';
-import { useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
-import { AppSidebar } from '@/components/AppSidebar';
+import { Navigate, Outlet } from 'react-router-dom';
+import { AppSidebar } from './AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const ProdutorLayout = () => {
-  const { user, userRole, loading } = useAuth();
-  const navigate = useNavigate();
-
-  console.log('ProdutorLayout - Auth state:', { user: !!user, userRole, loading });
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (!user) {
-      console.log('ProdutorLayout: No user, redirecting to auth');
-      navigate('/auth');
-      return;
-    }
-
-    if (userRole !== 'producer') {
-      console.log(`ProdutorLayout: User role ${userRole} is not producer, redirecting`);
-      // Redirect to appropriate dashboard based on actual role
-      switch (userRole) {
-        case 'company':
-          navigate('/company-dashboard');
-          break;
-        case 'student':
-          navigate('/student/dashboard');
-          break;
-        default:
-          navigate('/auth');
-      }
-    }
-  }, [user, userRole, loading, navigate]);
+  const { user, loading, userRole } = useAuth();
 
   if (loading) {
     return (
@@ -44,10 +14,23 @@ const ProdutorLayout = () => {
     );
   }
 
-  if (!user || userRole !== 'producer') {
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (userRole !== 'producer') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Redirecionando...</div>
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
+          <p className="text-gray-600 mb-4">Você não tem permissão para acessar esta área.</p>
+          <button 
+            onClick={() => window.location.href = '/auth'}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Fazer Login
+          </button>
+        </div>
       </div>
     );
   }
@@ -56,7 +39,7 @@ const ProdutorLayout = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1">
+        <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>

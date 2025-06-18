@@ -1,4 +1,3 @@
-
 import {
   BrowserRouter as Router,
   Routes,
@@ -19,20 +18,9 @@ import ProducerMentorship from "./pages/ProducerMentorship";
 import CompanyProfile from "./pages/CompanyProfile";
 import CourseProgressPage from "./components/company/CourseProgressPage";
 
-// Producer pages
-import ProducerDashboard from "./pages/ProducerDashboard";
-import ProducerCompanies from "./pages/ProducerCompanies";
-import ProducerCourses from "./pages/ProducerCourses";
-import ProducerPlans from "./pages/ProducerPlans";
-
-// Student pages
-import StudentDashboard from "./pages/StudentDashboard";
-
 import { ChangePassword } from "./components/auth/ChangePassword";
 import { ResetPassword } from "./components/auth/ResetPassword";
 import CompanyLayout from "./components/CompanyLayout";
-import ProdutorLayout from "./components/ProdutorLayout";
-import StudentLayout from "./components/StudentLayout";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import CompanyCourses from "./pages/CompanyCourses";
 import CompanyMentorships from "./pages/CompanyMentorships";
@@ -52,20 +40,6 @@ function App() {
             <Route path="/auth/change-password" element={<ChangePassword />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
 
-            {/* Producer Routes */}
-            <Route path="/producer" element={<ProdutorLayout />}>
-              <Route path="dashboard" element={<ProducerDashboard />} />
-              <Route path="companies" element={<ProducerCompanies />} />
-              <Route path="courses" element={<ProducerCourses />} />
-              <Route path="plans" element={<ProducerPlans />} />
-              <Route path="mentorship" element={<ProducerMentorship />} />
-            </Route>
-
-            {/* Student Routes */}
-            <Route path="/student" element={<StudentLayout />}>
-              <Route path="dashboard" element={<StudentDashboard />} />
-            </Route>
-
             {/* Private Routes */}
             <Route
               path="/profile"
@@ -80,6 +54,14 @@ function App() {
               element={
                 <RequireAuth role="admin">
                   <Admin />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/producer-mentorship"
+              element={
+                <RequireAuth role="producer">
+                  <ProducerMentorship />
                 </RequireAuth>
               }
             />

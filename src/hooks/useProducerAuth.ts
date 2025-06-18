@@ -11,51 +11,22 @@ export const useProducerAuth = () => {
     queryFn: async () => {
       if (!user) throw new Error('No user found');
 
-      console.log('Checking producer auth for user:', user.id);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-      try {
-        // Direct profile query with the new simplified RLS policies
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error('Error checking producer auth:', profileError);
-          // Return false as safe default
-          return {
-            isProducer: false,
-            role: 'student'
-          };
-        }
-
-        if (!profile) {
-          console.log('No profile found, may need to be created');
-          // Return false as safe default when no profile exists
-          return {
-            isProducer: false,
-            role: 'student'
-          };
-        }
-
-        const isProducerFromProfile = profile.role === 'producer';
-        console.log('Got producer status from profile:', isProducerFromProfile);
-        
-        return {
-          isProducer: isProducerFromProfile,
-          role: profile.role || 'student'
-        };
-      } catch (error) {
-        console.error('Error in useProducerAuth:', error);
-        return {
-          isProducer: false,
-          role: 'student'
-        };
+      if (error) {
+        console.error('Error checking producer auth:', error);
+        throw error;
       }
+
+      return {
+        isProducer: data?.role === 'producer',
+        role: data?.role
+      };
     },
     enabled: !!user,
-    retry: 1,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 };

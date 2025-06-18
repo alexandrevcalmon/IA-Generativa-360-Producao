@@ -3,20 +3,29 @@ import { useToast } from '@/hooks/use-toast';
 import { createAuthService } from './authService';
 import { fetchUserRole } from './userRoleService';
 
-export function useAuthMethods(authState: any) {
+interface UseAuthMethodsProps {
+  user: any;
+  companyUserData: any;
+  setUser: (user: any) => void;
+  setSession: (session: any) => void;
+  setUserRole: (role: string | null) => void;
+  setNeedsPasswordChange: (needs: boolean) => void;
+  setCompanyUserData: (data: any) => void;
+  setLoading: (loading: boolean) => void;
+}
+
+export function useAuthMethods({
+  user,
+  companyUserData,
+  setUser,
+  setSession,
+  setUserRole,
+  setNeedsPasswordChange,
+  setCompanyUserData,
+  setLoading,
+}: UseAuthMethodsProps) {
   const { toast } = useToast();
   const authService = createAuthService(toast);
-  
-  const {
-    user,
-    companyUserData,
-    setUser,
-    setSession,
-    setUserRole,
-    setNeedsPasswordChange,
-    setCompanyUserData,
-    setLoading,
-  } = authState;
 
   const refreshUserRole = async () => {
     if (!user) {

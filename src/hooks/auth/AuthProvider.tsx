@@ -1,13 +1,13 @@
 
 import { createContext, ReactNode } from 'react';
 import { AuthContextType } from './types';
-import { useAuthState } from './useAuthState';
+import { useAuthInitialization } from './useAuthInitialization';
 import { useAuthMethods } from './useAuthMethods';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const authState = useAuthState();
+  const authState = useAuthInitialization();
   
   const {
     user,
@@ -17,9 +17,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     needsPasswordChange,
     companyUserData,
     isInitialized,
+    setUser,
+    setSession,
+    setUserRole,
+    setNeedsPasswordChange,
+    setCompanyUserData,
+    setLoading,
   } = authState;
 
-  const authMethods = useAuthMethods(authState);
+  const authMethods = useAuthMethods({
+    user,
+    companyUserData,
+    setUser,
+    setSession,
+    setUserRole,
+    setNeedsPasswordChange,
+    setCompanyUserData,
+    setLoading,
+  });
 
   // Role helper properties
   const isProducer = userRole === 'producer';

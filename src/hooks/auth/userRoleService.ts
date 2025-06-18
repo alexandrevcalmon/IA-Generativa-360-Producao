@@ -1,191 +1,176 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+import { UserRoleData } from './types';
 
-export interface UserRoleInfo {
-  role: 'producer' | 'company' | 'student';
-  companyId?: string;
-  studentId?: string;
-}
-
-export interface UserRoleData {
-  role: string;
-  needsPasswordChange: boolean;
-  companyUserData: any;
-}
-
-function inferRoleFromEmail(email: string): 'producer' | 'company' | 'student' {
-  // Check for admin patterns that should be producers
-  if (email.includes('admin-produtor') || email.includes('producer') || email.includes('produtor')) {
-    return 'producer';
-  }
-  
-  // Check for company admin patterns
-  if (email.includes('admin-empresa') || email.includes('company')) {
-    return 'company';
-  }
-  
-  // Check for student patterns
-  if (email.includes('admin-estudante') || email.includes('student') || email.includes('estudante')) {
-    return 'student';
-  }
-  
-  // Default fallback
-  return 'student';
-}
-
-async function getUserProfile(userId: string): Promise<'producer' | 'company' | 'student'> {
-  console.log('Getting user profile for:', userId);
-  
+export const fetchUserRole = async (userId: string): Promise<UserRoleData> => {
   try {
-    // Direct profile query using the new simplified RLS policies
+    console.group('🔍 Fetching user role and data for:', userId);
+    
+    // First, check if user is a company by auth_user_id
+    console.log('🏢 Checking companies table first...');
+    const { data: company, error: companyError } = await supabase
+      .from('companies')
+      .select('*')
+      .eq('auth_user_id', userId)
+      .maybeSingle();
+    
+    console.log('Company query result:', {
+      hasData: !!company,
+      error: companyError,
+      companyId: company?.id,
+      needsPasswordChange: company?.needs_password_change,
+      companyEmail: company?.contact_email
+    });
+    
+    if (!companyError && company) {
+      console.log('✅ User found as company owner');
+      console.log('- Company Name:', company.name);
+      console.log('- Company Email:', company.contact_email);
+      console.log('- Needs Password Change:', company.needs_password_change);
+      
+      const needsChange = company.needs_password_change === true;
+      console.log('🔐 Password change required:', needsChange);
+      
+      console.groupEnd();
+      
+      return { 
+        role: 'company', 
+        needsPasswordChange: needsChange, 
+        companyUserData: company 
+      };
+    }
+    
+    // Then check profiles table for producer/admin roles
+    console.log('📋 Checking profiles table...');
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .maybeSingle();
-
-    if (!profileError && profile?.role) {
-      console.log('Got role from direct profile query:', profile.role);
-      return profile.role as 'producer' | 'company' | 'student';
-    }
-
-    if (profileError) {
-      console.error('Error fetching profile:', profileError);
-    }
-
-    console.log('No profile found or error occurred, profile may need to be created');
     
-    // Get user email to infer role as fallback
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('Profile query result:', { profile, profileError });
     
-    if (userError || !user?.email) {
-      console.error('Error getting user email:', userError);
-      return 'student';
-    }
-
-    const inferredRole = inferRoleFromEmail(user.email);
-    console.log('Inferred role from email as fallback:', inferredRole);
-    return inferredRole;
-    
-  } catch (error) {
-    console.error('Error in getUserProfile:', error);
-    return 'student';
-  }
-}
-
-export async function getUserRole(userId: string): Promise<UserRoleInfo> {
-  console.log('Getting user role for:', userId);
-  
-  try {
-    // Check if user is a company (existing data takes precedence)
-    const { data: company, error: companyError } = await supabase
-      .from('companies')
-      .select('id, needs_password_change')
-      .eq('auth_user_id', userId)
-      .maybeSingle();
-
-    if (companyError) {
-      console.error('Error fetching company:', companyError);
-    }
-
-    if (company) {
-      console.log('Found company data:', company);
+    if (!profileError && profile?.role && profile.role !== 'student') {
+      console.log('✅ User role from profiles:', profile.role);
+      console.groupEnd();
       return { 
-        role: 'company',
-        companyId: company.id 
+        role: profile.role, 
+        needsPasswordChange: false, 
+        companyUserData: null 
       };
     }
-
-    // Check if user is a collaborator/student (existing data takes precedence)
-    const { data: collaborator, error: collaboratorError } = await supabase
+    
+    // Check company_users table for student/collaborator role
+    console.log('👥 Checking company_users table...');
+    const { data: companyUser, error: companyUserError } = await supabase
       .from('company_users')
-      .select('id, company_id, needs_password_change, name, email, companies(name)')
+      .select('*')
       .eq('auth_user_id', userId)
       .maybeSingle();
-
-    if (collaboratorError) {
-      console.error('Error fetching collaborator:', collaboratorError);
-    }
-
-    if (collaborator) {
-      console.log('Found collaborator data:', collaborator);
-      return { 
-        role: 'student',
-        companyId: collaborator.company_id,
-        studentId: collaborator.id 
-      };
-    }
-
-    // Get role from profile or infer it
-    const role = await getUserProfile(userId);
-    console.log('Using role from profile/inference:', role);
-    return { role };
     
-  } catch (error) {
-    console.error('Error in getUserRole:', error);
-    return { role: 'student' };
-  }
-}
-
-export async function fetchUserRole(userId: string): Promise<UserRoleData> {
-  console.log('Fetching user role data for:', userId);
-  
-  try {
-    // Check if user is a company (existing data takes precedence)
-    const { data: company, error: companyError } = await supabase
-      .from('companies')
-      .select('id, needs_password_change')
-      .eq('auth_user_id', userId)
-      .maybeSingle();
-
+    console.log('Company user query result:', {
+      hasData: !!companyUser,
+      error: companyUserError,
+      companyId: companyUser?.company_id,
+      isActive: companyUser?.is_active,
+      needsPasswordChange: companyUser?.needs_password_change
+    });
+    
+    if (!companyUserError && companyUser) {
+      console.log('✅ User found in company_users');
+      console.log('- Name:', companyUser.name);
+      console.log('- Email:', companyUser.email);
+      console.log('- Company ID:', companyUser.company_id);
+      console.log('- Is Active:', companyUser.is_active);
+      console.log('- Needs Password Change:', companyUser.needs_password_change);
+      
+      // Fetch company data separately for better reliability
+      let companyData = null;
+      if (companyUser.company_id) {
+        console.log('📢 Fetching company data for ID:', companyUser.company_id);
+        const { data: companyInfo, error: companyInfoError } = await supabase
+          .from('companies')
+          .select('id, name, official_name')
+          .eq('id', companyUser.company_id)
+          .maybeSingle();
+        
+        console.log('Company query result:', {
+          hasCompany: !!companyInfo,
+          error: companyInfoError,
+          companyName: companyInfo?.name,
+          officialName: companyInfo?.official_name
+        });
+        
+        if (!companyInfoError && companyInfo) {
+          companyData = companyInfo;
+          console.log('✅ Company data fetched successfully:', companyInfo.name);
+        } else {
+          console.warn('❌ Failed to fetch company data:', companyInfoError);
+        }
+      }
+      
+      // Ensure proper boolean handling for needs_password_change
+      const needsChange = companyUser.needs_password_change === true;
+      console.log('🔐 Password change required:', needsChange);
+      
+      // Structure the data properly
+      const companyUserWithCompany = {
+        ...companyUser,
+        companies: companyData
+      };
+      
+      console.log('📦 Final company user data structure:', {
+        name: companyUserWithCompany.name,
+        email: companyUserWithCompany.email,
+        companyName: companyUserWithCompany.companies?.name,
+        hasCompanies: !!companyUserWithCompany.companies
+      });
+      
+      console.groupEnd();
+      
+      return { 
+        role: 'student', 
+        needsPasswordChange: needsChange, 
+        companyUserData: companyUserWithCompany 
+      };
+    }
+    
+    // Handle errors or missing data
+    if (companyUserError) {
+      console.error('❌ Error fetching company user data:', companyUserError);
+    }
+    
     if (companyError) {
-      console.error('Error fetching company:', companyError);
+      console.error('❌ Error fetching company data:', companyError);
     }
-
-    if (company) {
-      console.log('Found company data, returning company role');
+    
+    // If user exists in profiles but not in company_users or companies, respect the profile role
+    if (profile?.role) {
+      console.log('✅ Using profile role as fallback:', profile.role);
+      console.groupEnd();
       return { 
-        role: 'company',
-        needsPasswordChange: company.needs_password_change || false,
-        companyUserData: null
+        role: profile.role, 
+        needsPasswordChange: false, 
+        companyUserData: null 
       };
     }
-
-    // Check if user is a collaborator/student (existing data takes precedence)
-    const { data: collaborator, error: collaboratorError } = await supabase
-      .from('company_users')
-      .select('id, company_id, needs_password_change, name, email, companies(name)')
-      .eq('auth_user_id', userId)
-      .maybeSingle();
-
-    if (collaboratorError) {
-      console.error('Error fetching collaborator:', collaboratorError);
-    }
-
-    if (collaborator) {
-      console.log('Found collaborator data, returning student role');
-      return { 
-        role: 'student',
-        needsPasswordChange: collaborator.needs_password_change || false,
-        companyUserData: collaborator
-      };
-    }
-
-    // Get role from profile or infer it
-    const profileRole = await getUserProfile(userId);
-    console.log('Using profile role with no password change required:', profileRole);
+    
+    // Final fallback to student role
+    console.log('🎓 Defaulting to student role');
+    console.groupEnd();
     return { 
-      role: profileRole,
-      needsPasswordChange: false,
-      companyUserData: null
+      role: 'student', 
+      needsPasswordChange: false, 
+      companyUserData: null 
     };
     
   } catch (error) {
-    console.error('Error in fetchUserRole:', error);
+    console.error('💥 Error in fetchUserRole:', error);
+    console.groupEnd();
     return { 
-      role: 'student',
-      needsPasswordChange: false,
-      companyUserData: null
+      role: 'student', 
+      needsPasswordChange: false, 
+      companyUserData: null 
     };
   }
-}
+};
