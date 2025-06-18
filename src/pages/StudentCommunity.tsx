@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,33 @@ import {
   Calendar,
   MapPin,
   Star,
-  Filter
+  Filter,
+  Eye,
+  ThumbsUp,
+  Pin,
+  Lock
 } from "lucide-react";
+import { useCommunityTopics, type CommunityTopic } from '@/hooks/useCommunityTopics';
+import { CreateTopicDialog } from '@/components/community/CreateTopicDialog';
 
 const StudentCommunity = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [createTopicOpen, setCreateTopicOpen] = useState(false);
+
+  const { data: topics = [], isLoading, error } = useCommunityTopics();
+
+  const filteredTopics = topics.filter(topic =>
+    topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    topic.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const communityStats = {
+    totalMembers: 0, // This would come from a separate query
+    totalTopics: topics.length,
+    totalReplies: topics.reduce((sum, topic) => sum + topic.replies_count, 0),
+    eventsThisMonth: 0, // This would come from events query
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -27,7 +51,7 @@ const StudentCommunity = () => {
             <p className="text-gray-600">Conecte-se, aprenda e compartilhe conhecimento</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button>
+            <Button onClick={() => setCreateTopicOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Nova Discussão
             </Button>
@@ -47,6 +71,8 @@ const StudentCommunity = () => {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
                       placeholder="Buscar discussões, eventos ou pessoas..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
                     />
                   </div>
@@ -74,19 +100,74 @@ const StudentCommunity = () => {
               <div className="grid lg:grid-cols-3 gap-6">
                 {/* Main Discussion Feed */}
                 <div className="lg:col-span-2 space-y-4">
-                  <div className="text-center py-12">
-                    <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Nenhuma discussão encontrada
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Seja o primeiro a iniciar uma discussão na comunidade
-                    </p>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar Discussão
-                    </Button>
-                  </div>
+                  {isLoading ? (
+                    <div className="text-center py-12">
+                      <div className="text-lg text-gray-600">Carregando discussões...</div>
+                    </div>
+                  ) : filteredTopics.length > 0 ? (
+                    filteredTopics.map((topic) => (
+                      <Card key={topic.id} className={topic.is_pinned ? 'border-purple-200 bg-purple-50' : ''}>
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <CardTitle className="text-lg">{topic.title}</CardTitle>
+                                {topic.is_pinned && (
+                                  <Badge className="bg-purple-100 text-purple-800">
+                                    <Pin className="w-3 h-3 mr-1" />
+                                    Fixado
+                                  </Badge>
+                                )}
+                                {topic.is_locked && (
+                                  <Badge variant="outline" className="border-red-200 text-red-700">
+                                    <Lock className="w-3 h-3 mr-1" />
+                                    Bloqueado
+                                  </Badge>
+                                )}
+                                <Badge variant="outline">{topic.category}</Badge>
+                              </div>
+                              <p className="text-gray-600 mb-3">{topic.content.substring(0, 200)}...</p>
+                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <span>Por {topic.author_name}</span>
+                                {topic.company_name && <span>• {topic.company_name}</span>}
+                                <span>• {new Date(topic.created_at).toLocaleDateString('pt-BR')}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center gap-6 text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <MessageCircle className="h-4 w-4" />
+                              <span>{topic.replies_count} respostas</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <ThumbsUp className="h-4 w-4" />
+                              <span>{topic.likes_count} curtidas</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Eye className="h-4 w-4" />
+                              <span>{topic.views_count} visualizações</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="text-center py-12">
+                      <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Nenhuma discussão encontrada
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Seja o primeiro a iniciar uma discussão na comunidade
+                      </p>
+                      <Button onClick={() => setCreateTopicOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Discussão
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Sidebar */}
@@ -117,19 +198,19 @@ const StudentCommunity = () => {
                     <CardContent className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Membros Ativos</span>
-                        <span className="font-semibold">0</span>
+                        <span className="font-semibold">{communityStats.totalMembers}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Discussões</span>
-                        <span className="font-semibold">0</span>
+                        <span className="font-semibold">{communityStats.totalTopics}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Respostas</span>
-                        <span className="font-semibold">0</span>
+                        <span className="font-semibold">{communityStats.totalReplies}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Eventos este mês</span>
-                        <span className="font-semibold">0</span>
+                        <span className="font-semibold">{communityStats.eventsThisMonth}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -184,6 +265,11 @@ const StudentCommunity = () => {
           </Tabs>
         </div>
       </div>
+
+      <CreateTopicDialog 
+        open={createTopicOpen} 
+        onOpenChange={setCreateTopicOpen} 
+      />
     </div>
   );
 };

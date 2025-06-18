@@ -39,10 +39,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { CreateTopicDialog } from '@/components/community/CreateTopicDialog';
 
 const ProducerCommunity = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [createTopicOpen, setCreateTopicOpen] = useState(false);
 
   const { data: topics = [], isLoading, error } = useCommunityTopics();
   const { mutate: togglePin } = useToggleTopicPin();
@@ -121,7 +123,10 @@ const ProducerCommunity = () => {
               Modere discussões, fixe tópicos importantes e acompanhe a atividade
             </p>
           </div>
-          <Button className="bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white">
+          <Button 
+            className="bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white"
+            onClick={() => setCreateTopicOpen(true)}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Novo Tópico
           </Button>
@@ -382,6 +387,11 @@ const ProducerCommunity = () => {
           </Tabs>
         </div>
       </div>
+
+      <CreateTopicDialog 
+        open={createTopicOpen} 
+        onOpenChange={setCreateTopicOpen} 
+      />
     </div>
   );
 };
