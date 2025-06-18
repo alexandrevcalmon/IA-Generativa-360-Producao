@@ -31,6 +31,12 @@ export const ProducerQuickActions = () => {
             Gerenciar Mentoria
           </Button>
         </Link>
+        <Link to="/producer/community" className="block">
+          <Button className="w-full justify-start bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white">
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Gerenciar Comunidade
+          </Button>
+        </Link>
         <Link to="/producer/companies" className="block">
           <Button className="w-full justify-start" variant="outline">
             <Building2 className="h-4 w-4 mr-2" />

@@ -20,6 +20,7 @@ import ProducerCompanies from "./pages/ProducerCompanies";
 import ProducerCompanyDetails from "./pages/ProducerCompanyDetails";
 import ProducerPlans from "./pages/ProducerPlans";
 import ProducerMentorship from "./pages/ProducerMentorship";
+import ProducerCommunity from "./pages/ProducerCommunity";
 import CourseDetails from "./pages/CourseDetails";
 import Courses from "./pages/Courses";
 import CompanyDashboard from "./pages/CompanyDashboard";
@@ -68,6 +69,7 @@ function App() {
                   <Route path="collaborators-analytics" element={<ProducerCollaboratorsAnalytics />} />
                   <Route path="plans" element={<ProducerPlans />} />
                   <Route path="mentorship" element={<ProducerMentorship />} />
+                  <Route path="community" element={<ProducerCommunity />} />
                 </Route>
               </Route>
 

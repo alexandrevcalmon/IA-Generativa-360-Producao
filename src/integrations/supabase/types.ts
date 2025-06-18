@@ -291,6 +291,171 @@ export type Database = {
           },
         ]
       }
+      community_replies: {
+        Row: {
+          author_email: string
+          author_id: string
+          author_name: string
+          company_name: string | null
+          content: string
+          created_at: string
+          id: string
+          is_solution: boolean
+          likes_count: number
+          topic_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_email: string
+          author_id: string
+          author_name: string
+          company_name?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_solution?: boolean
+          likes_count?: number
+          topic_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_email?: string
+          author_id?: string
+          author_name?: string
+          company_name?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_solution?: boolean
+          likes_count?: number
+          topic_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_replies_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "community_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reply_likes: {
+        Row: {
+          created_at: string
+          id: string
+          reply_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reply_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reply_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reply_likes_reply_id_fkey"
+            columns: ["reply_id"]
+            isOneToOne: false
+            referencedRelation: "community_replies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_topic_likes: {
+        Row: {
+          created_at: string
+          id: string
+          topic_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          topic_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          topic_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_topic_likes_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "community_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_topics: {
+        Row: {
+          author_email: string
+          author_id: string
+          author_name: string
+          category: string | null
+          company_name: string | null
+          content: string
+          created_at: string
+          id: string
+          is_locked: boolean
+          is_pinned: boolean
+          likes_count: number
+          replies_count: number
+          tags: string[] | null
+          title: string
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          author_email: string
+          author_id: string
+          author_name: string
+          category?: string | null
+          company_name?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_locked?: boolean
+          is_pinned?: boolean
+          likes_count?: number
+          replies_count?: number
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          author_email?: string
+          author_id?: string
+          author_name?: string
+          category?: string | null
+          company_name?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_locked?: boolean
+          is_pinned?: boolean
+          likes_count?: number
+          replies_count?: number
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address_city: string | null

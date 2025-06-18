@@ -1,4 +1,3 @@
-
 import { 
   Sidebar, 
   SidebarContent, 
@@ -49,6 +48,11 @@ export function AppSidebar() {
       title: 'Mentoria',
       icon: MessageCircle,
       href: '/producer/mentorship'
+    },
+    {
+      title: 'Comunidade',
+      icon: Users,
+      href: '/producer/community'
     },
     {
       title: 'Planos',
