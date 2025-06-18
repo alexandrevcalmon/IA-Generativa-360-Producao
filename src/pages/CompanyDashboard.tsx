@@ -34,9 +34,12 @@ const CompanyDashboard = () => {
   const completionRate = totalEnrollments > 0 ? Math.round((totalCompletions / totalEnrollments) * 100) : 0;
   const upcomingMentorships = mentorships.filter(m => m.status === 'scheduled').length;
 
-  // Get plan limits from subscription plan data or fallback to company data
-  const maxStudents = companyData?.subscription_plan_data?.max_students || companyData?.max_students || 50;
-  const currentStudents = collaborators.length;
+  // Get plan limits from company data - use max_students directly
+  const maxStudents = companyData?.max_students || 50;
+  const currentStudents = companyData?.current_students || collaborators.length;
+
+  // Get plan name - prioritize subscription_plan over subscription_plan_data
+  const planName = companyData?.subscription_plan || 'Básico';
 
   const stats = [
     {
@@ -158,7 +161,7 @@ const CompanyDashboard = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-600">Plano Atual</p>
                     <p className="text-lg font-semibold capitalize">
-                      {companyData.subscription_plan_data?.name || companyData.subscription_plan || 'Básico'}
+                      {planName}
                     </p>
                   </div>
                   <div className="space-y-2">

@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,7 +15,6 @@ import {
   Calendar,
   Activity,
   BookOpen,
-  Trophy,
   Clock
 } from "lucide-react";
 
@@ -64,7 +62,6 @@ const CompanyCollaborators = () => {
           <Card>
             <CardContent className="p-8 text-center">
               <p className="text-red-500 mb-4">Erro ao carregar dados dos colaboradores</p>
-              <Button onClick={() => window.location.reload()}>Tentar Novamente</Button>
             </CardContent>
           </Card>
         </div>
@@ -96,15 +93,13 @@ const CompanyCollaborators = () => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <header className="border-b bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <SidebarTrigger />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Colaboradores</h1>
-              <p className="text-gray-600">
-                Gerencie os colaboradores da {companyData?.name || 'empresa'}
-              </p>
-            </div>
+        <div className="flex items-center space-x-4">
+          <SidebarTrigger />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Colaboradores</h1>
+            <p className="text-gray-600">
+              Gerencie os colaboradores da {companyData?.name || 'empresa'}
+            </p>
           </div>
         </div>
       </header>
