@@ -5,10 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { fetchUserRole } from './userRoleService';
 import { useAuthState } from './useAuthState';
 import { createSessionValidationService } from './sessionValidationService';
+import { createSessionCleanupService } from './sessionCleanupService';
 
 export function useAuthInitialization() {
   const authState = useAuthState();
   const sessionService = createSessionValidationService();
+  const cleanupService = createSessionCleanupService();
   
   const {
     setSession,

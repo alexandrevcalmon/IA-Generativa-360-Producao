@@ -2,9 +2,17 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { createSessionValidationService } from './sessionValidationService';
+import { createCacheManagementService } from './cacheManagementService';
+import { createSessionCleanupService } from './sessionCleanupService';
+import { createLogoutValidationService } from './logoutValidationService';
+import { createServerLogoutService } from './serverLogoutService';
 
 export const createSignOutService = (toast: ReturnType<typeof useToast>['toast']) => {
   const sessionService = createSessionValidationService();
+  const cacheService = createCacheManagementService();
+  const cleanupService = createSessionCleanupService();
+  const validationService = createLogoutValidationService();
+  const serverLogoutService = createServerLogoutService();
   
   // Flag to prevent multiple simultaneous logout attempts
   let isLoggingOut = false;
@@ -21,52 +29,13 @@ export const createSignOutService = (toast: ReturnType<typeof useToast>['toast']
     
     try {
       // Always clear local data first to prevent UI inconsistencies
-      sessionService.clearLocalSession();
+      cleanupService.clearLocalSession();
       
       // Force clear browser cache and storage more aggressively
-      try {
-        // Clear additional browser storage that might cache auth tokens
-        if (typeof window !== 'undefined') {
-          // Clear any potential cached requests
-          if ('caches' in window) {
-            const cacheNames = await caches.keys();
-            await Promise.all(
-              cacheNames.map(cacheName => caches.delete(cacheName))
-            );
-            console.log('🧹 Browser caches cleared');
-          }
-          
-          // Clear IndexedDB data related to Supabase
-          if ('indexedDB' in window) {
-            try {
-              const deleteRequest = indexedDB.deleteDatabase('supabase-auth');
-              deleteRequest.onsuccess = () => console.log('🗑️ IndexedDB auth data cleared');
-            } catch (idbError) {
-              console.log('ℹ️ IndexedDB cleanup skipped (not critical)');
-            }
-          }
-        }
-      } catch (cacheError) {
-        console.log('ℹ️ Cache clearing skipped (not critical):', cacheError.message);
-      }
+      await cacheService.clearBrowserCaches();
       
-      // Check current session state with timeout
-      let currentSession = null;
-      let sessionError = null;
-      
-      try {
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Session check timeout')), 3000)
-        );
-        
-        const result = await Promise.race([sessionPromise, timeoutPromise]);
-        currentSession = result.data?.session || null;
-        sessionError = result.error;
-      } catch (error) {
-        console.log('⚠️ Session check failed or timed out:', error.message);
-        sessionError = error;
-      }
+      // Validate current session
+      const { session: currentSession, error: sessionError } = await validationService.validateSessionForLogout(null);
       
       if (sessionError) {
         console.log('❌ Error getting session during logout:', sessionError.message);
@@ -87,95 +56,39 @@ export const createSignOutService = (toast: ReturnType<typeof useToast>['toast']
         return { error: null };
       }
       
-      // Only attempt server logout if we have a session with valid tokens
-      if (currentSession.access_token && currentSession.refresh_token) {
-        console.log('🔍 Valid session found, attempting enhanced server logout...');
-        
-        // Validate session before attempting logout to avoid 403 errors
-        const validation = await sessionService.validateSession(currentSession);
-        
-        if (!validation.isValid && !validation.needsRefresh) {
-          console.log('⚠️ Session already invalid on server, skipping server logout');
-          toast({
-            title: "Logout realizado",
-            description: "Sessão encerrada localmente.",
-          });
-          return { error: null };
-        }
-        
-        // Enhanced server logout with 403 protection
-        try {
-          console.log('🔄 Attempting server logout with enhanced error handling...');
-          
-          // Use local scope and add additional headers for cache busting
-          const logoutOptions = {
-            scope: 'local' as const,
-          };
-          
-          // Add cache-busting timestamp to force fresh request
-          const timestamp = Date.now();
-          console.log(`🕐 Logout attempt timestamp: ${timestamp}`);
-          
-          const { error: logoutError } = await supabase.auth.signOut(logoutOptions);
-          
-          if (logoutError) {
-            console.warn('⚠️ Server logout error details:', {
-              message: logoutError.message,
-              status: logoutError.status,
-              code: logoutError.code,
-              timestamp: new Date().toISOString()
-            });
-            
-            // Enhanced 403 error handling
-            if (logoutError.message?.includes('403') || 
-                logoutError.message?.toLowerCase().includes('forbidden') ||
-                logoutError.status === 403) {
-              
-              console.log('🔒 403 Forbidden detected - treating as successful logout');
-              console.log('💡 This usually means the session was already invalidated on the server');
-              
-              // Clear any remaining local auth state
-              sessionService.clearLocalSession();
-              
-              toast({
-                title: "Logout realizado",
-                description: "Sessão encerrada com segurança.",
-              });
-              
-              return { error: null };
-            }
-            
-            // For other server errors, still proceed with local cleanup
-            console.warn('⚠️ Server logout failed but local cleanup completed:', logoutError.message);
-            
-            toast({
-              title: "Logout realizado",
-              description: "Sessão encerrada localmente. Cache do navegador foi limpo.",
-            });
-            
-            return { error: null };
-          }
-          
-          console.log('✅ Server logout successful');
-        } catch (networkError) {
-          console.error('🌐 Network error during logout:', networkError);
-          
-          // Network errors are treated as successful logout since local state is cleared
-          toast({
-            title: "Logout realizado",
-            description: "Sessão encerrada localmente devido a problema de rede.",
-          });
-          
-          return { error: null };
-        }
-      } else {
-        console.log('⚠️ Session missing required tokens, skipping server logout');
+      // Check if we should skip server logout
+      const validation = await sessionService.validateSession(currentSession);
+      const skipResult = validationService.shouldSkipServerLogout(currentSession, validation);
+      
+      if (skipResult.skip) {
+        console.log(`⚠️ ${skipResult.reason}, skipping server logout`);
+        toast({
+          title: "Logout realizado",
+          description: "Sessão encerrada localmente.",
+        });
+        return { error: null };
       }
       
-      toast({
-        title: "Logout realizado com sucesso!",
-        description: "Até mais!",
-      });
+      // Perform server logout
+      console.log('🔍 Valid session found, attempting enhanced server logout...');
+      const logoutResult = await serverLogoutService.performServerLogout(currentSession);
+      
+      if (logoutResult.success || logoutResult.treatedAs403) {
+        toast({
+          title: "Logout realizado com sucesso!",
+          description: "Até mais!",
+        });
+      } else if (logoutResult.networkError) {
+        toast({
+          title: "Logout realizado",
+          description: "Sessão encerrada localmente devido a problema de rede.",
+        });
+      } else {
+        toast({
+          title: "Logout realizado",
+          description: "Sessão encerrada localmente. Cache do navegador foi limpo.",
+        });
+      }
       
       return { error: null };
       
@@ -187,7 +100,7 @@ export const createSignOutService = (toast: ReturnType<typeof useToast>['toast']
       });
       
       // Always ensure local state is cleared even on errors
-      sessionService.clearLocalSession();
+      cleanupService.clearLocalSession();
       
       toast({
         title: "Logout realizado",
