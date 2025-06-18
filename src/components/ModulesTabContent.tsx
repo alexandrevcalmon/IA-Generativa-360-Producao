@@ -1,10 +1,9 @@
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Plus } from "lucide-react";
-import { CourseModule, useUpdateModuleOrder } from "@/hooks/useCourseModules";
-import { DraggableModuleCard } from "@/components/DraggableModuleCard";
-import { DragDropContext, Droppable } from "react-beautiful-dnd";
+import { Badge } from "@/components/ui/badge";
+import { Plus, BookOpen, Edit, Trash2 } from "lucide-react";
+import { CourseModule } from "@/hooks/useCourseModules";
 
 interface ModulesTabContentProps {
   modules: CourseModule[];
@@ -12,36 +11,7 @@ interface ModulesTabContentProps {
   onEditModule: (module: CourseModule) => void;
 }
 
-export const ModulesTabContent = ({ 
-  modules, 
-  onCreateModule, 
-  onEditModule 
-}: ModulesTabContentProps) => {
-  const updateModuleOrder = useUpdateModuleOrder();
-
-  const handleDragEnd = async (result: any) => {
-    if (!result.destination) return;
-
-    const sourceIndex = result.source.index;
-    const destinationIndex = result.destination.index;
-
-    if (sourceIndex === destinationIndex) return;
-
-    const reorderedModules = Array.from(modules);
-    const [removed] = reorderedModules.splice(sourceIndex, 1);
-    reorderedModules.splice(destinationIndex, 0, removed);
-
-    // Atualizar as ordens no banco
-    const updates = reorderedModules.map((module, index) => ({
-      id: module.id,
-      order_index: index,
-    }));
-
-    if (modules.length > 0) {
-      await updateModuleOrder.mutateAsync({ courseId: modules[0].course_id, modules: updates });
-    }
-  };
-
+export const ModulesTabContent = ({ modules, onCreateModule, onEditModule }: ModulesTabContentProps) => {
   if (modules.length === 0) {
     return (
       <Card>
@@ -64,26 +34,48 @@ export const ModulesTabContent = ({
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <Droppable droppableId="modules" type="module">
-        {(provided) => (
-          <div 
-            {...provided.droppableProps} 
-            ref={provided.innerRef}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          >
-            {modules.map((module, index) => (
-              <DraggableModuleCard
-                key={module.id}
-                module={module}
-                index={index}
-                onEdit={onEditModule}
-              />
-            ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </DragDropContext>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Módulos do Curso</h3>
+        <Button 
+          onClick={onCreateModule}
+          className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Módulo
+        </Button>
+      </div>
+      
+      <div className="grid gap-4">
+        {modules.map((module) => (
+          <Card key={module.id} className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">{module.title}</CardTitle>
+                  <CardDescription className="mt-1">
+                    {module.description || 'Sem descrição'}
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={module.is_published ? 'default' : 'outline'}>
+                    {module.is_published ? 'Publicado' : 'Rascunho'}
+                  </Badge>
+                  <Button variant="ghost" size="sm" onClick={() => onEditModule(module)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>{module.lessons?.length || 0} aulas</span>
+                <span>Ordem: {module.order_index}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 };

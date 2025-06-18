@@ -27,6 +27,7 @@ import ProducerCommunity from "./pages/ProducerCommunity";
 import ProducerPlans from "./pages/ProducerPlans";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentCourses from "./pages/StudentCourses";
+import CourseDetails from "./pages/CourseDetails";
 
 import { ChangePassword } from "./components/auth/ChangePassword";
 import { ResetPassword } from "./components/auth/ResetPassword";
@@ -78,6 +79,7 @@ function App() {
               <Route path="dashboard" element={<ProducerDashboard />} />
               <Route path="companies" element={<ProducerCompanies />} />
               <Route path="courses" element={<ProducerCourses />} />
+              <Route path="courses/:courseId" element={<CourseDetails />} />
               <Route path="community" element={<ProducerCommunity />} />
               <Route path="plans" element={<ProducerPlans />} />
               <Route path="collaborators-analytics" element={<ProducerCollaboratorsAnalytics />} />
