@@ -1,46 +1,81 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { User } from '@supabase/supabase-js';
 
 interface UseAuthRedirectsProps {
-  user: any;
-  userRole: string | null;
-  authLoading: boolean;
-  needsPasswordChange: boolean;
+  user: User | null;
+  userRole: string;
+  loading: boolean;
+  targetRole?: string;
 }
 
-export function useAuthRedirects({ user, userRole, authLoading, needsPasswordChange }: UseAuthRedirectsProps) {
+export function useAuthRedirects({ user, userRole, loading, targetRole }: UseAuthRedirectsProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('Auth redirect check:', {
-      authLoading,
-      user: user?.email,
-      userRole,
-      needsPasswordChange
-    });
+    if (loading) return;
 
-    // Only redirect if all conditions are met
-    if (!authLoading && user && userRole && !needsPasswordChange) {
-      console.log('Redirecting authenticated user. Role:', userRole);
+    console.log('Auth redirect check:', { user: !!user, userRole, targetRole, loading });
+
+    // If no user, redirect to auth
+    if (!user) {
+      console.log('No user, redirecting to auth');
+      navigate('/auth');
+      return;
+    }
+
+    // If we have a target role and user doesn't match, redirect appropriately
+    if (targetRole && userRole !== targetRole) {
+      console.log(`User role ${userRole} doesn't match target ${targetRole}, redirecting`);
       
       switch (userRole) {
         case 'producer':
-          console.log('Redirecting to producer dashboard');
-          navigate('/producer-dashboard', { replace: true });
+          navigate('/producer/dashboard');
           break;
         case 'company':
-          console.log('Redirecting to company dashboard');
-          navigate('/company-dashboard', { replace: true });
+          navigate('/company-dashboard');
           break;
         case 'student':
-          console.log('Redirecting to student dashboard');
-          navigate('/student/dashboard', { replace: true });
+          navigate('/student/dashboard');
           break;
         default:
-          console.log('Unknown role, redirecting to student dashboard');
-          navigate('/student/dashboard', { replace: true });
+          navigate('/auth');
+      }
+      return;
+    }
+
+    // Auto-redirect based on role when no specific target
+    if (!targetRole && user && userRole) {
+      const currentPath = window.location.pathname;
+      
+      // Don't redirect if already on correct path
+      if (
+        (userRole === 'producer' && currentPath.startsWith('/producer')) ||
+        (userRole === 'company' && (currentPath.startsWith('/company') || currentPath === '/company-dashboard')) ||
+        (userRole === 'student' && currentPath.startsWith('/student'))
+      ) {
+        return;
+      }
+
+      // Redirect to appropriate dashboard
+      switch (userRole) {
+        case 'producer':
+          if (currentPath === '/' || currentPath === '/auth') {
+            navigate('/producer/dashboard');
+          }
+          break;
+        case 'company':
+          if (currentPath === '/' || currentPath === '/auth') {
+            navigate('/company-dashboard');
+          }
+          break;
+        case 'student':
+          if (currentPath === '/' || currentPath === '/auth') {
+            navigate('/student/dashboard');
+          }
+          break;
       }
     }
-  }, [user, userRole, authLoading, needsPasswordChange, navigate]);
+  }, [user, userRole, loading, targetRole, navigate]);
 }

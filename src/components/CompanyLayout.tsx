@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/auth';
 import { Navigate, Outlet } from 'react-router-dom';
 import { CompanySidebar } from './CompanySidebar';
@@ -5,6 +6,8 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 
 const CompanyLayout = () => {
   const { user, loading, userRole } = useAuth();
+
+  console.log('CompanyLayout - Auth state:', { user: !!user, userRole, loading });
 
   if (loading) {
     return (
@@ -15,10 +18,12 @@ const CompanyLayout = () => {
   }
 
   if (!user) {
+    console.log('CompanyLayout: No user, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
   if (userRole !== 'company') {
+    console.log(`CompanyLayout: User role ${userRole} is not company, showing access denied`);
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
