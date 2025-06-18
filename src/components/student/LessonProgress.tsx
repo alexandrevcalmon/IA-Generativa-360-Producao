@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, FileText } from 'lucide-react';
 import { StudentLesson } from '@/hooks/useStudentCourses';
-import { useUpdateLessonProgress } from '@/hooks/useStudentProgress';
-import { useEffect } from 'react';
+import { useUpdateLessonProgress, useDebouncedLessonProgress } from '@/hooks/useStudentProgress';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/auth';
 
 interface LessonProgressProps {
@@ -16,6 +16,12 @@ interface LessonProgressProps {
 export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonProgressProps) => {
   const { user } = useAuth();
   const updateProgress = useUpdateLessonProgress();
+  const { debouncedMutate } = useDebouncedLessonProgress();
+  
+  // Refs to track state and prevent unnecessary updates
+  const lastSavedTimeRef = useRef<number>(0);
+  const autoCompletedRef = useRef<boolean>(false);
+  const lastProgressPercentageRef = useRef<number>(0);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -25,40 +31,58 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
 
   const progressPercentage = duration > 0 ? (watchTime / duration) * 100 : 0;
 
-  // Auto-complete lesson when 95% is watched
+  // Auto-complete lesson when 95% is watched (only once)
   useEffect(() => {
     if (
       currentLesson && 
       user?.id &&
       !currentLesson.completed && 
+      !autoCompletedRef.current &&
       duration > 0 && 
-      progressPercentage >= 95
+      progressPercentage >= 95 &&
+      progressPercentage > lastProgressPercentageRef.current
     ) {
       console.log('🎯 Auto-completing lesson at 95% progress');
+      autoCompletedRef.current = true;
+      
       updateProgress.mutate({
         lessonId: currentLesson.id,
         completed: true,
         watchTimeSeconds: Math.floor(watchTime)
       });
     }
+    
+    lastProgressPercentageRef.current = progressPercentage;
   }, [currentLesson, progressPercentage, duration, watchTime, updateProgress, user?.id]);
 
-  // Save progress periodically (every 30 seconds of watch time)
+  // Save progress periodically with debounce (every 30 seconds, but debounced)
   useEffect(() => {
     if (
       currentLesson && 
       user?.id &&
       watchTime > 0 && 
-      Math.floor(watchTime) % 30 === 0
+      !autoCompletedRef.current && // Don't save if auto-completion is in progress
+      Math.floor(watchTime) % 30 === 0 && // Every 30 seconds
+      Math.floor(watchTime) !== lastSavedTimeRef.current // Avoid duplicate saves
     ) {
-      console.log('💾 Saving lesson progress:', Math.floor(watchTime), 'seconds');
-      updateProgress.mutate({
+      console.log('💾 Saving lesson progress (debounced):', Math.floor(watchTime), 'seconds');
+      lastSavedTimeRef.current = Math.floor(watchTime);
+      
+      // Use debounced update to prevent conflicts
+      debouncedMutate({
         lessonId: currentLesson.id,
         completed: currentLesson.completed || false,
         watchTimeSeconds: Math.floor(watchTime)
       });
     }
-  }, [watchTime, currentLesson, updateProgress, user?.id]);
+  }, [watchTime, currentLesson, debouncedMutate, user?.id]);
+
+  // Reset auto-completion flag when lesson changes
+  useEffect(() => {
+    autoCompletedRef.current = false;
+    lastSavedTimeRef.current = 0;
+    lastProgressPercentageRef.current = 0;
+  }, [currentLesson?.id]);
 
   return (
     <>
