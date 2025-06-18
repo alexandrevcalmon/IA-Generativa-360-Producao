@@ -1,5 +1,4 @@
 
-import StudentLayout from '@/components/StudentLayout';
 import { useAuth } from '@/hooks/auth';
 import { useStudentPoints } from '@/hooks/useStudentGamification';
 import { useStudentCourses } from '@/hooks/useStudentCourses';
@@ -43,36 +42,34 @@ const StudentDashboard = () => {
   }));
 
   return (
-    <StudentLayout>
-      <div className="flex flex-col h-full">
-        <StudentDashboardHeader totalPoints={totalPoints} currentStreak={currentStreak} />
-        
-        <div className="flex-1 overflow-auto p-6 bg-gray-50">
-          <div className="space-y-6">
-            <StudentStatsGrid 
-              coursesInProgress={coursesInProgress}
-              completedCourses={completedCourses}
-              hoursStudied={hoursStudied}
-              totalPoints={totalPoints}
-            />
-            
-            <div className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <StudentQuickActions />
-                <StudentRecentActivities activities={recentActivities} />
-              </div>
-              <div>
-                <StudentAchievements 
-                  coursesInProgress={coursesInProgress} 
-                  completedCourses={completedCourses} 
-                  totalPoints={totalPoints} 
-                />
-              </div>
+    <div className="flex flex-col h-full">
+      <StudentDashboardHeader totalPoints={totalPoints} currentStreak={currentStreak} />
+      
+      <div className="flex-1 overflow-auto p-6 bg-gray-50">
+        <div className="space-y-6">
+          <StudentStatsGrid 
+            coursesInProgress={coursesInProgress}
+            completedCourses={completedCourses}
+            hoursStudied={hoursStudied}
+            totalPoints={totalPoints}
+          />
+          
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <StudentQuickActions />
+              <StudentRecentActivities activities={recentActivities} />
+            </div>
+            <div>
+              <StudentAchievements 
+                coursesInProgress={coursesInProgress} 
+                completedCourses={completedCourses} 
+                totalPoints={totalPoints} 
+              />
             </div>
           </div>
         </div>
       </div>
-    </StudentLayout>
+    </div>
   );
 };
 

@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,6 @@ import {
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useStudentCourses } from "@/hooks/useStudentCourses";
-import StudentLayout from "@/components/StudentLayout";
 
 const StudentCourses = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -154,196 +154,192 @@ const StudentCourses = () => {
 
   if (isLoading) {
     return (
-      <StudentLayout>
-        <div className="flex flex-col h-full">
-          <div className="bg-white border-b p-6">
-            <h1 className="text-2xl font-bold text-gray-900">Catálogo de Cursos</h1>
-            <p className="text-gray-600">Carregando...</p>
-          </div>
-          <div className="flex-1 overflow-auto p-6 bg-gray-50">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-lg text-gray-600">Carregando cursos...</div>
-            </div>
+      <div className="flex flex-col h-full">
+        <div className="bg-white border-b p-6">
+          <h1 className="text-2xl font-bold text-gray-900">Catálogo de Cursos</h1>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+        <div className="flex-1 overflow-auto p-6 bg-gray-50">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg text-gray-600">Carregando cursos...</div>
           </div>
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
   return (
-    <StudentLayout>
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <header className="border-b bg-white px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Catálogo de Cursos</h1>
-              <p className="text-gray-600">Explore nossa biblioteca completa de conhecimento</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <header className="border-b bg-white px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Catálogo de Cursos</h1>
+            <p className="text-gray-600">Explore nossa biblioteca completa de conhecimento</p>
           </div>
-        </header>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-auto p-6 bg-gray-50">
-          <div className="space-y-6">
-            {/* Search and Filters */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input
-                        placeholder="Buscar cursos, instrutores ou tópicos..."
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <Select defaultValue="Todos">
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    
-                    <Select defaultValue="Todos os níveis">
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Nível" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {levels.map(level => (
-                          <SelectItem key={level} value={level}>
-                            {level}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    
-                    <Button variant="outline">
-                      <Filter className="h-4 w-4 mr-2" />
-                      Filtros
-                    </Button>
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto p-6 bg-gray-50">
+        <div className="space-y-6">
+          {/* Search and Filters */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Buscar cursos, instrutores ou tópicos..."
+                      className="pl-10"
+                    />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Course Tabs */}
-            <Tabs defaultValue="all" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4">
-                <TabsTrigger value="all">Todos</TabsTrigger>
-                <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
-                <TabsTrigger value="completed">Concluídos</TabsTrigger>
-                <TabsTrigger value="bookmarked">Favoritos</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="all" className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold">
-                    {courses?.length || 0} cursos disponíveis
-                  </h2>
-                  <Select defaultValue="newest">
+                <div className="flex gap-3">
+                  <Select defaultValue="Todos">
                     <SelectTrigger className="w-48">
-                      <SelectValue />
+                      <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="newest">Mais Recentes</SelectItem>
-                      <SelectItem value="popular">Mais Populares</SelectItem>
-                      <SelectItem value="rating">Melhor Avaliados</SelectItem>
-                      <SelectItem value="duration">Duração</SelectItem>
+                      {categories.map(category => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  
+                  <Select defaultValue="Todos os níveis">
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Nível" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {levels.map(level => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button variant="outline">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtros
+                  </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                {courses && courses.length > 0 ? (
-                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-                    {courses.map((course, index) => (
-                      <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Nenhum curso disponível
-                    </h3>
-                    <p className="text-gray-600">
-                      Novos cursos serão adicionados em breve
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
+          {/* Course Tabs */}
+          <Tabs defaultValue="all" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4">
+              <TabsTrigger value="all">Todos</TabsTrigger>
+              <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
+              <TabsTrigger value="completed">Concluídos</TabsTrigger>
+              <TabsTrigger value="bookmarked">Favoritos</TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="in-progress" className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold">
-                    {inProgressCourses.length} cursos em andamento
-                  </h2>
-                </div>
+            <TabsContent value="all" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">
+                  {courses?.length || 0} cursos disponíveis
+                </h2>
+                <Select defaultValue="newest">
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Mais Recentes</SelectItem>
+                    <SelectItem value="popular">Mais Populares</SelectItem>
+                    <SelectItem value="rating">Melhor Avaliados</SelectItem>
+                    <SelectItem value="duration">Duração</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
+              {courses && courses.length > 0 ? (
                 <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-                  {inProgressCourses.map((course, index) => (
+                  {courses.map((course, index) => (
                     <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
                   ))}
                 </div>
-              </TabsContent>
-
-              <TabsContent value="completed" className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold">
-                    {completedCourses.length} cursos concluídos
-                  </h2>
-                </div>
-
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-                  {completedCourses.map((course, index) => (
-                    <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="bookmarked" className="space-y-6">
+              ) : (
                 <div className="text-center py-12">
                   <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Nenhum curso favoritado ainda
+                    Nenhum curso disponível
                   </h3>
-                  <p className="text-gray-600 mb-4">
-                    Marque cursos como favoritos para acessá-los rapidamente
+                  <p className="text-gray-600">
+                    Novos cursos serão adicionados em breve
                   </p>
-                  <Button variant="outline">
-                    Explorar Cursos
-                  </Button>
                 </div>
-              </TabsContent>
-            </Tabs>
-          </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="in-progress" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">
+                  {inProgressCourses.length} cursos em andamento
+                </h2>
+              </div>
+
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
+                {inProgressCourses.map((course, index) => (
+                  <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="completed" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">
+                  {completedCourses.length} cursos concluídos
+                </h2>
+              </div>
+
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
+                {completedCourses.map((course, index) => (
+                  <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="bookmarked" className="space-y-6">
+              <div className="text-center py-12">
+                <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Nenhum curso favoritado ainda
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Marque cursos como favoritos para acessá-los rapidamente
+                </p>
+                <Button variant="outline">
+                  Explorar Cursos
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
-    </StudentLayout>
+    </div>
   );
 };
 
