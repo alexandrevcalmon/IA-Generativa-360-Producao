@@ -42,7 +42,20 @@ export const useCourseModules = (courseId: string) => {
         .from('course_modules')
         .select(`
           *,
-          lessons(*)
+          lessons(
+            id,
+            module_id,
+            title,
+            content,
+            video_url,
+            video_file_url,
+            material_url,
+            image_url,
+            duration_minutes,
+            order_index,
+            is_free,
+            resources
+          )
         `)
         .eq('course_id', courseId)
         .order('order_index', { ascending: true });
@@ -52,8 +65,14 @@ export const useCourseModules = (courseId: string) => {
         throw modulesError;
       }
       
-      console.log('[useCourseModules] Modules fetched successfully:', modules);
-      return (modules as CourseModule[]) || [];
+      // Ordenar as aulas dentro de cada módulo
+      const modulesWithSortedLessons = modules?.map(module => ({
+        ...module,
+        lessons: module.lessons?.sort((a: any, b: any) => a.order_index - b.order_index) || []
+      })) || [];
+      
+      console.log('[useCourseModules] Modules fetched successfully:', modulesWithSortedLessons);
+      return modulesWithSortedLessons as CourseModule[];
     },
     enabled: !!courseId && !!user,
   });

@@ -12,9 +12,17 @@ interface LessonsTabContentProps {
 }
 
 export const LessonsTabContent = ({ modules, onEditLesson, onCreateLesson }: LessonsTabContentProps) => {
-  const allLessons = modules.flatMap(module => 
-    module.lessons?.map(lesson => ({ ...lesson, moduleName: module.title })) || []
-  );
+  console.log('[LessonsTabContent] Modules received:', modules);
+  
+  const allLessons = modules.flatMap(module => {
+    console.log(`[LessonsTabContent] Module ${module.title} has ${module.lessons?.length || 0} lessons:`, module.lessons);
+    return module.lessons?.map(lesson => ({ 
+      ...lesson, 
+      moduleName: module.title 
+    })) || [];
+  });
+
+  console.log('[LessonsTabContent] All lessons:', allLessons);
 
   if (allLessons.length === 0) {
     return (
@@ -23,7 +31,9 @@ export const LessonsTabContent = ({ modules, onEditLesson, onCreateLesson }: Les
           <Play className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">Nenhuma aula criada</h3>
           <p className="text-muted-foreground mb-4">
-            Crie módulos primeiro, depois adicione aulas a eles.
+            {modules.length === 0 
+              ? "Crie módulos primeiro, depois adicione aulas a eles."
+              : "Adicione aulas aos módulos existentes."}
           </p>
         </CardContent>
       </Card>
@@ -32,7 +42,9 @@ export const LessonsTabContent = ({ modules, onEditLesson, onCreateLesson }: Les
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Todas as Aulas</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Todas as Aulas ({allLessons.length})</h3>
+      </div>
       
       <div className="grid gap-4">
         {allLessons.map((lesson) => (
