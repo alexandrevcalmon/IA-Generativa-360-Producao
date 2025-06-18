@@ -32,20 +32,37 @@ export function UserMenu() {
   }
 
   const handleSignOut = async () => {
-    console.log('🚪 UserMenu logout initiated...');
+    console.log('🚪 UserMenu enhanced logout initiated...', {
+      userEmail: user.email,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Disable the button immediately to prevent multiple clicks
+    const button = document.querySelector('[data-logout-button]') as HTMLButtonElement;
+    if (button) {
+      button.disabled = true;
+      console.log('🚫 Logout button disabled to prevent duplicate requests');
+    }
     
     try {
       // Call the enhanced signOut service
       const { error } = await signOut();
       
-      console.log('✅ Logout service completed, navigating...');
+      console.log('✅ Enhanced logout service completed, navigating...', {
+        hasError: !!error,
+        timestamp: new Date().toISOString()
+      });
       
       // Navigate immediately regardless of server response
       // The signOut service handles all error cases gracefully
       navigate('/', { replace: true });
       
     } catch (error) {
-      console.error('💥 Unexpected error in UserMenu logout:', error);
+      console.error('💥 Unexpected error in UserMenu enhanced logout:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
       
       // Force navigation and show a fallback message
       toast({
@@ -54,6 +71,14 @@ export function UserMenu() {
       });
       
       navigate('/', { replace: true });
+    } finally {
+      // Re-enable the button after a delay (in case navigation fails)
+      setTimeout(() => {
+        if (button) {
+          button.disabled = false;
+          console.log('🔄 Logout button re-enabled');
+        }
+      }, 2000);
     }
   };
 
@@ -128,7 +153,7 @@ export function UserMenu() {
           <span>Configurações</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
+        <DropdownMenuItem onClick={handleSignOut} data-logout-button>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sair</span>
         </DropdownMenuItem>
