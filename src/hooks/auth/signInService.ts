@@ -1,4 +1,5 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { createProducerSignInService } from './producerSignInService';
 import { createCompanySignInService } from './companySignInService';
 import { createDefaultSignInService } from './defaultSignInService';
