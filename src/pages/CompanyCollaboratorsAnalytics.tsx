@@ -43,30 +43,38 @@ const CompanyCollaboratorsAnalytics = () => {
     <div className="flex flex-col h-full">
       <CollaboratorAnalyticsHeader onRefresh={handleRefresh} />
       
-      <div className="flex-1 overflow-auto p-6 bg-gray-50">
+      <div className="flex-1 overflow-auto p-6 bg-calmon-bg-gradient">
         <div className="space-y-6">
           {hasData && (
             <>
-              <CollaboratorAnalyticsSummary stats={analytics} />
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+                <CollaboratorAnalyticsSummary stats={analytics} />
+              </div>
               
-              <CollaboratorAnalyticsFilters
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                filterStatus={filterStatus}
-                setFilterStatus={setFilterStatus}
-              />
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+                <CollaboratorAnalyticsFilters
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  filterStatus={filterStatus}
+                  setFilterStatus={setFilterStatus}
+                />
+              </div>
             </>
           )}
 
           {filteredAnalytics.length > 0 ? (
-            <CollaboratorAnalyticsList collaborators={filteredAnalytics} />
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+              <CollaboratorAnalyticsList collaborators={filteredAnalytics} />
+            </div>
           ) : (
-            <CollaboratorAnalyticsEmptyStates 
-              hasFiltered={hasFiltered} 
-              hasData={hasData} 
-            />
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+              <CollaboratorAnalyticsEmptyStates 
+                hasFiltered={hasFiltered} 
+                hasData={hasData} 
+              />
+            </div>
           )}
         </div>
       </div>
@@ -75,3 +83,4 @@ const CompanyCollaboratorsAnalytics = () => {
 };
 
 export default CompanyCollaboratorsAnalytics;
+

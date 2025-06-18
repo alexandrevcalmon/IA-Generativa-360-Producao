@@ -42,24 +42,30 @@ const StudentDashboard = () => {
   }));
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-calmon-bg-gradient">
       <StudentDashboardHeader totalPoints={totalPoints} currentStreak={currentStreak} />
       
-      <div className="flex-1 overflow-auto p-6 bg-gray-50">
+      <div className="flex-1 overflow-auto p-6">
         <div className="space-y-6">
-          <StudentStatsGrid 
-            coursesInProgress={coursesInProgress}
-            completedCourses={completedCourses}
-            hoursStudied={hoursStudied}
-            totalPoints={totalPoints}
-          />
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+            <StudentStatsGrid 
+              coursesInProgress={coursesInProgress}
+              completedCourses={completedCourses}
+              hoursStudied={hoursStudied}
+              totalPoints={totalPoints}
+            />
+          </div>
           
           <div className="grid lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <StudentQuickActions />
-              <StudentRecentActivities activities={recentActivities} />
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+                <StudentQuickActions />
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+                <StudentRecentActivities activities={recentActivities} />
+              </div>
             </div>
-            <div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
               <StudentAchievements 
                 coursesInProgress={coursesInProgress} 
                 completedCourses={completedCourses} 
@@ -74,3 +80,4 @@ const StudentDashboard = () => {
 };
 
 export default StudentDashboard;
+
