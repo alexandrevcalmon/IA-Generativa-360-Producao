@@ -12,7 +12,7 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
   const signOutService = createSignOutService(toast);
 
   return {
-    signIn: signInService.signIn,
+    signIn: (email: string, password: string, role?: string) => signInService.signIn(email, password, role),
     signUp: signUpService.signUp,
     resetPassword: passwordService.resetPassword,
     changePassword: passwordService.changePassword,

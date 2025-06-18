@@ -1,8 +1,8 @@
 
 import { useEffect } from 'react';
-import { Session } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchUserRole } from './userRoleService';
+import { fetchUserRoleAuxiliaryData } from './userRoleService';
 import { useAuthState } from './useAuthState';
 import { createSessionValidationService } from './sessionValidationService';
 import { createSessionCleanupService } from './sessionCleanupService';
@@ -82,24 +82,31 @@ export function useAuthInitialization() {
     // Fetch role data asynchronously to avoid blocking
     setTimeout(async () => {
       try {
-        console.log('👤 Fetching user role and data for:', session.user.email);
-        const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(session.user.id);
+        const user = session.user as User; // session.user should be full User object
+        console.log('👤 Setting role from metadata and fetching auxiliary data for:', user.email);
         
-        setUserRole(role);
-        setNeedsPasswordChange(needsChange);
-        setCompanyUserData(userData);
-        
-        console.log('✅ User data loaded successfully:', { 
-          role, 
-          needsChange, 
-          hasUserData: !!userData,
-          userEmail: session.user.email 
-        });
+        const primaryRole = user.user_metadata?.role || 'student';
+        setUserRole(primaryRole);
+        // needsPasswordChange is primarily set by signIn and managed by AuthProvider's state.
+        // fetchUserRoleAuxiliaryData no longer returns it.
+
+        const auxData = await fetchUserRoleAuxiliaryData(user);
+
+        if (primaryRole === 'company') {
+          setCompanyUserData(auxData.companyData);
+          console.log('✅ Company auxiliary data loaded for:', user.email, auxData.companyData);
+        } else if (primaryRole === 'collaborator') {
+          // companyUserData previously held collaborator info including nested company
+          setCompanyUserData(auxData.collaboratorData);
+          console.log('✅ Collaborator auxiliary data loaded for:', user.email, auxData.collaboratorData);
+        } else {
+          setCompanyUserData(null);
+        }
+        // console.log('Profile data:', auxData.profileData); // Available if needed
+
       } catch (error) {
-        console.error('❌ Error loading user data:', error);
-        // Set safe defaults
-        setUserRole('student');
-        setNeedsPasswordChange(false);
+        console.error('❌ Error loading user auxiliary data:', error);
+        // Set safe defaults - role is already set from metadata
         setCompanyUserData(null);
       } finally {
         setLoading(false);

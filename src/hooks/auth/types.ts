@@ -5,7 +5,7 @@ export interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any; needsPasswordChange?: boolean }>;
+  signIn: (email: string, password: string, role?: string) => Promise<{ error: any; needsPasswordChange?: boolean }>;
   signUp: (email: string, password: string, role?: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   changePassword: (newPassword: string) => Promise<{ error: any }>;
