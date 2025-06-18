@@ -1,13 +1,14 @@
 
-import { useMentorshipSessions, useRegisterForMentorship } from '@/hooks/useMentorshipSessions';
+import { useMentorshipSessions, useRegisterForMentorship, useUserMentorshipRegistrations } from '@/hooks/useMentorshipSessions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Calendar, Clock, Video, AlertCircle } from 'lucide-react';
+import { Users, Calendar, Clock, Video, AlertCircle, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 const StudentMentorship = () => {
   const { data: mentorshipSessions, isLoading, error } = useMentorshipSessions();
+  const { data: userRegistrations = [] } = useUserMentorshipRegistrations();
   const { registerForMentorship } = useRegisterForMentorship();
 
   const handleRegister = async (sessionId: string) => {
@@ -17,6 +18,10 @@ const StudentMentorship = () => {
       console.error('Error registering for mentorship:', error);
       // Error toast is already handled in the hook
     }
+  };
+
+  const isUserRegistered = (sessionId: string) => {
+    return userRegistrations.includes(sessionId);
   };
 
   const getStatusColor = (status: string) => {
@@ -159,57 +164,71 @@ const StudentMentorship = () => {
             </h2>
             <div className="grid gap-4">
               {upcomingSessions.length > 0 ? (
-                upcomingSessions.map((session) => (
-                  <Card key={session.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{session.title}</CardTitle>
-                        <Badge className={getStatusColor(session.status)}>
-                          {getStatusText(session.status)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {session.description && (
-                          <p className="text-gray-600">{session.description}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            <span>
-                              {new Date(session.scheduled_at).toLocaleDateString('pt-BR', {
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>{session.duration_minutes} minutos</span>
-                          </div>
-                          {session.max_participants && (
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              <span>Máx. {session.max_participants} participantes</span>
-                            </div>
-                          )}
+                upcomingSessions.map((session) => {
+                  const isRegistered = isUserRegistered(session.id);
+                  
+                  return (
+                    <Card key={session.id}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">{session.title}</CardTitle>
+                          <Badge className={getStatusColor(session.status)}>
+                            {getStatusText(session.status)}
+                          </Badge>
                         </div>
-                        <Button 
-                          onClick={() => handleRegister(session.id)}
-                          className="w-full"
-                        >
-                          <Users className="h-4 w-4 mr-2" />
-                          Participar
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {session.description && (
+                            <p className="text-gray-600">{session.description}</p>
+                          )}
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              <span>
+                                {new Date(session.scheduled_at).toLocaleDateString('pt-BR', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              <span>{session.duration_minutes} minutos</span>
+                            </div>
+                            {session.max_participants && (
+                              <div className="flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                <span>Máx. {session.max_participants} participantes</span>
+                              </div>
+                            )}
+                          </div>
+                          <Button 
+                            onClick={() => handleRegister(session.id)}
+                            className={`w-full ${isRegistered ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                            disabled={isRegistered}
+                          >
+                            {isRegistered ? (
+                              <>
+                                <Check className="h-4 w-4 mr-2" />
+                                Inscrito
+                              </>
+                            ) : (
+                              <>
+                                <Users className="h-4 w-4 mr-2" />
+                                Participar
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
               ) : (
                 <Card>
                   <CardContent className="p-8 text-center">

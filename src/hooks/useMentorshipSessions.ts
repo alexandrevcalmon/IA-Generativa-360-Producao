@@ -134,6 +134,28 @@ export const useSessionParticipants = (sessionId: string) => {
   });
 };
 
+// New hook to check user registrations
+export const useUserMentorshipRegistrations = () => {
+  return useQuery({
+    queryKey: ['user-mentorship-registrations'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('producer_mentorship_participants')
+        .select('session_id')
+        .eq('participant_id', user.id);
+
+      if (error) {
+        console.error('Error fetching user registrations:', error);
+        throw error;
+      }
+      return data.map(item => item.session_id);
+    },
+  });
+};
+
 export const useRegisterForMentorship = () => {
   const queryClient = useQueryClient();
 
@@ -187,6 +209,7 @@ export const useRegisterForMentorship = () => {
 
         queryClient.invalidateQueries({ queryKey: ['session-participants', sessionId] });
         queryClient.invalidateQueries({ queryKey: ['mentorship-sessions'] });
+        queryClient.invalidateQueries({ queryKey: ['user-mentorship-registrations'] });
         toast.success('Inscrição realizada com sucesso!');
         return data;
       } catch (error) {
