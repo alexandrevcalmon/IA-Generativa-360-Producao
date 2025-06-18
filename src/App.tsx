@@ -27,6 +27,8 @@ import ProducerCommunity from "./pages/ProducerCommunity";
 import ProducerPlans from "./pages/ProducerPlans";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentCourses from "./pages/StudentCourses";
+import StudentCourseDetail from "./pages/StudentCourseDetail";
+import StudentLessonView from "./pages/StudentLessonView";
 import CourseDetails from "./pages/CourseDetails";
 
 import { ChangePassword } from "./components/auth/ChangePassword";
@@ -103,6 +105,8 @@ function App() {
             <Route path="/student" element={<StudentLayout />}>
               <Route path="dashboard" element={<StudentDashboard />} />
               <Route path="courses" element={<StudentCourses />} />
+              <Route path="courses/:courseId" element={<StudentCourseDetail />} />
+              <Route path="courses/:courseId/lessons/:lessonId" element={<StudentLessonView />} />
             </Route>
             
             {/* Default Route */}
