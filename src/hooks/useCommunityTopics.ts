@@ -166,3 +166,69 @@ export const useDeleteCommunityTopic = () => {
     },
   });
 };
+
+export const useToggleTopicPin = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ topicId, isPinned }: { topicId: string; isPinned: boolean }) => {
+      console.log('📌 Toggling topic pin:', { topicId, isPinned });
+      
+      const { data, error } = await supabase
+        .from('community_topics')
+        .update({ is_pinned: isPinned })
+        .eq('id', topicId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error toggling topic pin:', error);
+        throw error;
+      }
+      
+      console.log('✅ Topic pin toggled successfully:', topicId);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+      toast.success('Tópico atualizado com sucesso!');
+    },
+    onError: (error) => {
+      console.error('❌ Error toggling topic pin:', error);
+      toast.error('Erro ao atualizar tópico');
+    },
+  });
+};
+
+export const useToggleTopicLock = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ topicId, isLocked }: { topicId: string; isLocked: boolean }) => {
+      console.log('🔒 Toggling topic lock:', { topicId, isLocked });
+      
+      const { data, error } = await supabase
+        .from('community_topics')
+        .update({ is_locked: isLocked })
+        .eq('id', topicId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error toggling topic lock:', error);
+        throw error;
+      }
+      
+      console.log('✅ Topic lock toggled successfully:', topicId);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+      toast.success('Tópico atualizado com sucesso!');
+    },
+    onError: (error) => {
+      console.error('❌ Error toggling topic lock:', error);
+      toast.error('Erro ao atualizar tópico');
+    },
+  });
+};

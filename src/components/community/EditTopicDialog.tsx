@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,7 +53,7 @@ export const EditTopicDialog = ({ open, onOpenChange, topic }: EditTopicDialogPr
       tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined,
     };
 
-    updateTopic({ id: topic.id, updates }, {
+    updateTopic({ id: topic.id, ...updates }, {
       onSuccess: () => {
         onOpenChange(false);
       },
