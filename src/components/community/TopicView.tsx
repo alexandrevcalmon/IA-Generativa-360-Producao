@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,7 +81,8 @@ export const TopicView = () => {
       author_id: user.id,
       author_name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
       author_email: user.email || '',
-      company_name: null // TODO: buscar da empresa do usuário se necessário
+      company_name: null,
+      is_solution: false
     }, {
       onSuccess: () => {
         setReplyContent('');
