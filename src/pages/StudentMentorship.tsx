@@ -3,20 +3,19 @@ import { useMentorshipSessions, useRegisterForMentorship } from '@/hooks/useMent
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Calendar, Clock, Video, MapPin } from 'lucide-react';
+import { Users, Calendar, Clock, Video, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const StudentMentorship = () => {
-  const { data: mentorshipSessions, isLoading } = useMentorshipSessions();
+  const { data: mentorshipSessions, isLoading, error } = useMentorshipSessions();
   const { registerForMentorship } = useRegisterForMentorship();
 
   const handleRegister = async (sessionId: string) => {
     try {
       await registerForMentorship(sessionId);
-      toast.success('Inscrição realizada com sucesso!');
     } catch (error) {
       console.error('Error registering for mentorship:', error);
-      toast.error('Erro ao se inscrever. Tente novamente.');
+      // Error toast is already handled in the hook
     }
   };
 
@@ -48,6 +47,27 @@ const StudentMentorship = () => {
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-lg text-gray-600">Carregando mentorias...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="bg-white border-b p-6">
+          <h1 className="text-2xl font-bold text-gray-900">Mentoria</h1>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Erro ao carregar mentorias
+            </h3>
+            <p className="text-gray-600">
+              Tente recarregar a página ou entre em contato com o suporte.
+            </p>
+          </div>
         </div>
       </div>
     );

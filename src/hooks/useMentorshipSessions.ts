@@ -42,7 +42,10 @@ export const useMentorshipSessions = () => {
         .eq('is_active', true)
         .order('scheduled_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching mentorship sessions:', error);
+        throw error;
+      }
       return data as MentorshipSession[];
     },
   });
@@ -65,7 +68,10 @@ export const useCreateMentorshipSession = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating mentorship session:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -91,7 +97,10 @@ export const useUpdateMentorshipSession = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating mentorship session:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -115,7 +124,10 @@ export const useSessionParticipants = (sessionId: string) => {
         .eq('session_id', sessionId)
         .order('registered_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching session participants:', error);
+        throw error;
+      }
       return data as MentorshipParticipant[];
     },
     enabled: !!sessionId,
@@ -127,47 +139,61 @@ export const useRegisterForMentorship = () => {
 
   return {
     registerForMentorship: async (sessionId: string) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
-      // Get user profile to get name and company info
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+        // Check if user is already registered for this session
+        const { data: existingRegistration } = await supabase
+          .from('producer_mentorship_participants')
+          .select('id')
+          .eq('session_id', sessionId)
+          .eq('participant_id', user.id)
+          .single();
 
-      if (!profile) throw new Error('User profile not found');
+        if (existingRegistration) {
+          toast.error('Você já está inscrito nesta sessão!');
+          return;
+        }
 
-      // Get company user info for additional details
-      const { data: companyUser } = await supabase
-        .from('company_users')
-        .select(`
-          *,
-          companies (
-            name
-          )
-        `)
-        .eq('auth_user_id', user.id)
-        .single();
+        // Get company user info for additional details
+        const { data: companyUser } = await supabase
+          .from('company_users')
+          .select(`
+            *,
+            companies (
+              name
+            )
+          `)
+          .eq('auth_user_id', user.id)
+          .single();
 
-      const { data, error } = await supabase
-        .from('producer_mentorship_participants')
-        .insert({
-          session_id: sessionId,
-          participant_id: user.id,
-          participant_name: companyUser?.name || user.user_metadata?.name || user.email || 'User',
-          participant_email: user.email || '',
-          company_name: companyUser?.companies?.name || undefined,
-        })
-        .select()
-        .single();
+        const { data, error } = await supabase
+          .from('producer_mentorship_participants')
+          .insert({
+            session_id: sessionId,
+            participant_id: user.id,
+            participant_name: companyUser?.name || user.user_metadata?.name || user.email || 'User',
+            participant_email: user.email || '',
+            company_name: companyUser?.companies?.name || undefined,
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) {
+          console.error('Error registering for mentorship:', error);
+          throw error;
+        }
 
-      queryClient.invalidateQueries({ queryKey: ['session-participants', sessionId] });
-      queryClient.invalidateQueries({ queryKey: ['mentorship-sessions'] });
-      return data;
+        queryClient.invalidateQueries({ queryKey: ['session-participants', sessionId] });
+        queryClient.invalidateQueries({ queryKey: ['mentorship-sessions'] });
+        toast.success('Inscrição realizada com sucesso!');
+        return data;
+      } catch (error) {
+        console.error('Error in registerForMentorship:', error);
+        toast.error('Erro ao se inscrever. Tente novamente.');
+        throw error;
+      }
     }
   };
 };
