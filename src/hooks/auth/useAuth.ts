@@ -1,30 +1,21 @@
 
-import { useAuthState } from './useAuthState';
-import { useAuthMethods } from './useAuthMethods';
+import { useContext } from 'react';
+import { AuthContext } from './AuthProvider';
 import { useAuthRedirects } from './useAuthRedirects';
 
 export function useAuth() {
-  const authState = useAuthState();
-  const { user, userRole, userRoleInfo, loading } = authState;
+  const context = useContext(AuthContext);
   
-  const authMethods = useAuthMethods(authState);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+
+  const { user, userRole, loading, needsPasswordChange } = context;
 
   // Use auth redirects for general navigation
-  useAuthRedirects({ user, userRole, loading });
+  useAuthRedirects({ user, userRole, loading, needsPasswordChange });
 
-  return {
-    user,
-    userRole,
-    userRoleInfo,
-    loading,
-    session: authState.session,
-    needsPasswordChange: authState.needsPasswordChange,
-    companyUserData: authState.companyUserData,
-    isProducer: userRole === 'producer',
-    isCompany: userRole === 'company',
-    isStudent: userRole === 'student',
-    ...authMethods,
-  };
+  return context;
 }
 
 interface UseAuthWithRedirectProps {
@@ -32,16 +23,16 @@ interface UseAuthWithRedirectProps {
 }
 
 export function useAuthWithRedirect({ targetRole }: UseAuthWithRedirectProps) {
-  const { user, userRole, userRoleInfo, loading, ...authMethods } = useAuth();
+  const context = useContext(AuthContext);
+  
+  if (context === undefined) {
+    throw new Error('useAuthWithRedirect must be used within an AuthProvider');
+  }
+
+  const { user, userRole, loading, needsPasswordChange } = context;
 
    // Use auth redirects for specific role-based navigation
-  useAuthRedirects({ user, userRole, loading, targetRole });
+  useAuthRedirects({ user, userRole, loading, targetRole, needsPasswordChange });
 
-  return {
-    user,
-    userRole,
-    userRoleInfo,
-    loading,
-    ...authMethods,
-  };
+  return context;
 }
