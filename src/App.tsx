@@ -83,6 +83,9 @@ function App() {
                   <Route path="profile" element={<StudentProfile />} />
                   <Route path="courses" element={<StudentCourses />} />
                   <Route path="courses/:courseId" element={<StudentCourseDetail />} />
+                  <Route path="gamification" element={<StudentGamification />} />
+                  <Route path="mentorship" element={<StudentMentorship />} />
+                  <Route path="calendar" element={<StudentCalendar />} />
                   <Route path="community" element={<StudentCommunity />} />
                 </Route>
                 {/* Lesson view without sidebar for better video viewing */}
