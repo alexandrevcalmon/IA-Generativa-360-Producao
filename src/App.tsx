@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Route,
@@ -11,9 +12,9 @@ import Index from "./pages/Index";
 import Learning from "./pages/Learning";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
-import { AuthProvider } from "./context/AuthContext";
-import { QueryClient } from "@tanstack/react-query";
-import AuthGuard from "./components/AuthGuard";
+import { AuthProvider } from "./hooks/auth/AuthProvider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthGuard } from "./components/AuthGuard";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentCourses from "./pages/StudentCourses";
 import StudentCourseDetail from "./pages/StudentCourseDetail";
@@ -24,6 +25,7 @@ import StudentCalendar from "./pages/StudentCalendar";
 import StudentGamification from "./pages/StudentGamification";
 import StudentAnalytics from "./pages/StudentAnalytics";
 import StudentProfile from "./pages/StudentProfile";
+import StudentLayout from "./components/StudentLayout";
 import ProdutorLayout from "./components/ProdutorLayout";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
@@ -44,9 +46,11 @@ import CompanyDashboard from "./pages/CompanyDashboard";
 import CompanyProfile from "./pages/CompanyProfile";
 import CompanyCollaboratorsAnalytics from "./pages/CompanyCollaboratorsAnalytics";
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <QueryClient>
+    <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
           <div className="min-h-screen bg-background">
@@ -111,7 +115,7 @@ function App() {
           </div>
         </Router>
       </AuthProvider>
-    </QueryClient>
+    </QueryClientProvider>
   );
 }
 
