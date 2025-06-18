@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { useCompanyCourses } from "@/hooks/useCompanyCourses";
-import { useCompanyCollaborators } from "@/hooks/useCompanyCollaborators";
+import { useGetCompanyCollaborators } from "@/hooks/useCompanyCollaborators";
+import { useCompanyData } from "@/hooks/useCompanyData";
 import { BookOpen, Users, Search, Filter, TrendingUp, Clock, Award } from "lucide-react";
 
 const CourseProgressPage = () => {
+  const { data: companyData } = useCompanyData();
   const { data: courses = [], isLoading: coursesLoading } = useCompanyCourses();
-  const { data: collaborators = [], isLoading: collaboratorsLoading } = useCompanyCollaborators();
+  const { data: collaborators = [], isLoading: collaboratorsLoading } = useGetCompanyCollaborators(companyData?.id);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
