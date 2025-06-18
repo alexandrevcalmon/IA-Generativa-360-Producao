@@ -5,6 +5,7 @@ import { CheckCircle, FileText } from 'lucide-react';
 import { StudentLesson } from '@/hooks/useStudentCourses';
 import { useUpdateLessonProgress } from '@/hooks/useStudentProgress';
 import { useEffect } from 'react';
+import { useAuth } from '@/hooks/auth';
 
 interface LessonProgressProps {
   currentLesson: StudentLesson;
@@ -13,6 +14,7 @@ interface LessonProgressProps {
 }
 
 export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonProgressProps) => {
+  const { user } = useAuth();
   const updateProgress = useUpdateLessonProgress();
 
   const formatTime = (seconds: number) => {
@@ -27,18 +29,36 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
   useEffect(() => {
     if (
       currentLesson && 
+      user?.id &&
       !currentLesson.completed && 
       duration > 0 && 
       progressPercentage >= 95
     ) {
-      console.log('Auto-completing lesson at 95% progress');
+      console.log('🎯 Auto-completing lesson at 95% progress');
       updateProgress.mutate({
         lessonId: currentLesson.id,
         completed: true,
         watchTimeSeconds: Math.floor(watchTime)
       });
     }
-  }, [currentLesson, progressPercentage, duration, watchTime, updateProgress]);
+  }, [currentLesson, progressPercentage, duration, watchTime, updateProgress, user?.id]);
+
+  // Save progress periodically (every 30 seconds of watch time)
+  useEffect(() => {
+    if (
+      currentLesson && 
+      user?.id &&
+      watchTime > 0 && 
+      Math.floor(watchTime) % 30 === 0
+    ) {
+      console.log('💾 Saving lesson progress:', Math.floor(watchTime), 'seconds');
+      updateProgress.mutate({
+        lessonId: currentLesson.id,
+        completed: currentLesson.completed || false,
+        watchTimeSeconds: Math.floor(watchTime)
+      });
+    }
+  }, [watchTime, currentLesson, updateProgress, user?.id]);
 
   return (
     <>

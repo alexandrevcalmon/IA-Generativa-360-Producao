@@ -45,6 +45,7 @@ import CompanyLayout from "./components/CompanyLayout";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import CompanyProfile from "./pages/CompanyProfile";
 import CompanyCollaboratorsAnalytics from "./pages/CompanyCollaboratorsAnalytics";
+import { TopicDetailView } from "./components/community/TopicDetailView";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ function App() {
                 <Route path="/student/courses/:courseId" element={<StudentCourseDetail />} />
                 <Route path="/student/courses/:courseId/lessons/:lessonId" element={<StudentLessonView />} />
                 <Route path="/student/community" element={<StudentCommunity />} />
+                <Route path="/student/community/topic/:topicId" element={<TopicDetailView />} />
                 <Route path="/student/mentorship" element={<StudentMentorship />} />
                 <Route path="/student/calendar" element={<StudentCalendar />} />
                 <Route path="/student/gamification" element={<StudentGamification />} />

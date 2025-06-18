@@ -78,7 +78,7 @@ export const TopicCard = ({ topic, onEdit, showModeratorActions = false }: Topic
   };
 
   const handleViewTopic = () => {
-    navigate(`/community/topic/${topic.id}`);
+    navigate(`/student/community/topic/${topic.id}`);
   };
 
   return (
