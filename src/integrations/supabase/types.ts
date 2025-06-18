@@ -165,6 +165,132 @@ export type Database = {
           },
         ]
       }
+      collaborator_activity_logs: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          collaborator_id: string
+          company_id: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          collaborator_id: string
+          company_id: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          collaborator_id?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborator_activity_logs_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "company_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborator_activity_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaborator_activity_stats: {
+        Row: {
+          average_quiz_score: number | null
+          collaborator_id: string
+          company_id: string
+          courses_completed: number | null
+          courses_enrolled: number | null
+          created_at: string
+          current_level: number | null
+          id: string
+          last_login_at: string | null
+          lessons_completed: number | null
+          lessons_started: number | null
+          quiz_attempts: number | null
+          quiz_passed: number | null
+          streak_days: number | null
+          total_login_count: number | null
+          total_points: number | null
+          total_watch_time_minutes: number | null
+          updated_at: string
+        }
+        Insert: {
+          average_quiz_score?: number | null
+          collaborator_id: string
+          company_id: string
+          courses_completed?: number | null
+          courses_enrolled?: number | null
+          created_at?: string
+          current_level?: number | null
+          id?: string
+          last_login_at?: string | null
+          lessons_completed?: number | null
+          lessons_started?: number | null
+          quiz_attempts?: number | null
+          quiz_passed?: number | null
+          streak_days?: number | null
+          total_login_count?: number | null
+          total_points?: number | null
+          total_watch_time_minutes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          average_quiz_score?: number | null
+          collaborator_id?: string
+          company_id?: string
+          courses_completed?: number | null
+          courses_enrolled?: number | null
+          created_at?: string
+          current_level?: number | null
+          id?: string
+          last_login_at?: string | null
+          lessons_completed?: number | null
+          lessons_started?: number | null
+          quiz_attempts?: number | null
+          quiz_passed?: number | null
+          streak_days?: number | null
+          total_login_count?: number | null
+          total_points?: number | null
+          total_watch_time_minutes?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborator_activity_stats_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: true
+            referencedRelation: "company_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborator_activity_stats_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address_city: string | null
@@ -1313,6 +1439,10 @@ export type Database = {
       is_producer: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      update_collaborator_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {

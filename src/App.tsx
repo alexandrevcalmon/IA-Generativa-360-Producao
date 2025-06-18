@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -35,6 +34,7 @@ import StudentCommunity from "./pages/StudentCommunity";
 import NotFound from "./pages/NotFound";
 import { AuthGuard } from "@/components/AuthGuard";
 import StudentLayout from "@/components/StudentLayout";
+import ProducerCollaboratorsAnalytics from "./pages/ProducerCollaboratorsAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +61,7 @@ function App() {
                 <Route path="courses/:courseId" element={<CourseDetails />} />
                 <Route path="companies" element={<ProducerCompanies />} />
                 <Route path="companies/:companyId" element={<ProducerCompanyDetails />} />
+                <Route path="collaborators-analytics" element={<ProducerCollaboratorsAnalytics />} />
                 <Route path="plans" element={<ProducerPlans />} />
               </Route>
 
