@@ -24,9 +24,9 @@ serve(async (req) => {
       }
     )
 
-    const { email, companyId } = await req.json()
+    const { email, companyId, companyName, contactName } = await req.json()
 
-    console.log('Creating auth user for company:', { email, companyId })
+    console.log('Creating auth user for company:', { email, companyId, companyName, contactName })
 
     // Check if company exists
     const { data: company, error: companyError } = await supabaseAdmin
@@ -64,6 +64,7 @@ serve(async (req) => {
     const existingUser = existingUsers.users?.find(user => user.email === email)
 
     let authUserId: string
+    let isNewUser = false
 
     if (existingUser) {
       console.log('Auth user already exists, linking to company:', existingUser.id)
@@ -77,7 +78,7 @@ serve(async (req) => {
             ...existingUser.user_metadata,
             role: 'company',
             company_id: companyId,
-            company_name: company.name
+            company_name: companyName || company.name
           }
         }
       )
@@ -96,7 +97,7 @@ serve(async (req) => {
         user_metadata: {
           role: 'company',
           company_id: companyId,
-          company_name: company.name
+          company_name: companyName || company.name
         }
       })
 
@@ -112,11 +113,12 @@ serve(async (req) => {
       }
 
       authUserId = authUser.user.id
+      isNewUser = true
       console.log('Successfully created new auth user:', authUserId)
     }
 
     // Update company with auth_user_id
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateCompanyError } = await supabaseAdmin
       .from('companies')
       .update({ 
         auth_user_id: authUserId,
@@ -124,8 +126,8 @@ serve(async (req) => {
       })
       .eq('id', companyId)
 
-    if (updateError) {
-      console.error('Error updating company:', updateError)
+    if (updateCompanyError) {
+      console.error('Error updating company:', updateCompanyError)
       return new Response(
         JSON.stringify({ error: 'Failed to update company' }),
         { 
@@ -135,13 +137,46 @@ serve(async (req) => {
       )
     }
 
-    console.log('Successfully linked auth user to company:', { authUserId, companyId })
+    // Add or update record in users table
+    const { error: upsertUserError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: authUserId,
+        name: contactName || company.contact_name || 'Administrador',
+        email: email,
+        role: 'company',
+        company_id: companyId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, { 
+        onConflict: 'id'
+      })
+
+    if (upsertUserError) {
+      console.error('Error upserting user record:', upsertUserError)
+      // Don't fail the entire process for this, just log the error
+    } else {
+      console.log('Successfully upserted user record')
+    }
+
+    // Send welcome email notification (placeholder - would need email service)
+    try {
+      // This would integrate with an email service like Resend
+      console.log(`Would send welcome email to ${email} for company ${companyName || company.name}`)
+      console.log('Email content would include login instructions and temporary password info')
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError)
+      // Don't fail the process for email errors
+    }
+
+    console.log('Successfully completed company auth user creation process:', { authUserId, companyId, isNewUser })
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         authUserId: authUserId,
-        needsPasswordChange: true 
+        needsPasswordChange: true,
+        isNewUser: isNewUser
       }),
       { 
         status: 200, 

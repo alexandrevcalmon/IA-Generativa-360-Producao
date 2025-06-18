@@ -16,6 +16,7 @@ import { CompanyBasicFields } from "@/components/company/CompanyBasicFields";
 import { CompanyAddressFields } from "@/components/company/CompanyAddressFields";
 import { CompanyContactFields } from "@/components/company/CompanyContactFields";
 import { CompanyAdditionalFields } from "@/components/company/CompanyAdditionalFields";
+import { useToast } from "@/hooks/use-toast";
 
 interface CreateCompanyDialogProps {
   isOpen: boolean;
@@ -26,17 +27,46 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
   const { formData, setFormData } = useCreateCompanyFormData(isOpen);
   const createCompanyMutation = useCreateCompany();
   const { data: plans, isLoading: plansLoading, error: plansError } = useSubscriptionPlans();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name) {
-      alert("Nome Fantasia é obrigatório.");
+      toast({
+        title: "Erro de validação",
+        description: "Nome Fantasia é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.contact_email) {
+      toast({
+        title: "Erro de validação",
+        description: "Email do contato é obrigatório para criar o acesso à plataforma.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.contact_email)) {
+      toast({
+        title: "Erro de validação",
+        description: "Por favor, insira um email válido.",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!formData.subscription_plan_id || !formData.billing_period) {
-      alert("Por favor, selecione um plano de assinatura e período de cobrança.");
+      toast({
+        title: "Erro de validação",
+        description: "Por favor, selecione um plano de assinatura e período de cobrança.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -65,7 +95,8 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
             Cadastrar Nova Empresa
           </DialogTitle>
           <DialogDescription>
-            Preencha as informações da empresa cliente que será cadastrada na plataforma.
+            Preencha as informações da empresa cliente. Um usuário de acesso será criado automaticamente 
+            com o email do contato fornecido.
           </DialogDescription>
         </DialogHeader>
 

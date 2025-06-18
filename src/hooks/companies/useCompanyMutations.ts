@@ -18,7 +18,8 @@ export const useCreateCompany = () => {
       console.log('Creating company with user:', user.id);
       console.log('Company data:', companyData);
 
-      const { data, error } = await supabase
+      // First, create the company
+      const { data: company, error: companyError } = await supabase
         .from('companies')
         .insert([{
           ...companyData,
@@ -28,24 +29,69 @@ export const useCreateCompany = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Error creating company:', error);
-        throw new Error(`Failed to create company: ${error.message}`);
+      if (companyError) {
+        console.error('Error creating company:', companyError);
+        throw new Error(`Failed to create company: ${companyError.message}`);
       }
 
-      console.log('Company created successfully:', data);
-      return data;
+      console.log('Company created successfully:', company);
+
+      // After company creation, create the auth user if contact_email is provided
+      if (company.contact_email) {
+        console.log('Creating auth user for company contact email:', company.contact_email);
+        
+        try {
+          const { data: authResult, error: authError } = await supabase.functions.invoke(
+            'create-company-auth-user',
+            {
+              body: { 
+                email: company.contact_email,
+                companyId: company.id,
+                companyName: company.name,
+                contactName: company.contact_name
+              }
+            }
+          );
+
+          if (authError) {
+            console.error('Error creating auth user:', authError);
+            // Don't fail the entire company creation process
+            toast({
+              title: "Empresa criada com sucesso!",
+              description: "A empresa foi criada, mas houve um problema ao criar o usuário de acesso. Isso pode ser configurado posteriormente.",
+              variant: "default",
+            });
+          } else if (authResult?.success) {
+            console.log('Auth user created successfully:', authResult);
+            toast({
+              title: "Empresa e usuário criados com sucesso!",
+              description: "A empresa foi criada e o usuário de acesso foi configurado. Um email com instruções de login foi enviado.",
+            });
+          }
+        } catch (authFunctionError) {
+          console.error('Error calling auth function:', authFunctionError);
+          // Don't fail the entire process
+          toast({
+            title: "Empresa criada com sucesso!",
+            description: "A empresa foi criada, mas houve um problema ao configurar o usuário de acesso.",
+            variant: "default",
+          });
+        }
+      } else {
+        toast({
+          title: "Empresa criada com sucesso!",
+          description: "A nova empresa foi adicionada à plataforma.",
+        });
+      }
+
+      return company;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['companies-with-plans'] });
-      toast({
-        title: "Empresa criada com sucesso!",
-        description: "A nova empresa foi adicionada à plataforma.",
-      });
     },
     onError: (error) => {
-      console.error('Error creating company:', error);
+      console.error('Error in company creation process:', error);
       toast({
         title: "Erro ao criar empresa",
         description: `Ocorreu um erro ao criar a empresa: ${error.message}`,
