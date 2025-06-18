@@ -10,27 +10,16 @@ import {
   BookOpen, 
   Clock, 
   Play, 
-  CheckCircle, 
-  Lock,
+  CheckCircle,
   Award,
   Users
 } from 'lucide-react';
 import { useStudentCourse } from '@/hooks/useStudentCourses';
-import { useMarkLessonComplete } from '@/hooks/useStudentProgress';
 
 const StudentCourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { data: course, isLoading } = useStudentCourse(courseId!);
-  const markCompleteMutation = useMarkLessonComplete();
-
-  const handleLessonComplete = async (lessonId: string) => {
-    try {
-      await markCompleteMutation.mutateAsync(lessonId);
-    } catch (error) {
-      console.error('Failed to mark lesson complete:', error);
-    }
-  };
 
   const handleWatchLesson = (lessonId: string) => {
     navigate(`/student/courses/${courseId}/lessons/${lessonId}`);
@@ -214,8 +203,6 @@ const StudentCourseDetail = () => {
                               <div className="w-6 h-6 flex items-center justify-center">
                                 {lesson.completed ? (
                                   <CheckCircle className="h-4 w-4 text-green-600" />
-                                ) : lesson.is_free ? (
-                                  <Play className="h-4 w-4 text-blue-600" />
                                 ) : (
                                   <Play className="h-4 w-4 text-blue-600" />
                                 )}
@@ -230,15 +217,10 @@ const StudentCourseDetail = () => {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              {!lesson.completed && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleLessonComplete(lesson.id)}
-                                  disabled={markCompleteMutation.isPending}
-                                >
-                                  Marcar como Concluída
-                                </Button>
+                              {lesson.completed && (
+                                <Badge variant="outline" className="text-green-600 border-green-200">
+                                  Concluída
+                                </Badge>
                               )}
                               <Button 
                                 size="sm" 
