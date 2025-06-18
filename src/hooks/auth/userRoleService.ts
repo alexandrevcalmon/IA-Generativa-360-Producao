@@ -46,6 +46,7 @@ async function ensureUserProfile(userId: string, email: string): Promise<'produc
 
     if (profileError) {
       console.error('Error checking existing profile:', profileError);
+      // Don't throw here, continue with profile creation
     }
 
     if (existingProfile?.role) {
@@ -58,21 +59,23 @@ async function ensureUserProfile(userId: string, email: string): Promise<'produc
     console.log('Inferred role from email:', inferredRole);
 
     // Create profile with inferred role
-    const { error: insertError } = await supabase
+    const { data: newProfile, error: insertError } = await supabase
       .from('profiles')
       .insert({ 
         id: userId, 
         role: inferredRole 
-      });
+      })
+      .select('role')
+      .single();
 
     if (insertError) {
       console.error('Error creating profile:', insertError);
-      // Return inferred role even if insert failed
+      // Even if insert failed, return inferred role as fallback
       return inferredRole;
     }
 
-    console.log('Successfully created profile with role:', inferredRole);
-    return inferredRole;
+    console.log('Successfully created profile with role:', newProfile.role);
+    return newProfile.role as 'producer' | 'company' | 'student';
   } catch (error) {
     console.error('Error in ensureUserProfile:', error);
     // Fallback to email inference
@@ -97,7 +100,7 @@ export async function getUserRole(userId: string): Promise<UserRoleInfo> {
     // Ensure profile exists and get role
     const role = await ensureUserProfile(userId, user.email);
 
-    // Check if user is a company (existing data)
+    // Check if user is a company (existing data takes precedence)
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .select('id, needs_password_change')
@@ -116,7 +119,7 @@ export async function getUserRole(userId: string): Promise<UserRoleInfo> {
       };
     }
 
-    // Check if user is a collaborator/student (existing data)
+    // Check if user is a collaborator/student (existing data takes precedence)
     const { data: collaborator, error: collaboratorError } = await supabase
       .from('company_users')
       .select('id, company_id, needs_password_change, name, email, companies(name)')
@@ -166,7 +169,7 @@ export async function fetchUserRole(userId: string): Promise<UserRoleData> {
     // Ensure profile exists and get role
     const profileRole = await ensureUserProfile(userId, user.email);
 
-    // Check if user is a company (existing data)
+    // Check if user is a company (existing data takes precedence)
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .select('id, needs_password_change')
@@ -186,7 +189,7 @@ export async function fetchUserRole(userId: string): Promise<UserRoleData> {
       };
     }
 
-    // Check if user is a collaborator/student (existing data)
+    // Check if user is a collaborator/student (existing data takes precedence)
     const { data: collaborator, error: collaboratorError } = await supabase
       .from('company_users')
       .select('id, company_id, needs_password_change, name, email, companies(name)')
