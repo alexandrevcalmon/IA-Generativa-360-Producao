@@ -1,5 +1,5 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -56,5 +56,89 @@ export const useCourseModules = (courseId: string) => {
       return (modules as CourseModule[]) || [];
     },
     enabled: !!courseId && !!user,
+  });
+};
+
+export const useCreateModule = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (moduleData: Omit<CourseModule, 'id' | 'created_at' | 'lessons'>) => {
+      console.log('[useCreateModule] Creating module:', moduleData);
+      
+      const { data, error } = await supabase
+        .from('course_modules')
+        .insert([moduleData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[useCreateModule] Error creating module:', error);
+        throw error;
+      }
+
+      console.log('[useCreateModule] Module created successfully:', data);
+      return data;
+    },
+    onSuccess: (data) => {
+      // Invalidate and refetch course modules
+      queryClient.invalidateQueries({ queryKey: ['course-modules', data.course_id] });
+    },
+  });
+};
+
+export const useUpdateModule = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...moduleData }: Partial<CourseModule> & { id: string }) => {
+      console.log('[useUpdateModule] Updating module:', id, moduleData);
+      
+      const { data, error } = await supabase
+        .from('course_modules')
+        .update(moduleData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[useUpdateModule] Error updating module:', error);
+        throw error;
+      }
+
+      console.log('[useUpdateModule] Module updated successfully:', data);
+      return data;
+    },
+    onSuccess: (data) => {
+      // Invalidate and refetch course modules
+      queryClient.invalidateQueries({ queryKey: ['course-modules', data.course_id] });
+    },
+  });
+};
+
+export const useDeleteModule = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ moduleId, courseId }: { moduleId: string; courseId: string }) => {
+      console.log('[useDeleteModule] Deleting module:', moduleId);
+      
+      const { error } = await supabase
+        .from('course_modules')
+        .delete()
+        .eq('id', moduleId);
+
+      if (error) {
+        console.error('[useDeleteModule] Error deleting module:', error);
+        throw error;
+      }
+
+      console.log('[useDeleteModule] Module deleted successfully');
+      return { moduleId, courseId };
+    },
+    onSuccess: (data) => {
+      // Invalidate and refetch course modules
+      queryClient.invalidateQueries({ queryKey: ['course-modules', data.courseId] });
+    },
   });
 };
