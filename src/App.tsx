@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -40,7 +41,15 @@ import StudentLayout from "@/components/StudentLayout";
 import ProdutorLayout from "@/components/ProdutorLayout";
 import ProducerCollaboratorsAnalytics from "./pages/ProducerCollaboratorsAnalytics";
 
-const queryClient = new QueryClient();
+// Create QueryClient instance outside of the component to avoid recreation
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 function App() {
   return (
