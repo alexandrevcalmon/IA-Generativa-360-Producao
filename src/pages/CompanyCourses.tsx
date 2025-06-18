@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCompanyCourses } from "@/hooks/useCompanyCourses";
-import { BookOpen, Users, Clock, Search, Filter, ArrowUpRight } from "lucide-react";
+import { BookOpen, Users, Clock, Search, Filter, Eye, GraduationCap } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 
 const CompanyCourses = () => {
   const { data: courses = [], isLoading, error } = useCompanyCourses();
@@ -43,6 +42,11 @@ const CompanyCourses = () => {
       case 'advanced': return 'Avançado';
       default: return level;
     }
+  };
+
+  const calculateCompletionRate = (course: any) => {
+    if (course.enrolled_students === 0) return 0;
+    return Math.round((course.completed_students / course.enrolled_students) * 100);
   };
 
   if (isLoading) {
@@ -217,15 +221,22 @@ const CompanyCourses = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-600">
-                        {course.completed_students} concluíram
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Taxa de conclusão:</span>
+                        <div className="flex items-center">
+                          <GraduationCap className="h-4 w-4 mr-1 text-green-600" />
+                          <span className="font-medium">{calculateCompletionRate(course)}%</span>
+                        </div>
                       </div>
-                      <Button asChild size="sm">
-                        <Link to={`/course/${course.id}`}>
-                          <ArrowUpRight className="h-4 w-4 mr-1" />
-                          Ver Detalhes
-                        </Link>
+                      
+                      <div className="flex items-center justify-between text-sm text-gray-600">
+                        <span>{course.completed_students} colaboradores concluíram</span>
+                      </div>
+
+                      <Button className="w-full" size="sm">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver Progresso dos Colaboradores
                       </Button>
                     </div>
                   </CardContent>

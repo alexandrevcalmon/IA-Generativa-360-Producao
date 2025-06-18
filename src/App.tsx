@@ -16,6 +16,7 @@ import Admin from "./pages/Admin";
 import CompanyCollaborators from "./pages/CompanyCollaborators";
 import CompanyCollaboratorsAnalytics from "./pages/CompanyCollaboratorsAnalytics";
 import ProducerMentorship from "./pages/ProducerMentorship";
+import CompanyProfile from "./pages/CompanyProfile";
 
 import { ChangePassword } from "./components/auth/ChangePassword";
 import { ResetPassword } from "./components/auth/ResetPassword";
@@ -74,6 +75,7 @@ function App() {
               <Route path="collaborators-analytics" element={<CompanyCollaboratorsAnalytics />} />
               <Route path="courses" element={<CompanyCourses />} />
               <Route path="mentorships" element={<CompanyMentorships />} />
+              <Route path="profile" element={<CompanyProfile />} />
             </Route>
             
             {/* Default Route */}
