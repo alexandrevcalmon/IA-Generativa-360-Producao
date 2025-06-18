@@ -132,20 +132,26 @@ serve(async (req) => {
     console.log('[create-company-auth-user] Company table updated successfully.');
 
     console.log(`[create-company-auth-user] Upserting 'profiles' table for ID ${authUserId}.`);
-    const profileToUpsert = {
+    const profileDataForUpsert: any = {
       id: authUserId,
       role: 'company',
       email: email,
-      name: contactName || effectiveCompanyName, // Use contactName for profile if available, else companyName
+      name: contactName || effectiveCompanyName || email, // Fallback to email if no name
       updated_at: new Date().toISOString()
     };
+
+    // If it's a brand new auth user, we explicitly set created_at.
+    // The profiles table has DEFAULT NOW() for created_at, so this ensures it's set for new profile rows via upsert.
+    // If the profile already exists (isNewUser is false, or somehow true but profile exists),
+    // this created_at will only apply if it's a new insert part of the upsert.
+    // If it's an update part of the upsert, created_at is not typically modified by default unless part of the SET clause.
     if (isNewUser) {
-      // @ts-ignore
-      profileToUpsert.created_at = new Date().toISOString();
+        profileDataForUpsert.created_at = new Date().toISOString();
     }
+
     const { error: upsertProfileError } = await supabaseAdmin
       .from('profiles')
-      .upsert(profileToUpsert, { onConflict: 'id' });
+      .upsert(profileDataForUpsert, { onConflict: 'id' });
 
     if (upsertProfileError) {
       console.error('[create-company-auth-user] Error upserting profile record:', upsertProfileError.message, upsertProfileError.details);

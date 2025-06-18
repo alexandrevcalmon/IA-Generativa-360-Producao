@@ -70,6 +70,10 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
           console.log('🎓 Redirecting student to dashboard');
           navigate('/student/dashboard', { replace: true });
           break;
+        case 'collaborator': // ADDED THIS CASE
+          console.log('🤝 Redirecting collaborator to student dashboard');
+          navigate('/student/dashboard', { replace: true });
+          break;
         default:
           console.warn('❓ Unknown role, redirecting to auth. Role:', userRole);
           navigate('/auth', { replace: true });
