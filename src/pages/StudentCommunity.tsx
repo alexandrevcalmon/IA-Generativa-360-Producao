@@ -1,250 +1,147 @@
 
+import { StudentLayout } from '@/components/StudentLayout';
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  MessageCircle,
-  Users,
-  Search,
-  Plus,
-  Calendar,
-  MapPin,
-  Star,
-  Filter,
-  Eye,
-  ThumbsUp,
-  Pin,
-  Lock
-} from "lucide-react";
-import { useCommunityTopics, type CommunityTopic } from '@/hooks/useCommunityTopics';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Search, Filter } from 'lucide-react';
+import { useCommunityTopics } from '@/hooks/useCommunityTopics';
 import { CreateTopicDialog } from '@/components/community/CreateTopicDialog';
-import { TopicCard } from '@/components/community/TopicCard';
 import { EditTopicDialog } from '@/components/community/EditTopicDialog';
+import { TopicCard } from '@/components/community/TopicCard';
+import type { CommunityTopic } from '@/hooks/useCommunityTopics';
 
 const StudentCommunity = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [createTopicOpen, setCreateTopicOpen] = useState(false);
-  const [editTopicOpen, setEditTopicOpen] = useState(false);
-  const [selectedTopic, setSelectedTopic] = useState<CommunityTopic | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingTopic, setEditingTopic] = useState<CommunityTopic | null>(null);
 
-  const { data: topics = [], isLoading, error } = useCommunityTopics();
+  const { data: topics = [], isLoading } = useCommunityTopics();
 
-  const filteredTopics = topics.filter(topic =>
-    topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    topic.content.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter topics based on search and category
+  const filteredTopics = topics.filter(topic => {
+    const matchesSearch = topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         topic.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || topic.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
-  const communityStats = {
-    totalMembers: 0,
-    totalTopics: topics.length,
-    totalReplies: topics.reduce((sum, topic) => sum + topic.replies_count, 0),
-    eventsThisMonth: 0,
-  };
+  // Get unique categories for filter
+  const categories = Array.from(new Set(topics.map(topic => topic.category)));
 
-  const handleEditTopic = (topic: CommunityTopic) => {
-    setSelectedTopic(topic);
-    setEditTopicOpen(true);
-  };
+  // Sort topics: pinned first, then by creation date
+  const sortedTopics = filteredTopics.sort((a, b) => {
+    if (a.is_pinned && !b.is_pinned) return -1;
+    if (!a.is_pinned && b.is_pinned) return 1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <header className="border-b bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Comunidade</h1>
-            <p className="text-gray-600">Conecte-se, aprenda e compartilhe conhecimento</p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Button onClick={() => setCreateTopicOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Discussão
+    <StudentLayout>
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="bg-white border-b p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Comunidade</h1>
+              <p className="text-gray-600">Conecte-se com outros estudantes e tire suas dúvidas</p>
+            </div>
+            <Button onClick={() => setIsCreateDialogOpen(true)} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Novo Tópico
             </Button>
           </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto p-6 bg-gray-50">
-        <div className="max-w-6xl mx-auto space-y-6">
-          {/* Search and Filters */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Buscar discussões, eventos ou pessoas..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
+          {/* Filters */}
+          <div className="flex gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar tópicos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-48">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as categorias</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6 bg-gray-50">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+                <p className="text-gray-600">Carregando tópicos...</p>
+              </div>
+            </div>
+          ) : sortedTopics.length > 0 ? (
+            <div className="space-y-4">
+              {sortedTopics.map(topic => (
+                <TopicCard 
+                  key={topic.id} 
+                  topic={topic} 
+                  onEdit={setEditingTopic}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="text-gray-400 mb-4">
+                  <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
                 </div>
-                <div className="flex gap-3">
-                  <Button variant="outline">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filtros
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum tópico encontrado</h3>
+                <p className="text-gray-600 mb-4">
+                  {searchTerm || selectedCategory !== 'all' 
+                    ? 'Tente ajustar os filtros de busca.'
+                    : 'Seja o primeiro a iniciar uma discussão na comunidade!'
+                  }
+                </p>
+                {!searchTerm && selectedCategory === 'all' && (
+                  <Button onClick={() => setIsCreateDialogOpen(true)} className="mt-2">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar Primeiro Tópico
                   </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Community Tabs */}
-          <Tabs defaultValue="discussions" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="discussions">Discussões</TabsTrigger>
-              <TabsTrigger value="events">Eventos</TabsTrigger>
-              <TabsTrigger value="members">Membros</TabsTrigger>
-              <TabsTrigger value="resources">Recursos</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="discussions" className="space-y-6">
-              <div className="grid lg:grid-cols-3 gap-6">
-                {/* Main Discussion Feed */}
-                <div className="lg:col-span-2 space-y-4">
-                  {isLoading ? (
-                    <div className="text-center py-12">
-                      <div className="text-lg text-gray-600">Carregando discussões...</div>
-                    </div>
-                  ) : filteredTopics.length > 0 ? (
-                    filteredTopics.map((topic) => (
-                      <TopicCard 
-                        key={topic.id} 
-                        topic={topic} 
-                        onEdit={handleEditTopic}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Nenhuma discussão encontrada
-                      </h3>
-                      <p className="text-gray-600 mb-4">
-                        Seja o primeiro a iniciar uma discussão na comunidade
-                      </p>
-                      <Button onClick={() => setCreateTopicOpen(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Criar Discussão
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Sidebar */}
-                <div className="space-y-6">
-                  {/* Top Contributors */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Star className="h-5 w-5 mr-2 text-yellow-500" />
-                        Top Colaboradores
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-center py-6">
-                        <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-600">
-                          Ainda não há colaboradores ativos
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Community Stats */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Estatísticas da Comunidade</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Membros Ativos</span>
-                        <span className="font-semibold">{communityStats.totalMembers}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Discussões</span>
-                        <span className="font-semibold">{communityStats.totalTopics}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Respostas</span>
-                        <span className="font-semibold">{communityStats.totalReplies}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Eventos este mês</span>
-                        <span className="font-semibold">{communityStats.eventsThisMonth}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="events" className="space-y-6">
-              <div className="text-center py-12">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Nenhum evento agendado
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Eventos da comunidade aparecerão aqui quando disponíveis
-                </p>
-                <Button variant="outline">
-                  Sugerir Evento
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="members" className="space-y-6">
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Membros da Comunidade
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Conecte-se com outros profissionais e estudantes
-                </p>
-                <Button variant="outline">
-                  Explorar Membros
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="resources" className="space-y-6">
-              <div className="text-center py-12">
-                <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Recursos da Comunidade
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Materiais compartilhados pela comunidade
-                </p>
-                <Button variant="outline">
-                  Ver Recursos
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
-      </div>
 
-      <CreateTopicDialog 
-        open={createTopicOpen} 
-        onOpenChange={setCreateTopicOpen} 
-      />
-      
-      <EditTopicDialog 
-        open={editTopicOpen} 
-        onOpenChange={setEditTopicOpen} 
-        topic={selectedTopic}
-      />
-    </div>
+        {/* Dialogs */}
+        <CreateTopicDialog 
+          open={isCreateDialogOpen} 
+          onOpenChange={setIsCreateDialogOpen} 
+        />
+        
+        {editingTopic && (
+          <EditTopicDialog 
+            topic={editingTopic}
+            open={!!editingTopic}
+            onOpenChange={(open) => !open && setEditingTopic(null)}
+          />
+        )}
+      </div>
+    </StudentLayout>
   );
 };
 
