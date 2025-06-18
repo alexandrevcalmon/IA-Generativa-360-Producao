@@ -68,8 +68,11 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
           navigate('/company-dashboard', { replace: true });
           break;
         case 'student':
-        case 'collaborator': // Both student and collaborator go to student dashboard
-          console.log('🎓 Redirecting student/collaborator to dashboard');
+          console.log('🎓 Redirecting student to dashboard');
+          navigate('/student/dashboard', { replace: true });
+          break;
+        case 'collaborator':
+          console.log('👥 Redirecting collaborator to student dashboard');
           navigate('/student/dashboard', { replace: true });
           break;
         default:
