@@ -1,7 +1,6 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { MentorshipActions } from "./MentorshipActions";
 
 interface MentorshipHeaderProps {
   companyName?: string;
@@ -26,7 +25,6 @@ export const MentorshipHeader = ({ companyName, onRefresh, refreshing }: Mentors
           <Button variant="outline" onClick={onRefresh} disabled={refreshing}>
             {refreshing ? 'Atualizando...' : 'Atualizar'}
           </Button>
-          <MentorshipActions />
         </div>
       </div>
     </header>

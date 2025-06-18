@@ -11,13 +11,11 @@ import { useCompanyData } from "@/hooks/useCompanyData";
 import { 
   Users, 
   Search, 
-  UserPlus, 
   Mail, 
   Phone, 
   Calendar,
   Activity,
   BookOpen,
-  Trophy,
   Clock
 } from "lucide-react";
 
@@ -91,20 +89,14 @@ const CompanyCollaborators = () => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <header className="border-b bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <SidebarTrigger />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Colaboradores</h1>
-              <p className="text-gray-600">
-                Gerencie os colaboradores da {companyData?.name || 'empresa'}
-              </p>
-            </div>
+        <div className="flex items-center space-x-4">
+          <SidebarTrigger />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Colaboradores</h1>
+            <p className="text-gray-600">
+              Gerencie os colaboradores da {companyData?.name || 'empresa'}
+            </p>
           </div>
-          <Button>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Adicionar Colaborador
-          </Button>
         </div>
       </header>
 
@@ -263,18 +255,12 @@ const CompanyCollaborators = () => {
                 <h3 className="text-lg font-medium mb-2">
                   {searchTerm ? 'Nenhum colaborador encontrado' : 'Nenhum colaborador cadastrado'}
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600">
                   {searchTerm 
                     ? 'Tente buscar com outros termos ou limpe o filtro'
-                    : 'Adicione colaboradores para começar a acompanhar o progresso'
+                    : 'Entre em contato com o administrador para adicionar colaboradores'
                   }
                 </p>
-                {!searchTerm && (
-                  <Button>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Adicionar Primeiro Colaborador
-                  </Button>
-                )}
               </CardContent>
             </Card>
           )}
