@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -107,6 +108,31 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
 
       if (data.user) {
         console.log('Sign in successful, user authenticated');
+        
+        // Check if this is a collaborator that needs password change
+        const { data: collaborator, error: collaboratorError } = await supabase
+          .from('company_users')
+          .select('id, needs_password_change, company_id, name')
+          .eq('auth_user_id', data.user.id)
+          .maybeSingle();
+        
+        console.log('Collaborator check result:', { collaborator, collaboratorError });
+        
+        if (!collaboratorError && collaborator && collaborator.needs_password_change) {
+          console.log('Collaborator needs password change, setting flag');
+          
+          toast({
+            title: "Login realizado com sucesso!",
+            description: "Bem-vindo! Você precisa alterar sua senha.",
+          });
+          
+          return { 
+            error: null, 
+            user: data.user, 
+            session: data.session,
+            needsPasswordChange: true 
+          };
+        }
         
         toast({
           title: "Login realizado com sucesso!",

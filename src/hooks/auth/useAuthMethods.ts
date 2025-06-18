@@ -59,19 +59,36 @@ export function useAuthMethods({
       if (result.user && !result.error) {
         console.log('✅ Sign in successful, fetching user data...');
         
-        // Fetch user role immediately after successful login
-        const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(result.user.id);
-        
-        setUser(result.user);
-        setSession(result.session);
-        setUserRole(role);
-        setNeedsPasswordChange(needsChange);
-        setCompanyUserData(userData);
-        
-        console.log('✅ Sign in complete:', { role, needsChange, hasUserData: !!userData });
-        
-        setLoading(false);
-        return { error: null, needsPasswordChange: needsChange };
+        // Check if authService already determined needsPasswordChange
+        if (result.needsPasswordChange) {
+          console.log('🔐 Password change required from authService');
+          
+          // Fetch user role for proper setup
+          const { role, companyUserData: userData } = await fetchUserRole(result.user.id);
+          
+          setUser(result.user);
+          setSession(result.session);
+          setUserRole(role);
+          setNeedsPasswordChange(true);
+          setCompanyUserData(userData);
+          
+          setLoading(false);
+          return { error: null, needsPasswordChange: true };
+        } else {
+          // Normal login flow - fetch role and check for password change requirement
+          const { role, needsPasswordChange: needsChange, companyUserData: userData } = await fetchUserRole(result.user.id);
+          
+          setUser(result.user);
+          setSession(result.session);
+          setUserRole(role);
+          setNeedsPasswordChange(needsChange);
+          setCompanyUserData(userData);
+          
+          console.log('✅ Sign in complete:', { role, needsChange, hasUserData: !!userData });
+          
+          setLoading(false);
+          return { error: null, needsPasswordChange: needsChange };
+        }
       }
       
       setLoading(false);
