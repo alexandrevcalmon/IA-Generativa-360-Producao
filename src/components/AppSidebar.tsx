@@ -1,3 +1,4 @@
+
 import { 
   Sidebar, 
   SidebarContent, 
@@ -12,6 +13,7 @@ import {
   CreditCard, 
   BookOpen,
   BarChart3,
+  Users,
   LogOut 
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -38,14 +40,19 @@ export function AppSidebar() {
       href: '/producer/companies'
     },
     {
+      title: 'Cursos',
+      icon: BookOpen,
+      href: '/producer/courses'
+    },
+    {
       title: 'Planos',
       icon: CreditCard,
       href: '/producer/plans'
     },
     {
-      title: 'Cursos',
-      icon: BookOpen,
-      href: '/producer/courses'
+      title: 'Analytics Colaboradores',
+      icon: Users,
+      href: '/producer/collaborators-analytics'
     },
     {
       title: 'Analytics',

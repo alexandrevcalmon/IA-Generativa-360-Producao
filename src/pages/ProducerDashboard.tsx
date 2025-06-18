@@ -1,12 +1,12 @@
 
 import { useCourses } from "@/hooks/useCourses";
-import { ProducerDashboardHeader } from "@/components/producer/ProducerDashboardHeader";
 import { ProducerStatsGrid } from "@/components/producer/ProducerStatsGrid";
 import { ProducerCoursesSection } from "@/components/producer/ProducerCoursesSection";
 import { ProducerAnalyticsSection } from "@/components/producer/ProducerAnalyticsSection";
 import { ProducerQuickActions } from "@/components/producer/ProducerQuickActions";
 import { ProducerRecentActivity } from "@/components/producer/ProducerRecentActivity";
 import { ProducerPerformanceSummary } from "@/components/producer/ProducerPerformanceSummary";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 const ProducerDashboard = () => {
   const { data: courses = [], isLoading } = useCourses();
@@ -17,7 +17,18 @@ const ProducerDashboard = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <ProducerDashboardHeader />
+      {/* Header with Sidebar Trigger */}
+      <header className="border-b bg-white px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <SidebarTrigger />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Painel do Produtor</h1>
+              <p className="text-gray-600">Bem-vindo de volta! Gerencie seus cursos e empresas clientes.</p>
+            </div>
+          </div>
+        </div>
+      </header>
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto p-6 bg-gray-50">

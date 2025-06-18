@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,6 +35,7 @@ import StudentCommunity from "./pages/StudentCommunity";
 import NotFound from "./pages/NotFound";
 import { AuthGuard } from "@/components/AuthGuard";
 import StudentLayout from "@/components/StudentLayout";
+import ProdutorLayout from "@/components/ProdutorLayout";
 import ProducerCollaboratorsAnalytics from "./pages/ProducerCollaboratorsAnalytics";
 
 const queryClient = new QueryClient();
@@ -52,17 +54,19 @@ function App() {
               <Route path="/auth" element={<Auth />} />
               <Route path="/login-produtor" element={<LoginProdutor />} />
 
-              {/* Producer routes */}
+              {/* Producer routes with ProdutorLayout */}
               <Route path="/producer" element={<AuthGuard />}>
                 <Route index element={<Navigate to="/producer/dashboard" replace />} />
-                <Route path="dashboard" element={<ProducerDashboard />} />
-                <Route path="profile" element={<ProducerProfile />} />
-                <Route path="courses" element={<ProducerCourses />} />
-                <Route path="courses/:courseId" element={<CourseDetails />} />
-                <Route path="companies" element={<ProducerCompanies />} />
-                <Route path="companies/:companyId" element={<ProducerCompanyDetails />} />
-                <Route path="collaborators-analytics" element={<ProducerCollaboratorsAnalytics />} />
-                <Route path="plans" element={<ProducerPlans />} />
+                <Route element={<ProdutorLayout />}>
+                  <Route path="dashboard" element={<ProducerDashboard />} />
+                  <Route path="profile" element={<ProducerProfile />} />
+                  <Route path="courses" element={<ProducerCourses />} />
+                  <Route path="courses/:courseId" element={<CourseDetails />} />
+                  <Route path="companies" element={<ProducerCompanies />} />
+                  <Route path="companies/:companyId" element={<ProducerCompanyDetails />} />
+                  <Route path="collaborators-analytics" element={<ProducerCollaboratorsAnalytics />} />
+                  <Route path="plans" element={<ProducerPlans />} />
+                </Route>
               </Route>
 
               {/* Company routes */}
