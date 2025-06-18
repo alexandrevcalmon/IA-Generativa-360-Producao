@@ -80,10 +80,10 @@ CREATE POLICY "Collaborators can view their company data"
     )
   );
 
--- Atualizar perfis para corrigir inconsistências de roles
--- Colaboradores devem ter role 'student' na tabela profiles
+-- Atualizar perfis existentes para manter consistência
+-- Colaboradores que estão na tabela company_users devem ter role 'collaborator'
 UPDATE public.profiles 
-SET role = 'student' 
+SET role = 'collaborator' 
 WHERE id IN (
   SELECT DISTINCT auth_user_id 
   FROM public.company_users

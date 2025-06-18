@@ -68,10 +68,28 @@ export const fetchUserRoleAuxiliaryData = async (user: User): Promise<UserRoleAu
       // Update profile role if it doesn't match what we determined
       if (fetchedProfile.role !== finalRole) {
         console.log(`[fetchUserRoleAuxiliaryData] Updating profile role from ${fetchedProfile.role} to ${finalRole}`);
-        await supabase
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({ role: finalRole })
           .eq('id', user.id);
+        
+        if (updateError) {
+          console.error(`[fetchUserRoleAuxiliaryData] Error updating profile role:`, updateError.message);
+        }
+      }
+    } else {
+      // Create profile if it doesn't exist
+      console.log(`[fetchUserRoleAuxiliaryData] Creating new profile with role: ${finalRole}`);
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({ id: user.id, role: finalRole })
+        .select()
+        .single();
+      
+      if (createError) {
+        console.error(`[fetchUserRoleAuxiliaryData] Error creating profile:`, createError.message);
+      } else {
+        profileData = newProfile;
       }
     }
 
