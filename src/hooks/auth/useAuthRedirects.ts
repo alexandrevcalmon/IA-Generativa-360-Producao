@@ -27,7 +27,7 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
       switch (userRole) {
         case 'producer':
           console.log('Redirecting to producer dashboard');
-          navigate('/producer-dashboard', { replace: true });
+          navigate('/producer/dashboard', { replace: true });
           break;
         case 'company':
           console.log('Redirecting to company dashboard');

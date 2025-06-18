@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -17,10 +18,14 @@ import CompanyCollaboratorsAnalytics from "./pages/CompanyCollaboratorsAnalytics
 import ProducerMentorship from "./pages/ProducerMentorship";
 import CompanyProfile from "./pages/CompanyProfile";
 import CourseProgressPage from "./components/company/CourseProgressPage";
+import LoginProdutor from "./pages/LoginProdutor";
+import ProducerDashboard from "./pages/ProducerDashboard";
+import ProducerCompanies from "./pages/ProducerCompanies";
 
 import { ChangePassword } from "./components/auth/ChangePassword";
 import { ResetPassword } from "./components/auth/ResetPassword";
 import CompanyLayout from "./components/CompanyLayout";
+import ProdutorLayout from "./components/ProdutorLayout";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import CompanyCourses from "./pages/CompanyCourses";
 import CompanyMentorships from "./pages/CompanyMentorships";
@@ -39,6 +44,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/change-password" element={<ChangePassword />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
+            <Route path="/login-produtor" element={<LoginProdutor />} />
 
             {/* Private Routes */}
             <Route
@@ -57,14 +63,13 @@ function App() {
                 </RequireAuth>
               }
             />
-            <Route
-              path="/producer-mentorship"
-              element={
-                <RequireAuth role="producer">
-                  <ProducerMentorship />
-                </RequireAuth>
-              }
-            />
+            
+            {/* Producer Routes */}
+            <Route path="/producer" element={<ProdutorLayout />}>
+              <Route path="dashboard" element={<ProducerDashboard />} />
+              <Route path="companies" element={<ProducerCompanies />} />
+              <Route path="mentorship" element={<ProducerMentorship />} />
+            </Route>
             
             {/* Company Routes */}
             <Route path="/company-dashboard" element={<CompanyLayout />}>

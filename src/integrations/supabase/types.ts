@@ -479,7 +479,6 @@ export type Database = {
           logo_url: string | null
           max_students: number | null
           name: string
-          needs_password_change: boolean
           notes: string | null
           official_name: string | null
           phone: string | null
@@ -509,7 +508,6 @@ export type Database = {
           logo_url?: string | null
           max_students?: number | null
           name: string
-          needs_password_change?: boolean
           notes?: string | null
           official_name?: string | null
           phone?: string | null
@@ -539,7 +537,6 @@ export type Database = {
           logo_url?: string | null
           max_students?: number | null
           name?: string
-          needs_password_change?: boolean
           notes?: string | null
           official_name?: string | null
           phone?: string | null
@@ -878,6 +875,13 @@ export type Database = {
             referencedRelation: "courses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "enrollments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       learning_path_courses: {
@@ -994,6 +998,13 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -1665,10 +1676,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      create_company_auth_user: {
-        Args: { company_email: string; company_id: string }
-        Returns: string
-      }
       ensure_user_profile_consistency: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1689,21 +1696,9 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
-      initialize_student_gamification: {
-        Args: { user_auth_id: string }
-        Returns: undefined
-      }
-      is_company_user: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
       is_producer: {
         Args: { user_id: string }
         Returns: boolean
-      }
-      populate_test_collaborator_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
       }
       update_collaborator_stats: {
         Args: Record<PropertyKey, never>
