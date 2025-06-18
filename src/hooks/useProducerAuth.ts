@@ -13,20 +13,27 @@ export const useProducerAuth = () => {
 
       console.log('[useProducerAuth] Checking producer auth for user:', user.id);
 
-      // Use the safe function to avoid RLS recursion
+      // Direct query to avoid RLS recursion issues
       const { data, error } = await supabase
-        .rpc('get_user_role_safe', { user_id: user.id });
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
       if (error) {
         console.error('[useProducerAuth] Error checking producer auth:', error);
-        throw error;
+        // If there's an error, assume not a producer
+        return {
+          isProducer: false,
+          role: 'student'
+        };
       }
 
-      console.log('[useProducerAuth] User role result:', data);
+      console.log('[useProducerAuth] User role result:', data?.role);
 
       return {
-        isProducer: data === 'producer',
-        role: data
+        isProducer: data?.role === 'producer',
+        role: data?.role || 'student'
       };
     },
     enabled: !!user,
