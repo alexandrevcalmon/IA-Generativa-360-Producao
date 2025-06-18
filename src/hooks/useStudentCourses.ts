@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,16 +39,16 @@ export interface StudentLesson {
 }
 
 export const useStudentCourses = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
 
   return useQuery({
-    queryKey: ['student-courses', user?.id],
+    queryKey: ['student-courses', user?.id, userRole],
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
 
-      console.log('Fetching courses for student:', user.id);
+      console.log('Fetching courses for user:', user.id, 'with role:', userRole);
 
-      // Get courses that are published - this will now work with RLS policies
+      // Get courses that are published - this will now work with the updated RLS policies
       const { data: courses, error: coursesError } = await supabase
         .from('courses')
         .select('*')
@@ -78,7 +79,7 @@ export const useStudentCourses = () => {
 
           const enrollment = enrollmentMap.get(course.id);
 
-          // Get modules - this will now work with RLS policies
+          // Get modules - this will now work with updated RLS policies
           const { data: modules, error: modulesError } = await supabase
             .from('course_modules')
             .select('*')
@@ -94,7 +95,7 @@ export const useStudentCourses = () => {
             (modules || []).map(async (module) => {
               console.log('Processing module:', module.title);
 
-              // Get lessons - this will now work with RLS policies
+              // Get lessons - this will now work with updated RLS policies
               const { data: lessons, error: lessonsError } = await supabase
                 .from('lessons')
                 .select('*')
@@ -153,15 +154,15 @@ export const useStudentCourses = () => {
       console.log('Processed courses with modules and lessons:', coursesWithProgress.length);
       return coursesWithProgress as StudentCourse[];
     },
-    enabled: !!user,
+    enabled: !!user && (userRole === 'student' || userRole === 'collaborator'),
   });
 };
 
 export const useStudentCourse = (courseId: string) => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
 
   return useQuery({
-    queryKey: ['student-course', courseId, user?.id],
+    queryKey: ['student-course', courseId, user?.id, userRole],
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
 
@@ -232,6 +233,6 @@ export const useStudentCourse = (courseId: string) => {
         modules: modulesWithLessons,
       } as StudentCourse;
     },
-    enabled: !!user && !!courseId,
+    enabled: !!user && !!courseId && (userRole === 'student' || userRole === 'collaborator'),
   });
 };

@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -25,6 +26,7 @@ import ProducerCourses from "./pages/ProducerCourses";
 import ProducerCommunity from "./pages/ProducerCommunity";
 import ProducerPlans from "./pages/ProducerPlans";
 import StudentDashboard from "./pages/StudentDashboard";
+import StudentCourses from "./pages/StudentCourses";
 
 import { ChangePassword } from "./components/auth/ChangePassword";
 import { ResetPassword } from "./components/auth/ResetPassword";
@@ -98,6 +100,7 @@ function App() {
             {/* Student Routes */}
             <Route path="/student" element={<StudentLayout />}>
               <Route path="dashboard" element={<StudentDashboard />} />
+              <Route path="courses" element={<StudentCourses />} />
             </Route>
             
             {/* Default Route */}
