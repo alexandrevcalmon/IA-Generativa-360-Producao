@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,6 @@ import {
   TrendingUp,
   Calendar,
   Star,
-  Play,
   CheckCircle
 } from 'lucide-react';
 
@@ -42,9 +42,6 @@ const StudentDashboard = () => {
     nextGoalProgress: 75
   };
 
-  const enrolledCourses = courses?.filter(c => c.enrolled_at) || [];
-  const availableCourses = courses?.filter(c => !c.enrolled_at) || [];
-
   const recentActivities = [
     {
       type: 'course_progress',
@@ -65,14 +62,6 @@ const StudentDashboard = () => {
       points: 25
     }
   ];
-
-  const handleEnrollInCourse = async (courseId: string) => {
-    try {
-      await enrollMutation.mutateAsync(courseId);
-    } catch (error) {
-      console.error('Failed to enroll:', error);
-    }
-  };
 
   if (coursesLoading) {
     return (
@@ -177,98 +166,40 @@ const StudentDashboard = () => {
 
           {/* Main Content Grid */}
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Current Courses - 2/3 width */}
+            {/* Left Column - Quick Actions - 2/3 width */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Enrolled Courses */}
+              {/* Quick Access */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-blue-600" />
-                    Meus Cursos
+                    Acesso Rápido
                   </CardTitle>
                   <CardDescription>
-                    Continue de onde parou
+                    Navegue rapidamente pelas principais funcionalidades
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {enrolledCourses.length > 0 ? (
-                    enrolledCourses.map((course) => (
-                      <div key={course.id} className="p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="font-medium text-gray-900">{course.title}</h3>
-                          <Badge variant="outline">{Math.round(course.progress_percentage)}%</Badge>
-                        </div>
-                        <Progress value={course.progress_percentage} className="mb-3" />
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">
-                            {course.modules.length} módulos • {course.modules.reduce((total, module) => total + module.lessons.length, 0)} lições
-                          </span>
-                          <div className="flex gap-2">
-                            <Button size="sm" asChild>
-                              <Link to={`/student/courses/${course.id}`}>
-                                <Play className="w-3 h-3 mr-1" />
-                                Continuar
-                              </Link>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500 mb-4">Você ainda não está inscrito em nenhum curso.</p>
-                      <p className="text-sm text-gray-400">Explore os cursos disponíveis abaixo para começar.</p>
-                    </div>
-                  )}
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Link to="/student/courses">
+                    <Button className="w-full h-20 flex flex-col items-center gap-2" variant="outline">
+                      <BookOpen className="h-6 w-6" />
+                      <span>Meus Cursos</span>
+                    </Button>
+                  </Link>
+                  <Button className="w-full h-20 flex flex-col items-center gap-2" variant="outline" disabled>
+                    <Calendar className="h-6 w-6" />
+                    <span>Agenda</span>
+                  </Button>
+                  <Button className="w-full h-20 flex flex-col items-center gap-2" variant="outline" disabled>
+                    <Trophy className="h-6 w-6" />
+                    <span>Conquistas</span>
+                  </Button>
+                  <Button className="w-full h-20 flex flex-col items-center gap-2" variant="outline" disabled>
+                    <Target className="h-6 w-6" />
+                    <span>Metas</span>
+                  </Button>
                 </CardContent>
               </Card>
-
-              {/* Available Courses */}
-              {availableCourses.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="h-5 w-5 text-green-600" />
-                      Cursos Disponíveis
-                    </CardTitle>
-                    <CardDescription>
-                      Novos cursos para expandir seus conhecimentos
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {availableCourses.slice(0, 3).map((course) => (
-                      <div key={course.id} className="p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="font-medium text-gray-900">{course.title}</h3>
-                          <Badge variant="secondary">{course.difficulty_level}</Badge>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">{course.description}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500">
-                            {course.estimated_hours}h • {course.category}
-                          </span>
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleEnrollInCourse(course.id)}
-                            disabled={enrollMutation.isPending}
-                          >
-                            {enrollMutation.isPending ? 'Inscrevendo...' : 'Inscrever-se'}
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                    {availableCourses.length > 3 && (
-                      <div className="text-center pt-2">
-                        <Button variant="outline" asChild>
-                          <Link to="/student/courses">
-                            Ver todos os cursos
-                          </Link>
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
             </div>
 
             {/* Right Column - 1/3 width */}
