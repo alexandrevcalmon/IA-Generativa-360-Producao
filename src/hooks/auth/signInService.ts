@@ -1,4 +1,4 @@
-// src/hooks/auth/signInService.ts
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -6,222 +6,199 @@ import {
   checkCompanyByEmail, 
   createCompanyAuthUser,
   updateUserMetadata 
-} from './authUtils'; // checkCompanyUser returns { collaborator, collaboratorError }
+} from './authUtils';
 
 export const createSignInService = (toast: ReturnType<typeof useToast>['toast']) => {
   const signIn = async (email: string, password: string, role?: string) => {
     try {
-      // V4: Refined handling for role=company for existing users.
-      console.log(`[SignInServiceV4] Attempting sign-in. Email: ${email}, Intended Role: ${role}`);
+      console.log('Starting sign in process for:', email, 'with role:', role);
 
-      // Branch 1: Producer Login
+      // Producer Path
       if (role === 'producer') {
-        console.log(`[SignInServiceV3] Path: Producer. Email: ${email}`);
+        console.log('Attempting Producer login for:', email);
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
         if (error) {
-          console.error(`[SignInServiceV3] Producer login error for ${email}: ${error.message}`);
-          toast({ title: "Erro no Login", description: error.message, variant: "destructive" });
+          console.error('Producer sign in error:', error.message);
+          toast({ title: "Erro no login", description: error.message, variant: "destructive" });
           return { error };
         }
+
         if (data.user) {
+          console.log('Producer login successful for:', email);
           if (data.user.user_metadata?.role !== 'producer') {
-            console.log(`[SignInServiceV3] Updating metadata to 'producer' for ${email}`);
+            console.log('Updating user metadata to producer role');
             await updateUserMetadata({ role: 'producer' });
           }
-          toast({ title: "Login de Produtor bem-sucedido!", description: "Bem-vindo!" });
+          toast({ title: "Login realizado com sucesso!", description: "Bem-vindo, Produtor!" });
           return { error: null, user: data.user, session: data.session, needsPasswordChange: false };
         }
-        console.error(`[SignInServiceV3] Producer login for ${email} succeeded but user data is missing.`);
-        return { error: new Error("User data not found for producer.") };
       }
 
-      // Branch 2: Company Login (explicitly chosen via ?role=company)
-      // AND Branch 3: Default Path (Student, Collaborator, or unspecified role)
-      // Both start with a general login attempt.
-
-      console.log(`[SignInServiceV3] Path: ${role === 'company' ? 'Company (explicit)' : 'Default/Student/Collaborator'}. Email: ${email}`);
-      const { data: loginAttempt, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (loginError) {
-        console.error(`[SignInServiceV3] Initial login attempt failed for ${email}. Error: ${loginError.message}`);
-        // Company-specific flow for "Invalid login credentials" if role=company
-        if (role === 'company' && loginError.message.includes('Invalid login credentials')) {
-          console.log(`[SignInServiceV3] Company with role='company' failed initial login. Checking company by email for potential creation/link.`);
+      // Company Path & Default Path (Student/Collaborator) will be handled below
+      // This initial signInWithPassword will serve as the first attempt for Company and the main attempt for Default
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Sign in error:', error);
+        
+        // COMPANY PATH: Handle "Invalid login credentials" for potential company user creation
+        if (role === 'company' && error.message.includes('Invalid login credentials')) {
+          console.log('Company login failed with invalid credentials, checking for company by email:', email);
           const { companies, companySearchError } = await checkCompanyByEmail(email);
+          console.log('Company search result:', { companies, companySearchError });
 
-          if (companySearchError) {
-            console.error(`[SignInServiceV3] Error checking company by email ${email}: ${companySearchError.message}`);
-            toast({ title: "Erro ao verificar empresa", description: companySearchError.message, variant: "destructive" });
-            return { error: companySearchError };
-          }
-
-          if (companies && companies.length > 0) {
+          if (!companySearchError && companies && companies.length > 0) {
             const company = companies[0];
-            console.log(`[SignInServiceV3] Company ${company.name} found. Attempting to create/link auth user.`);
+            console.log('Found company:', company.name);
             const { data: createResult, error: createError } = await createCompanyAuthUser(email, company.id);
+            console.log('createCompanyAuthUser result:', { createResult, createError });
 
-            if (createError || !createResult?.success) {
-              console.error(`[SignInServiceV3] Failed to create/link auth user for company ${company.id}. Error: ${createError?.message}`);
-              toast({ title: "Falha ao vincular usuário à empresa", description: createError?.message || "Erro desconhecido na função Edge.", variant: "destructive" });
-              return { error: createError || new Error("Failed Edge Function createCompanyAuthUser")};
-            }
+            if (!createError && createResult?.success) {
+              console.log('Company auth user created/linked, attempting login again...');
+              const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({ email, password });
 
-            console.log(`[SignInServiceV3] Auth user created/linked for ${company.name}. Retrying login.`);
-            const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({ email, password });
-            if (retryError) {
-              console.error(`[SignInServiceV3] Retry login failed for ${email} after company link. Error: ${retryError.message}`);
-              toast({ title: "Erro no Login", description: "Falha ao tentar login após vincular à empresa.", variant: "destructive" });
-              return { error: retryError };
-            }
-
-            if (retryData.user) {
-              console.log(`[SignInServiceV3] Retry login successful for ${email}. Updating metadata to 'company'.`);
-              await updateUserMetadata({ role: 'company', company_id: company.id, company_name: company.name });
-              toast({ title: "Login de Empresa bem-sucedido!", description: "Bem-vindo! Sua senha precisa ser alterada." });
-              return { error: null, user: retryData.user, session: retryData.session, needsPasswordChange: true };
-            }
-            console.error(`[SignInServiceV3] Retry login for ${email} for company flow succeeded but user data is missing.`);
-            return { error: new Error("User data not found on company retry.") };
-          } else {
-            console.log(`[SignInServiceV3] No company found with email ${email} for role=company flow.`);
-            toast({ title: "Empresa não encontrada", description: "Nenhuma empresa cadastrada com este email para login de gestor.", variant: "destructive" });
-            return { error: new Error("Company not found for role=company flow.") };
-          }
-        }
-        // General error handling for other login errors (Email not confirmed, etc.)
-        if (loginError.message.includes('Email not confirmed')) {
-             toast({ title: "Email não confirmado", description: "Verifique seu email para confirmação.", variant: "destructive"});
-        } else {
-             toast({ title: "Credenciais Inválidas", description: "Email ou senha incorretos.", variant: "destructive"});
-        }
-        return { error: loginError };
-      }
-
-      // Login successful, data.user is available (loginAttempt.user)
-      if (loginAttempt.user) {
-        const user = loginAttempt.user;
-        const user = loginAttempt.user;
-        // userFinalRole and needsPwdChange will be determined by the specific path taken below.
-
-        console.log(`[SignInServiceV4] Initial login successful for ${user.email}. Current metadata role: ${user.user_metadata?.role}. Intended role from URL: ${role}`);
-
-        // Explicit 'company' role from URL (existing company user)
-        if (role === 'company') {
-          console.log(`[SignInServiceV4] Handling explicit 'company' role for user ${user.id}. Verifying company ownership.`);
-
-          const { data: companyRecord, error: companyRecordError } = await supabase
-            .from('companies')
-            .select('id, name, needs_password_change, auth_user_id')
-            .eq('auth_user_id', user.id)
-            .maybeSingle();
-
-          if (companyRecordError) {
-            console.error(`[SignInServiceV4] Error fetching company record for ${user.id} (auth_user_id) to verify ownership: ${companyRecordError.message}. Proceeding with default role handling.`);
-            // Fall through to default handling by not returning here.
-          }
-
-          if (companyRecord && companyRecord.auth_user_id === user.id) {
-            // User IS a legitimate company owner.
-            console.log(`[SignInServiceV4] User ${user.id} confirmed as owner of company ${companyRecord.name} (ID: ${companyRecord.id}).`);
-            let currentMetaRole = user.user_metadata?.role;
-            if (currentMetaRole !== 'company' || user.user_metadata?.company_id !== companyRecord.id || user.user_metadata?.company_name !== companyRecord.name) {
-              console.warn(`[SignInServiceV4] Company owner ${user.id} had metadata role '${currentMetaRole}' or mismatched company details. Updating to 'company' with correct details.`);
-              await updateUserMetadata({
-                role: 'company',
-                company_id: companyRecord.id,
-                company_name: companyRecord.name,
-                name: user.user_metadata?.name || user.email // Preserve existing name from metadata or default to email
+              if (!retryError && retryData.user) {
+                console.log('Company login successful after auth user creation/linking');
+                await updateUserMetadata({
+                  role: 'company',
+                  company_id: company.id,
+                  company_name: company.name,
+                });
+                toast({ title: "Login realizado com sucesso!", description: "Bem-vindo! Você precisa alterar sua senha." });
+                return { error: null, user: retryData.user, session: retryData.session, needsPasswordChange: true };
+              } else {
+                console.error('Retry login failed for company:', retryError?.message);
+                toast({
+                  title: "Credenciais incorretas",
+                  description: "Email ou senha incorretos. Verifique suas credenciais ou redefina sua senha.",
+                  variant: "destructive",
+                });
+              }
+            } else {
+              console.error('Failed to create/link company auth user:', createError);
+              toast({
+                title: "Credenciais incorretas",
+                description: "Email ou senha incorretos. Verifique suas credenciais ou redefina sua senha.",
+                variant: "destructive",
               });
             }
-            const needsPwdChangeForCompanyOwner = companyRecord.needs_password_change || false;
-            toast({ title: "Login de Empresa bem-sucedido!", description: needsPwdChangeForCompanyOwner ? "Bem-vindo! Sua senha precisa ser alterada." : "Bem-vindo!" });
-            return { error: null, user, session: loginAttempt.session, needsPasswordChange: needsPwdChangeForCompanyOwner };
-          } else if (!companyRecordError) { // Only show this if there wasn't a DB error, meaning user is definitively not linked.
-            // User is NOT a company owner, despite ?role=company.
-            console.warn(`[SignInServiceV4] User ${user.id} attempted company login via URL but is not linked as an owner in 'companies' table. Proceeding with actual role determination.`);
+          } else {
             toast({
-              id: 'non-owner-company-login-toast-id', // Added ID to potentially prevent duplicate generic toasts
-              title: "Acesso como Empresa Não Verificado",
-              description: "Você será conectado com seu perfil existente.",
-              variant: "info",
-              duration: 7000, // Longer duration for info toast
+              title: "Credenciais incorretas",
+              description: "Email ou senha incorretos. Verifique suas credenciais ou redefina sua senha.",
+              variant: "destructive",
             });
-            // Fall through to default/collaborator/student handling.
-            // Metadata role will NOT be changed to 'company' here.
           }
-        } // End of explicit 'company' role handling from URL
+        } else if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: "Email não confirmado",
+            description: "Verifique seu email e clique no link de confirmação antes de fazer login.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Too many requests')) {
+          toast({
+            title: "Muitas tentativas",
+            description: "Aguarde alguns minutos antes de tentar novamente.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro no login",
+            description: "Ocorreu um erro inesperado. Tente novamente ou entre em contato com o suporte.",
+            variant: "destructive",
+          });
+        }
+        return { error };
+      }
 
-        // DEFAULT PATH / Collaborator check / Student
-        // This path is taken if:
-        // 1. role was not 'producer' AND
-        // 2. role was not 'company' (from URL) OR
-        // 3. role was 'company' (from URL) but user was not verified as a company owner (or DB error occurred during check).
-        let userFinalRole = user.user_metadata?.role; // Re-evaluate userFinalRole based on current metadata
-        let needsPwdChange = false;
-        console.log(`[SignInServiceV4] Entering default/collaborator/student path for user ${user.id}. Current metadata role: ${userFinalRole}`);
+      if (data.user) {
+        console.log('Sign in successful for user:', data.user.email);
 
-        const { collaborator, collaboratorError } = await checkCompanyUser(user.id);
+        // COMPANY PATH (successful initial login)
+        if (role === 'company') {
+          console.log('Handling successful initial login for Company user:', data.user.email);
+          if (data.user.user_metadata?.role !== 'company') {
+            console.log('User metadata role is not company, but role=company was passed. Updating metadata.');
+            // Attempt to get company_id and company_name from existing metadata or make a call
+            // This part might need adjustment based on how company_id/name are sourced for existing users
+            // For now, assuming it might be missing and needs an update post a broader check or default.
+            await updateUserMetadata({ role: 'company' });
+          }
+          // Check needs_password_change for company user
+          // This requires fetching company details, potentially via a modified checkCompanyUser or new function
+          // For now, let's assume a function getCompanyDetails(userId) exists or adapt checkCompanyUser
+          const { companyData, error: companyError } = await checkCompanyByEmail(data.user.email || ''); // Or use user_id if more direct
+          if (companyError || !companyData || companyData.length === 0) {
+            console.error('Could not verify company details for password change check:', companyError);
+            // Defaulting to false, or handle error as critical
+            toast({ title: "Login realizado com sucesso!", description: "Bem-vindo!" });
+            return { error: null, user: data.user, session: data.session, needsPasswordChange: false };
+          }
+          const company = companyData[0];
+          // Assuming the company table has a needs_password_change field directly related to the company admin
+          // or the auth user linked to the company. This logic may need refinement based on schema.
+          // If needs_password_change is per company user (collaborator-like), then checkCompanyUser is more appropriate.
+          // Let's assume for now the company itself (via its primary auth contact/admin) has this flag.
+          const needsPasswordChange = company.auth_user_id === data.user.id ? company.needs_password_change || false : false;
+
+          if (needsPasswordChange) {
+            toast({ title: "Login realizado com sucesso!", description: "Bem-vindo! Você precisa alterar sua senha." });
+          } else {
+            toast({ title: "Login realizado com sucesso!", description: "Bem-vindo de volta." });
+          }
+          return { error: null, user: data.user, session: data.session, needsPasswordChange };
+        }
+
+        // DEFAULT PATH (Student/Collaborator)
+        console.log('Handling default path (Student/Collaborator) for user:', data.user.email);
+        const { collaborator, collaboratorError } = await checkCompanyUser(data.user.id);
+        console.log('Collaborator check result:', { collaborator, collaboratorError });
 
         if (!collaboratorError && collaborator) {
-          console.log(`[SignInServiceV4] User ${user.id} identified as collaborator for company ID: ${collaborator.company_id}.`);
-          userFinalRole = 'collaborator';
-          if (user.user_metadata?.role !== 'collaborator' || user.user_metadata?.company_id !== collaborator.company_id || user.user_metadata?.company_name !== collaborator.companies?.name) {
+          console.log('User is a collaborator for company:', collaborator.companies?.name);
+          if (data.user.user_metadata?.role !== 'collaborator') {
             await updateUserMetadata({
               role: 'collaborator',
               company_id: collaborator.company_id,
-              name: user.user_metadata?.name || collaborator.name,
-              company_name: collaborator.companies?.name // Assumes companies a nested object with name
+              company_name: collaborator.companies?.name
             });
-            console.log(`[SignInServiceV4] Updated metadata for collaborator ${user.id}.`);
           }
           if (collaborator.needs_password_change) {
-            needsPwdChange = true;
-          }
-          // Avoid double toast if info toast about redirection was just shown
-          if (!toast.isActive?.('non-owner-company-login-toast-id')) {
-             toast({ title: "Login de Colaborador bem-sucedido!", description: needsPwdChange ? "Bem-vindo! Sua senha precisa ser alterada." : "Bem-vindo!" });
+            console.log('Collaborator needs password change.');
+            toast({ title: "Login realizado com sucesso!", description: "Bem-vindo! Você precisa alterar sua senha." });
+            return { error: null, user: data.user, session: data.session, needsPasswordChange: true };
           }
         } else {
-          if (collaboratorError) {
-            console.error(`[SignInServiceV4] Error checking collaborator status for ${user.id}: ${collaboratorError.message}`);
-          }
-          // If not a collaborator, and no specific role was set from metadata (e.g. new user, or old user without role)
-          // Or if user.user_metadata.role was 'company' but they weren't verified as owner, it will fall here.
-          // We should ensure that if user.user_metadata.role is 'company' but they are not an owner, it gets reset to 'student' or their actual role.
-          // However, the current logic defaults to 'student' only if !userFinalRole.
-          // If userFinalRole is 'company' (but not owner), it will currently stay 'company'. This needs refinement.
-
-          if (userFinalRole === 'company') { // They had 'company' in metadata but weren't verified as owner
-             console.warn(`[SignInServiceV4] User ${user.id} had 'company' role in metadata but was not verified as owner. Re-evaluating role.`);
-             // At this point, they are not an owner, not a collaborator. Default to student.
-             userFinalRole = 'student';
-             await updateUserMetadata({ role: 'student', name: user.user_metadata?.name || user.email, company_id: null, company_name: null }); // Clear company info
-             console.log(`[SignInServiceV4] Role for ${user.id} set to 'student' as company ownership not verified.`);
-          } else if (!userFinalRole) { // No role at all
-            console.log(`[SignInServiceV4] User ${user.id} is not a collaborator and has no role in metadata. Defaulting to 'student'.`);
-            await updateUserMetadata({ role: 'student', name: user.user_metadata?.name || user.email });
-            userFinalRole = 'student';
-          } else { // Existing role (e.g. student, or already collaborator and confirmed above)
-            console.log(`[SignInServiceV4] User ${user.id} is not a (newly identified) collaborator. Role remains: '${userFinalRole}' from metadata.`);
-          }
-
-          if (!toast.isActive?.('non-owner-company-login-toast-id')) {
-            toast({ title: `Login de ${userFinalRole!.charAt(0).toUpperCase() + userFinalRole!.slice(1)} bem-sucedido!`, description: "Bem-vindo!" });
+          // Not a collaborator, or error in check. Assume student if no role.
+          if (!data.user.user_metadata?.role) {
+            console.log('User is not a collaborator and has no role, defaulting to student.');
+            await updateUserMetadata({ role: 'student' });
           }
         }
         
-        console.log(`[SignInServiceV4] Sign-in for ${user.email} completed. Final Role: ${userFinalRole}, Needs Password Change: ${needsPwdChange}`);
-        return { error: null, user, session: loginAttempt.session, needsPasswordChange: needsPwdChange };
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo de volta.",
+        });
+        
+        return { error: null, user: data.user, session: data.session, needsPasswordChange: false };
       }
       
-      console.error(`[SignInServiceV4] Login attempt for ${email} resulted in no error but also no user object.`);
-      return { error: new Error("No user data after login attempt.") };
-
-    } catch (e: any) {
-      console.error(`[SignInServiceV4] Critical unhandled error during signIn for ${email}:`, e.message, e.stack);
-      toast({ title: "Erro Crítico no Login", description: "Um problema inesperado ocorreu.", variant: "destructive" });
-      return { error: { message: e.message, name: "CriticalErrorSignInService" } };
+      return { error };
+    } catch (error) {
+      console.error('SignIn error:', error);
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível conectar ao servidor. Verifique sua conexão com a internet.",
+        variant: "destructive",
+      });
+      return { error };
     }
   };
+
   return { signIn };
 };

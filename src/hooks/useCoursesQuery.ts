@@ -1,6 +1,7 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth'; // useAuth should provide userRole
+import { useAuth } from '@/hooks/useAuth';
 
 export interface Course {
   id: string;
@@ -12,76 +13,56 @@ export interface Course {
   thumbnail_url: string | null;
   is_published: boolean | null;
   tags: string[] | null;
-  instructor_id: string | null; // This should match auth.uid() for producers
+  instructor_id: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
 
 export const useCourses = () => {
-  // Get user and userRole from useAuth.
-  const { user, userRole } = useAuth();
+  const { user } = useAuth();
 
   return useQuery({
-    // Query key is now dynamic based on userRole and user ID to ensure
-    // different users/roles get different cached query results.
-    queryKey: ['courses', userRole, user?.id],
+    queryKey: ['courses'],
     queryFn: async () => {
-      if (!user) {
-        console.log('[useCourses] No user, returning empty array.');
-        return [];
-      }
-
-      let query = supabase
+      console.log('Fetching courses for user:', user?.id);
+      
+      const { data, error } = await supabase
         .from('courses')
-        .select('*');
-
-      if (userRole === 'producer') {
-        console.log(`[useCourses] User is a producer. Fetching courses for instructor_id: ${user.id}`);
-        query = query.eq('instructor_id', user.id);
-      } else {
-        // For other roles (e.g., student, collaborator, company), fetch all published courses.
-        console.log(`[useCourses] User role is '${userRole}'. Fetching all published courses.`);
-        query = query.eq('is_published', true);
-      }
-
-      // Common ordering for all queries
-      query = query.order('created_at', { ascending: false });
-
-      const { data, error } = await query;
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('[useCourses] Error fetching courses:', error.message, error.details);
-        throw error; // Rethrow to let React Query handle the error state
+        console.error('Error fetching courses:', error);
+        throw error;
       }
       
-      console.log(`[useCourses] Courses fetched successfully for role '${userRole}', user '${user.id}'. Count: ${data?.length || 0}`);
-      return data as Course[] || []; // Ensure an array is returned even if data is null
+      console.log('Courses fetched successfully:', data?.length);
+      return data as Course[];
     },
-    // Query enabled only if user is logged in.
-    // The queryFn itself handles the !user case, but this prevents even attempting if no user.
     enabled: !!user,
   });
 };
 
-// useCourse hook remains the same for fetching a single course by ID
 export const useCourse = (courseId: string) => {
-  const { user } = useAuth(); // Keep user check for enabled flag
+  const { user } = useAuth();
 
   return useQuery({
     queryKey: ['course', courseId],
     queryFn: async () => {
-      console.log('[useCourse] Fetching single course:', courseId);
+      console.log('Fetching single course:', courseId);
+      
       const { data, error } = await supabase
         .from('courses')
         .select('*')
         .eq('id', courseId)
-        .single(); // .single() is okay here, expects one course or error
+        .single();
 
       if (error) {
-        console.error('[useCourse] Error fetching course:', error.message);
+        console.error('Error fetching course:', error);
         throw error;
       }
-      console.log('[useCourse] Course fetched successfully:', data);
+      
+      console.log('Course fetched successfully:', data);
       return data as Course;
     },
     enabled: !!courseId && !!user,
