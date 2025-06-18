@@ -1,13 +1,12 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/auth';
+import { toast } from 'sonner';
 
 export const useUpdateLessonProgress = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ 
@@ -33,7 +32,7 @@ export const useUpdateLessonProgress = () => {
         .from('lesson_progress')
         .upsert({
           lesson_id: lessonId,
-          user_id: user.id, // Explicitly set user_id for RLS policy
+          user_id: user.id, // This now correctly references auth.users.id
           completed: completed ?? false,
           watch_time_seconds: watchTimeSeconds ?? 0,
           completed_at: completed ? new Date().toISOString() : null,
@@ -51,8 +50,7 @@ export const useUpdateLessonProgress = () => {
       
       // Show toast when lesson is completed
       if (completed) {
-        toast({
-          title: "Aula concluída!",
+        toast.success("Aula concluída!", {
           description: "Parabéns! Você completou esta aula.",
         });
       }
@@ -65,6 +63,9 @@ export const useUpdateLessonProgress = () => {
     },
     onError: (error) => {
       console.error('Progress update error:', error);
+      toast.error("Erro ao atualizar progresso", {
+        description: "Não foi possível atualizar o progresso da aula.",
+      });
     },
   });
 };
@@ -85,7 +86,6 @@ export const useMarkLessonComplete = () => {
 export const useEnrollInCourse = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (courseId: string) => {
@@ -97,7 +97,7 @@ export const useEnrollInCourse = () => {
         .from('enrollments')
         .insert({
           course_id: courseId,
-          user_id: user.id,
+          user_id: user.id, // This now correctly references auth.users.id
           enrolled_at: new Date().toISOString(),
           progress_percentage: 0
         })
@@ -114,17 +114,14 @@ export const useEnrollInCourse = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['student-courses'] });
-      toast({
-        title: "Inscrição realizada!",
+      toast.success("Inscrição realizada!", {
         description: "Você foi inscrito no curso com sucesso.",
       });
     },
     onError: (error) => {
       console.error('Enrollment error:', error);
-      toast({
-        title: "Erro na inscrição",
+      toast.error("Erro na inscrição", {
         description: "Não foi possível realizar a inscrição no curso.",
-        variant: "destructive",
       });
     },
   });
