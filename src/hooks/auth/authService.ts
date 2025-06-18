@@ -15,7 +15,7 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
       if (error) {
         console.error('Sign in error:', error);
         
-        // If login fails with default password, try to create/link company auth user
+        // Enhanced error handling with specific messages
         if (error.message.includes('Invalid login credentials')) {
           console.log('Login failed, checking for company with email:', email);
           
@@ -76,30 +76,42 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
               } else {
                 console.error('Retry login failed:', retryError);
                 toast({
-                  title: "Erro no login",
-                  description: "Falha ao fazer login após criação da conta",
+                  title: "Credenciais incorretas",
+                  description: "Email ou senha incorretos. Verifique suas credenciais ou redefina sua senha.",
                   variant: "destructive",
                 });
               }
             } else {
               console.error('Failed to create/link company auth user:', createError);
               toast({
-                title: "Erro no login",
-                description: "Falha ao criar conta da empresa",
+                title: "Credenciais incorretas",
+                description: "Email ou senha incorretos. Verifique suas credenciais ou redefina sua senha.",
                 variant: "destructive",
               });
             }
           } else {
             toast({
-              title: "Erro no login",
-              description: "Email ou senha incorretos",
+              title: "Credenciais incorretas",
+              description: "Email ou senha incorretos. Verifique suas credenciais ou redefina sua senha.",
               variant: "destructive",
             });
           }
+        } else if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: "Email não confirmado",
+            description: "Verifique seu email e clique no link de confirmação antes de fazer login.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Too many requests')) {
+          toast({
+            title: "Muitas tentativas",
+            description: "Aguarde alguns minutos antes de tentar novamente.",
+            variant: "destructive",
+          });
         } else {
           toast({
             title: "Erro no login",
-            description: error.message,
+            description: "Ocorreu um erro inesperado. Tente novamente ou entre em contato com o suporte.",
             variant: "destructive",
           });
         }
@@ -145,6 +157,11 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
       return { error };
     } catch (error) {
       console.error('SignIn error:', error);
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível conectar ao servidor. Verifique sua conexão com a internet.",
+        variant: "destructive",
+      });
       return { error };
     }
   };
@@ -165,11 +182,25 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
       });
       
       if (error) {
-        toast({
-          title: "Erro no cadastro",
-          description: error.message,
-          variant: "destructive",
-        });
+        if (error.message.includes('User already registered')) {
+          toast({
+            title: "Conta já existe",
+            description: "Uma conta com este email já existe. Tente fazer login ou redefinir sua senha.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Password should be at least')) {
+          toast({
+            title: "Senha muito fraca",
+            description: "A senha deve ter pelo menos 6 caracteres.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro no cadastro",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
           title: "Cadastro realizado com sucesso!",
@@ -180,6 +211,11 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
       return { error };
     } catch (error) {
       console.error('SignUp error:', error);
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível conectar ao servidor. Verifique sua conexão com a internet.",
+        variant: "destructive",
+      });
       return { error };
     }
   };
@@ -193,21 +229,40 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
       });
       
       if (error) {
-        toast({
-          title: "Erro ao enviar email",
-          description: error.message,
-          variant: "destructive",
-        });
+        if (error.message.includes('User not found')) {
+          toast({
+            title: "Email não encontrado",
+            description: "Não encontramos uma conta com este email. Verifique o endereço ou crie uma nova conta.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('For security purposes')) {
+          toast({
+            title: "Limite de tentativas atingido",
+            description: "Por segurança, aguarde alguns minutos antes de solicitar outro email de redefinição.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro ao enviar email",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
-          title: "Email enviado!",
-          description: "Verifique seu email para redefinir sua senha.",
+          title: "Email enviado com sucesso!",
+          description: "Verifique sua caixa de entrada e spam para as instruções de redefinição de senha.",
         });
       }
       
       return { error };
     } catch (error) {
       console.error('Reset password error:', error);
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível enviar o email. Verifique sua conexão com a internet.",
+        variant: "destructive",
+      });
       return { error };
     }
   };
@@ -247,11 +302,36 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
           title: "Senha alterada com sucesso!",
           description: "Sua nova senha foi definida.",
         });
+      } else {
+        if (error.message.includes('New password should be different')) {
+          toast({
+            title: "Senha inválida",
+            description: "A nova senha deve ser diferente da atual.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Password should be at least')) {
+          toast({
+            title: "Senha muito fraca",
+            description: "A senha deve ter pelo menos 6 caracteres.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro ao alterar senha",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
       }
 
       return { error };
     } catch (error) {
       console.error('Change password error:', error);
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível alterar a senha. Verifique sua conexão com a internet.",
+        variant: "destructive",
+      });
       return { error };
     }
   };
@@ -276,6 +356,11 @@ export const createAuthService = (toast: ReturnType<typeof useToast>['toast']) =
       return { error };
     } catch (error) {
       console.error('SignOut error:', error);
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível fazer logout. Tente novamente.",
+        variant: "destructive",
+      });
       return { error };
     }
   };

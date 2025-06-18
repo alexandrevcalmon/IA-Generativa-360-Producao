@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { useAuth } from '@/hooks/auth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { ForgotPasswordDialog } from './ForgotPasswordDialog';
 
 interface AuthFormProps {
   isLogin: boolean;
@@ -27,83 +28,29 @@ export function AuthForm({
   onSubmit
 }: AuthFormProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
-  const { resetPassword } = useAuth();
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lastAttemptTime, setLastAttemptTime] = useState<number | null>(null);
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      alert('Por favor, digite seu email primeiro.');
+    
+    // Track login attempts for better UX
+    const now = Date.now();
+    if (lastAttemptTime && now - lastAttemptTime < 2000) {
+      // Prevent rapid successive attempts
       return;
     }
     
-    setResetLoading(true);
-    try {
-      await resetPassword(email);
-      setShowForgotPassword(false);
-    } catch (error) {
-      console.error('Error sending reset email:', error);
-    } finally {
-      setResetLoading(false);
-    }
+    setLastAttemptTime(now);
+    setLoginAttempts(prev => prev + 1);
+    
+    await onSubmit(e);
   };
 
-  if (showForgotPassword) {
-    return (
-      <div className="space-y-4">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold">Esqueci minha senha</h3>
-          <p className="text-sm text-gray-600 mt-2">
-            Digite seu email para receber as instruções de redefinição de senha.
-          </p>
-        </div>
-        
-        <form onSubmit={handleForgotPassword} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="reset-email">E-mail</Label>
-            <Input
-              id="reset-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Button 
-              type="submit" 
-              className="w-full bg-emerald-600 hover:bg-emerald-700"
-              disabled={resetLoading}
-            >
-              {resetLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                'Enviar email de redefinição'
-              )}
-            </Button>
-            
-            <Button 
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => setShowForgotPassword(false)}
-            >
-              Voltar ao login
-            </Button>
-          </div>
-        </form>
-      </div>
-    );
-  }
+  const showRecoveryHint = loginAttempts >= 2;
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email">E-mail</Label>
         <Input
@@ -143,6 +90,22 @@ export function AuthForm({
         </div>
       </div>
 
+      {showRecoveryHint && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Várias tentativas de login. Verifique suas credenciais ou{' '}
+            <ForgotPasswordDialog 
+              trigger={
+                <span className="text-emerald-600 hover:underline cursor-pointer">
+                  redefina sua senha
+                </span>
+              }
+            />
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-3">
         <Button 
           type="submit" 
@@ -159,14 +122,9 @@ export function AuthForm({
           )}
         </Button>
         
-        <Button
-          type="button"
-          variant="link"
-          className="w-full text-emerald-600 hover:text-emerald-700"
-          onClick={() => setShowForgotPassword(true)}
-        >
-          Esqueci minha senha
-        </Button>
+        <div className="text-center">
+          <ForgotPasswordDialog />
+        </div>
       </div>
     </form>
   );

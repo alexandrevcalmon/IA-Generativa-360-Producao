@@ -1,5 +1,8 @@
 
+import { useState } from 'react';
 import { AuthForm } from './AuthForm';
+import { AccountRecoveryOptions } from './AccountRecoveryOptions';
+import { Button } from '@/components/ui/button';
 
 interface AuthTabsProps {
   email: string;
@@ -22,8 +25,19 @@ export function AuthTabs({
   loading,
   onSubmit
 }: AuthTabsProps) {
+  const [showRecovery, setShowRecovery] = useState(false);
+
+  if (showRecovery) {
+    return (
+      <AccountRecoveryOptions 
+        email={email}
+        onBack={() => setShowRecovery(false)}
+      />
+    );
+  }
+
   return (
-    <div className="w-full">
+    <div className="w-full space-y-4">
       <AuthForm
         isLogin={true}
         email={email}
@@ -35,6 +49,16 @@ export function AuthTabs({
         loading={loading}
         onSubmit={onSubmit}
       />
+      
+      <div className="text-center">
+        <Button
+          variant="link"
+          onClick={() => setShowRecovery(true)}
+          className="text-gray-600 hover:text-emerald-600"
+        >
+          Problemas para acessar sua conta?
+        </Button>
+      </div>
     </div>
   );
 }
