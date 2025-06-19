@@ -90,7 +90,10 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
     lastSavedTimeRef.current = 0;
     lastProgressPercentageRef.current = 0;
     saveIntervalRef.current = 0;
-  }, [currentLesson?.id]);
+    
+    // Reset completion toasts for this lesson
+    updateProgress.resetCompletionToasts?.(currentLesson?.id);
+  }, [currentLesson?.id, updateProgress]);
 
   return (
     <>

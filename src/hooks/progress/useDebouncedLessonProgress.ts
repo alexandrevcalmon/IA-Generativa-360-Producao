@@ -4,14 +4,14 @@ import { useUpdateLessonProgress } from './useUpdateLessonProgress';
 import { debounce } from './utils';
 import { UpdateProgressParams } from './types';
 
-// Hook for debounced progress updates with improved timing
+// Hook for debounced progress updates with enhanced timing to prevent conflicts
 export const useDebouncedLessonProgress = () => {
   const updateProgress = useUpdateLessonProgress();
   
   const debouncedUpdate = useCallback(
     debounce((params: UpdateProgressParams) => {
       updateProgress.mutate(params);
-    }, 3000), // Increased to 3 seconds to reduce conflicts
+    }, 4000), // Increased to 4 seconds to further reduce conflicts and prevent duplicate toasts
     [updateProgress]
   );
 

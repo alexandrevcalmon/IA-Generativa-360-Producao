@@ -91,9 +91,9 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
         />
       )}
 
-      {/* Chat Widget */}
+      {/* Chat Widget - Enhanced z-index to stay above toasts */}
       {isOpen && (
-        <Card className="fixed bottom-4 right-4 w-80 h-[500px] shadow-xl z-50 flex flex-col">
+        <Card className="fixed bottom-4 right-4 w-80 h-[500px] shadow-xl z-[9999] flex flex-col">
           {/* Header - Fixed at top */}
           <ChatHeader
             lessonId={lessonId}

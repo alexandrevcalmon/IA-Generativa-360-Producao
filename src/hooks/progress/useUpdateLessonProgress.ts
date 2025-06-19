@@ -12,6 +12,7 @@ export const useUpdateLessonProgress = () => {
   const queryClient = useQueryClient();
   const pendingUpdatesRef = useRef<Set<string>>(new Set());
   const lastUpdateTimeRef = useRef<Map<string, number>>(new Map());
+  const completionToastsRef = useRef<Set<string>>(new Set()); // Track completion toasts
 
   const updateProgressMutation = useMutation({
     mutationFn: async ({ 
@@ -30,10 +31,10 @@ export const useUpdateLessonProgress = () => {
         return null;
       }
 
-      // Throttle updates to prevent rapid fire (minimum 1 second between updates)
+      // Enhanced throttling to prevent rapid fire (minimum 2 seconds between updates)
       const lastUpdateTime = lastUpdateTimeRef.current.get(updateKey) || 0;
       const timeSinceLastUpdate = currentTime - lastUpdateTime;
-      if (timeSinceLastUpdate < 1000) {
+      if (timeSinceLastUpdate < 2000) {
         console.log('🚫 Throttling update for lesson:', lessonId, 'time since last:', timeSinceLastUpdate);
         return null;
       }
@@ -96,11 +97,31 @@ export const useUpdateLessonProgress = () => {
           return data;
         });
 
-        // Show toast when lesson is completed
+        // Enhanced toast control for lesson completion
         if (completed && result) {
-          toast.success("Aula concluída!", {
-            description: "Parabéns! Você completou esta aula.",
-          });
+          const completionToastKey = `${user.id}-${lessonId}-completed`;
+          
+          // Only show completion toast once per lesson
+          if (!completionToastsRef.current.has(completionToastKey)) {
+            completionToastsRef.current.add(completionToastKey);
+            
+            toast.success("Aula concluída!", {
+              description: "Parabéns! Você completou esta aula.",
+              duration: 4000, // Auto-dismiss after 4 seconds
+              dismissible: true, // Enable close button
+              style: {
+                zIndex: 9998, // Lower than chat widget (z-50 = 50, so chat is higher)
+              },
+              onDismiss: () => {
+                // Remove from tracking when dismissed
+                completionToastsRef.current.delete(completionToastKey);
+              },
+              onAutoClose: () => {
+                // Remove from tracking when auto-closed
+                completionToastsRef.current.delete(completionToastKey);
+              }
+            });
+          }
         }
 
         return result;
@@ -123,14 +144,24 @@ export const useUpdateLessonProgress = () => {
     onError: (error: any) => {
       console.error('❌ Progress update error:', error);
       
-      // Show user-friendly error messages
+      // Show user-friendly error messages with controlled toast
       if (error?.code === '42501') {
         toast.error("Erro de permissão", {
           description: "Você não tem permissão para atualizar o progresso desta aula.",
+          duration: 3000,
+          dismissible: true,
+          style: {
+            zIndex: 9998,
+          }
         });
       } else if (error?.code !== '23505' && error?.status !== 409) {
         toast.error("Erro ao atualizar progresso", {
           description: "Não foi possível atualizar o progresso da aula. Tente novamente.",
+          duration: 3000,
+          dismissible: true,
+          style: {
+            zIndex: 9998,
+          }
         });
       } else {
         console.log('🔄 Conflict error suppressed (expected during high concurrency)');
@@ -138,5 +169,18 @@ export const useUpdateLessonProgress = () => {
     },
   });
 
-  return updateProgressMutation;
+  // Reset completion toasts tracking when component unmounts or lesson changes
+  const resetCompletionToasts = (lessonId?: string) => {
+    if (lessonId && user) {
+      const completionToastKey = `${user.id}-${lessonId}-completed`;
+      completionToastsRef.current.delete(completionToastKey);
+    } else {
+      completionToastsRef.current.clear();
+    }
+  };
+
+  return {
+    ...updateProgressMutation,
+    resetCompletionToasts
+  };
 };
