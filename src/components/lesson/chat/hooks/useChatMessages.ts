@@ -10,7 +10,7 @@ export const useChatMessages = () => {
     inputMessage: string,
     currentSessionId: string | null,
     messages: ChatMessage[],
-    setMessages: (messages: ChatMessage[]) => void,
+    setMessages: (messages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void,
     lessonId?: string
   ) => {
     if (!inputMessage.trim() || !currentSessionId) return;
@@ -37,7 +37,7 @@ export const useChatMessages = () => {
         timestamp: new Date().toISOString()
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev: ChatMessage[]) => [...prev, assistantMessage]);
       
       // Update context indicator if response includes lesson context
       if ('hasLessonContext' in response) {
