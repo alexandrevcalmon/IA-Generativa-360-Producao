@@ -1,157 +1,138 @@
 
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import { AuthProvider, useAuth } from "./hooks/auth";
-import { Toaster } from "sonner";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/hooks/auth/AuthProvider';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
-import Auth from "./pages/Auth";
-import Index from "./pages/Index";
-import Profile from "./pages/Profile";
-import Admin from "./pages/Admin";
-import CompanyCollaborators from "./pages/CompanyCollaborators";
-import CompanyCollaboratorsAnalytics from "./pages/CompanyCollaboratorsAnalytics";
-import ProducerCollaboratorsAnalytics from "./pages/ProducerCollaboratorsAnalytics";
-import ProducerMentorship from "./pages/ProducerMentorship";
-import CompanyProfile from "./pages/CompanyProfile";
-import CourseProgressPage from "./components/company/CourseProgressPage";
-import LoginProdutor from "./pages/LoginProdutor";
-import ProducerDashboard from "./pages/ProducerDashboard";
-import ProducerCompanies from "./pages/ProducerCompanies";
-import ProducerCourses from "./pages/ProducerCourses";
-import ProducerCommunity from "./pages/ProducerCommunity";
-import ProducerPlans from "./pages/ProducerPlans";
-import StudentDashboard from "./pages/StudentDashboard";
-import StudentCourses from "./pages/StudentCourses";
-import StudentCourseDetail from "./pages/StudentCourseDetail";
-import StudentLessonView from "./pages/StudentLessonView";
-import StudentCalendar from "./pages/StudentCalendar";
-import StudentCommunity from "./pages/StudentCommunity";
-import StudentMentorship from "./pages/StudentMentorship";
-import StudentGamification from "./pages/StudentGamification";
-import StudentAnalytics from "./pages/StudentAnalytics";
-import StudentProfile from "./pages/StudentProfile";
-import CourseDetails from "./pages/CourseDetails";
+// Import pages
+import Index from '@/pages/Index';
+import Auth from '@/pages/Auth';
+import Dashboard from '@/pages/Dashboard';
+import Courses from '@/pages/Courses';
+import CourseDetails from '@/pages/CourseDetails';
+import Community from '@/pages/Community';
+import Profile from '@/pages/Profile';
+import Analytics from '@/pages/Analytics';
+import Learning from '@/pages/Learning';
+import LoginProdutor from '@/pages/LoginProdutor';
+import NotFound from '@/pages/NotFound';
 
-import { ChangePassword } from "./components/auth/ChangePassword";
-import { ResetPassword } from "./components/auth/ResetPassword";
-import CompanyLayout from "./components/CompanyLayout";
-import ProdutorLayout from "./components/ProdutorLayout";
-import StudentLayout from "./components/StudentLayout";
-import CompanyDashboard from "./pages/CompanyDashboard";
-import CompanyCourses from "./pages/CompanyCourses";
-import CompanyMentorships from "./pages/CompanyMentorships";
+// Producer pages
+import ProducerDashboard from '@/pages/ProducerDashboard';
+import ProducerCourses from '@/pages/ProducerCourses';
+import ProducerCompanies from '@/pages/ProducerCompanies';
+import ProducerCompanyDetails from '@/pages/ProducerCompanyDetails';
+import ProducerMentorship from '@/pages/ProducerMentorship';
+import ProducerCommunity from '@/pages/ProducerCommunity';
+import ProducerCollaboratorsAnalytics from '@/pages/ProducerCollaboratorsAnalytics';
+import ProducerPlans from '@/pages/ProducerPlans';
+import ProducerProfile from '@/pages/ProducerProfile';
+import ProducerAIConfigurations from '@/pages/ProducerAIConfigurations';
 
-const queryClient = new QueryClient();
+// Company pages
+import CompanyDashboard from '@/pages/CompanyDashboard';
+import CompanyCourses from '@/pages/CompanyCourses';
+import CompanyMentorships from '@/pages/CompanyMentorships';
+import CompanyCollaborators from '@/pages/CompanyCollaborators';
+import CompanyCollaboratorsAnalytics from '@/pages/CompanyCollaboratorsAnalytics';
+import CompanyProfile from '@/pages/CompanyProfile';
+
+// Student pages
+import StudentDashboard from '@/pages/StudentDashboard';
+import StudentCourses from '@/pages/StudentCourses';
+import StudentCourseDetail from '@/pages/StudentCourseDetail';
+import StudentLessonView from '@/pages/StudentLessonView';
+import StudentCalendar from '@/pages/StudentCalendar';
+import StudentMentorship from '@/pages/StudentMentorship';
+import StudentCommunity from '@/pages/StudentCommunity';
+import StudentGamification from '@/pages/StudentGamification';
+import StudentProfile from '@/pages/StudentProfile';
+import StudentAnalytics from '@/pages/StudentAnalytics';
+
+// Layouts
+import ProdutorLayout from '@/components/ProdutorLayout';
+import CompanyLayout from '@/components/CompanyLayout';
+import StudentLayout from '@/components/StudentLayout';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
-  console.log('App: Initializing application...');
-  
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
         <AuthProvider>
-          <Toaster />
           <Routes>
-            {/* Public Routes */}
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/change-password" element={<ChangePassword />} />
-            <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/login-produtor" element={<LoginProdutor />} />
 
-            {/* Private Routes */}
-            <Route
-              path="/profile"
-              element={
-                <RequireAuth>
-                  <Profile />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <RequireAuth role="admin">
-                  <Admin />
-                </RequireAuth>
-              }
-            />
-            
-            {/* Producer Routes */}
+            {/* Producer routes */}
             <Route path="/producer" element={<ProdutorLayout />}>
               <Route path="dashboard" element={<ProducerDashboard />} />
-              <Route path="companies" element={<ProducerCompanies />} />
               <Route path="courses" element={<ProducerCourses />} />
-              <Route path="courses/:courseId" element={<CourseDetails />} />
-              <Route path="community" element={<ProducerCommunity />} />
-              <Route path="plans" element={<ProducerPlans />} />
-              <Route path="collaborators-analytics" element={<ProducerCollaboratorsAnalytics />} />
+              <Route path="companies" element={<ProducerCompanies />} />
+              <Route path="companies/:id" element={<ProducerCompanyDetails />} />
               <Route path="mentorship" element={<ProducerMentorship />} />
+              <Route path="community" element={<ProducerCommunity />} />
+              <Route path="collaborators-analytics" element={<ProducerCollaboratorsAnalytics />} />
+              <Route path="plans" element={<ProducerPlans />} />
+              <Route path="profile" element={<ProducerProfile />} />
+              <Route path="ai-configurations" element={<ProducerAIConfigurations />} />
+              <Route index element={<Navigate to="/producer/dashboard" replace />} />
             </Route>
-            
-            {/* Company Routes */}
-            <Route path="/company-dashboard" element={<CompanyLayout />}>
-              <Route index element={<CompanyDashboard />} />
-            </Route>
+
+            {/* Company routes */}
             <Route path="/company" element={<CompanyLayout />}>
+              <Route path="dashboard" element={<CompanyDashboard />} />
+              <Route path="courses" element={<CompanyCourses />} />
+              <Route path="mentorships" element={<CompanyMentorships />} />
               <Route path="collaborators" element={<CompanyCollaborators />} />
               <Route path="collaborators-analytics" element={<CompanyCollaboratorsAnalytics />} />
-              <Route path="courses" element={<CompanyCourses />} />
-              <Route path="course-progress" element={<CourseProgressPage />} />
-              <Route path="mentorships" element={<CompanyMentorships />} />
               <Route path="profile" element={<CompanyProfile />} />
+              <Route index element={<Navigate to="/company/dashboard" replace />} />
             </Route>
-            
-            {/* Student Routes */}
+
+            {/* Student routes */}
             <Route path="/student" element={<StudentLayout />}>
               <Route path="dashboard" element={<StudentDashboard />} />
               <Route path="courses" element={<StudentCourses />} />
               <Route path="courses/:courseId" element={<StudentCourseDetail />} />
               <Route path="courses/:courseId/lessons/:lessonId" element={<StudentLessonView />} />
               <Route path="calendar" element={<StudentCalendar />} />
-              <Route path="community" element={<StudentCommunity />} />
               <Route path="mentorship" element={<StudentMentorship />} />
+              <Route path="community" element={<StudentCommunity />} />
               <Route path="gamification" element={<StudentGamification />} />
-              <Route path="analytics" element={<StudentAnalytics />} />
               <Route path="profile" element={<StudentProfile />} />
+              <Route path="analytics" element={<StudentAnalytics />} />
+              <Route index element={<Navigate to="/student/dashboard" replace />} />
             </Route>
-            
-            {/* Default Route */}
-            <Route path="*" element={<Navigate to="/" />} />
+
+            {/* Legacy routes for backward compatibility */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/:id" element={<CourseDetails />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/learning" element={<Learning />} />
+
+            {/* 404 page */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
+          <Toaster />
         </AuthProvider>
       </Router>
     </QueryClientProvider>
   );
-}
-
-function RequireAuth({ children, role }: { children: JSX.Element; role?: string }) {
-  console.log('RequireAuth: Checking authentication...');
-  
-  const { user, loading, userRole } = useAuth();
-
-  if (loading) {
-    console.log('RequireAuth: Loading...');
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    console.log('RequireAuth: No user, redirecting to auth');
-    return <Navigate to="/auth" replace />;
-  }
-
-  if (role && userRole !== role) {
-    console.log('RequireAuth: Role mismatch', { userRole, requiredRole: role });
-    return <div>Unauthorized</div>;
-  }
-
-  console.log('RequireAuth: Access granted');
-  return children;
 }
 
 export default App;

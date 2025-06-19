@@ -48,6 +48,102 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_configurations: {
+        Row: {
+          api_key_encrypted: string | null
+          company_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          max_tokens: number
+          model_name: string
+          provider_id: string | null
+          system_prompt: string
+          temperature: number
+          updated_at: string
+        }
+        Insert: {
+          api_key_encrypted?: string | null
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_tokens?: number
+          model_name: string
+          provider_id?: string | null
+          system_prompt?: string
+          temperature?: number
+          updated_at?: string
+        }
+        Update: {
+          api_key_encrypted?: string | null
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_tokens?: number
+          model_name?: string
+          provider_id?: string | null
+          system_prompt?: string
+          temperature?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_configurations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_configurations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "ai_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_providers: {
+        Row: {
+          api_endpoint: string
+          created_at: string
+          default_model: string | null
+          display_name: string
+          id: string
+          is_active: boolean
+          name: string
+          requires_api_key: boolean
+          supported_models: Json
+          updated_at: string
+        }
+        Insert: {
+          api_endpoint: string
+          created_at?: string
+          default_model?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean
+          name: string
+          requires_api_key?: boolean
+          supported_models?: Json
+          updated_at?: string
+        }
+        Update: {
+          api_endpoint?: string
+          created_at?: string
+          default_model?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          requires_api_key?: boolean
+          supported_models?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           all_day: boolean
@@ -956,6 +1052,60 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_materials: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          extracted_content: string | null
+          file_name: string
+          file_size_bytes: number | null
+          file_type: string
+          file_url: string
+          id: string
+          lesson_id: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          extracted_content?: string | null
+          file_name: string
+          file_size_bytes?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          lesson_id?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          extracted_content?: string | null
+          file_name?: string
+          file_size_bytes?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          lesson_id?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_materials_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_materials_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
             referencedColumns: ["id"]
           },
         ]
