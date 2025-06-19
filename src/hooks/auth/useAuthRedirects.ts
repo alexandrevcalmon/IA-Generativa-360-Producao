@@ -35,7 +35,7 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
     // Don't redirect if user is already on the correct dashboard
     const isOnCorrectDashboard = 
       (userRole === 'producer' && location.pathname.startsWith('/producer')) ||
-      (userRole === 'company' && (location.pathname.startsWith('/company') || location.pathname === '/company-dashboard')) ||
+      (userRole === 'company' && location.pathname.startsWith('/company')) ||
       (userRole === 'student' && location.pathname.startsWith('/student')) ||
       (userRole === 'collaborator' && location.pathname.startsWith('/student')); // Collaborators use student dashboard
 
@@ -59,7 +59,7 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
         if (userRole) {
           switch (userRole) {
             case 'company':
-              navigate('/company-dashboard', { replace: true });
+              navigate('/company/dashboard', { replace: true });
               break;
             case 'student':
             case 'collaborator':
@@ -80,7 +80,7 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
             navigate('/producer/dashboard', { replace: true });
             break;
           case 'company':
-            navigate('/company-dashboard', { replace: true });
+            navigate('/company/dashboard', { replace: true });
             break;
           case 'student':
           case 'collaborator':
@@ -95,7 +95,8 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
     const shouldRedirect = 
       location.pathname === '/' || 
       location.pathname === '/auth' || 
-      location.pathname === '/login-produtor';
+      location.pathname === '/login-produtor' ||
+      location.pathname === '/company-dashboard'; // Add legacy route
 
     if (!shouldRedirect) {
       console.log('ℹ️ Not on redirect-eligible page, skipping redirect. Current:', location.pathname);
@@ -113,7 +114,7 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
           break;
         case 'company':
           console.log('🏢 Redirecting company to dashboard');
-          navigate('/company-dashboard', { replace: true });
+          navigate('/company/dashboard', { replace: true });
           break;
         case 'student':
           console.log('🎓 Redirecting student to dashboard');

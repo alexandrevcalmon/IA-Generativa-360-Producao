@@ -76,6 +76,9 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/login-produtor" element={<LoginProdutor />} />
 
+            {/* Legacy company dashboard redirect */}
+            <Route path="/company-dashboard" element={<Navigate to="/company/dashboard" replace />} />
+
             {/* Producer routes */}
             <Route path="/producer" element={<ProdutorLayout />}>
               <Route path="dashboard" element={<ProducerDashboard />} />
