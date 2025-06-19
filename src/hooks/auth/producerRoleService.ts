@@ -6,21 +6,21 @@ export const createProducerRoleService = () => {
     try {
       console.log(`[ProducerRoleService] Checking if user ${userId} is a producer`);
       
-      // Use the enhanced function that checks producers first
+      // Use the new enhanced function that includes automatic migration
+      const { data: producerCheck, error: producerError } = await supabase.rpc('is_current_user_producer_enhanced');
+
+      if (!producerError && producerCheck) {
+        console.log(`[ProducerRoleService] User is confirmed as producer via enhanced check`);
+        return true;
+      }
+
+      // Additional fallback to the enhanced role check
       const { data: roleData, error: roleError } = await supabase.rpc('get_user_role_enhanced', {
         user_id: userId
       });
 
       if (!roleError && roleData === 'producer') {
-        console.log(`[ProducerRoleService] User is confirmed as producer via enhanced check`);
-        return true;
-      }
-
-      // Fallback to direct producer check
-      const { data: producerCheck, error: producerError } = await supabase.rpc('is_current_user_producer_new');
-
-      if (!producerError && producerCheck) {
-        console.log(`[ProducerRoleService] User is confirmed as producer via direct check`);
+        console.log(`[ProducerRoleService] User is confirmed as producer via enhanced role check`);
         return true;
       }
 

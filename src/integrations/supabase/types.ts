@@ -1972,6 +1972,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_current_user_producer_enhanced: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_current_user_producer_new: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -1979,6 +1983,12 @@ export type Database = {
       is_producer: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      migrate_existing_producers: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          migrated_count: number
+        }[]
       }
       update_collaborator_stats: {
         Args: Record<PropertyKey, never>

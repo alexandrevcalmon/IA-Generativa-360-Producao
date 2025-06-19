@@ -13,8 +13,8 @@ export const useProducerAuth = () => {
 
       console.log('[useProducerAuth] Checking producer auth for user:', user.id);
 
-      // Use the new producer-specific function
-      const { data, error } = await supabase.rpc('is_current_user_producer_new');
+      // Use the enhanced producer-specific function with automatic migration
+      const { data, error } = await supabase.rpc('is_current_user_producer_enhanced');
 
       if (error) {
         console.error('[useProducerAuth] Error checking producer auth:', error);
@@ -27,14 +27,12 @@ export const useProducerAuth = () => {
 
       console.log('[useProducerAuth] Producer check result:', data);
 
-      // Also get the role directly for additional info
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+      // Also get the role directly for additional info using enhanced function
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role_enhanced', {
+        user_id: user.id
+      });
 
-      const role = profileError ? 'student' : (profileData?.role || 'student');
+      const role = roleError ? 'student' : (roleData || 'student');
 
       return {
         isProducer: data === true,
