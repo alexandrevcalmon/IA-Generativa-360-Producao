@@ -22,6 +22,7 @@ import NotFound from '@/pages/NotFound';
 // Producer pages
 import ProducerDashboard from '@/pages/ProducerDashboard';
 import ProducerCourses from '@/pages/ProducerCourses';
+import ProducerCourseDetails from '@/pages/ProducerCourseDetails';
 import ProducerCompanies from '@/pages/ProducerCompanies';
 import ProducerCompanyDetails from '@/pages/ProducerCompanyDetails';
 import ProducerMentorship from '@/pages/ProducerMentorship';
@@ -83,6 +84,7 @@ function App() {
             <Route path="/producer" element={<ProdutorLayout />}>
               <Route path="dashboard" element={<ProducerDashboard />} />
               <Route path="courses" element={<ProducerCourses />} />
+              <Route path="courses/:courseId" element={<ProducerCourseDetails />} />
               <Route path="companies" element={<ProducerCompanies />} />
               <Route path="companies/:id" element={<ProducerCompanyDetails />} />
               <Route path="mentorship" element={<ProducerMentorship />} />

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,7 @@ export const AIConfigurationCard = ({
           <CardTitle className="text-lg flex items-center gap-2">
             {config.ai_providers?.display_name || 'Provider'}
             {isGlobalConfig && (
-              <Globe className="h-4 w-4 text-blue-600" title="Configuração Global" />
+              <Globe className="h-4 w-4 text-blue-600" />
             )}
           </CardTitle>
           <div className="flex items-center gap-2">
