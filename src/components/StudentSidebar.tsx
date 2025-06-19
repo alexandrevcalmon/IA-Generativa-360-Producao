@@ -25,6 +25,7 @@ import {
 
 import { UserMenu } from "./UserMenu";
 import { useAuth } from "@/hooks/auth";
+import { useCollaboratorData } from "@/hooks/useCollaboratorData";
 import { Link } from "react-router-dom";
 
 const studentMenuItems = [
@@ -72,20 +73,38 @@ const studentMenuItems = [
 
 export function StudentSidebar() {
   const { user, userRole } = useAuth();
+  const { data: collaboratorData } = useCollaboratorData();
+
+  // Determine display information based on user role
+  const displayInfo = {
+    logo: collaboratorData?.company?.logo_url || "/logo-calmon-academy.png",
+    title: collaboratorData?.company?.name || "Calmon Academy",
+    userName: collaboratorData?.name || user?.email || "Usuário",
+    userRole: userRole === 'collaborator' ? 'Colaborador' : 'Estudante'
+  };
 
   return (
     <Sidebar className="border-r border-yellow-200 bg-gradient-to-b from-yellow-50 to-amber-50">
       <SidebarHeader className="border-b border-yellow-200 p-4 bg-gradient-to-r from-amber-100 to-yellow-100">
         <div className="flex items-center gap-2">
           <img 
-            src="/logo-calmon-academy.png" 
-            alt="Calmon Academy" 
-            className="h-8 w-8 flex-shrink-0"
+            src={displayInfo.logo}
+            alt={displayInfo.title}
+            className="h-8 w-8 flex-shrink-0 object-contain"
+            onError={(e) => {
+              // Fallback to default logo if company logo fails to load
+              e.currentTarget.src = "/logo-calmon-academy.png";
+            }}
           />
           <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-sm text-amber-800 truncate">Calmon Academy</span>
-            <span className="text-xs text-amber-600 capitalize truncate">
-              {userRole === 'collaborator' ? 'Colaborador' : 'Estudante'}
+            <span className="font-semibold text-sm text-amber-800 truncate">
+              {displayInfo.title}
+            </span>
+            <span className="text-xs text-amber-600 truncate">
+              {displayInfo.userName}
+            </span>
+            <span className="text-xs text-amber-500 truncate">
+              {displayInfo.userRole}
             </span>
           </div>
         </div>
