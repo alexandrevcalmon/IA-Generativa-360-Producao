@@ -42,7 +42,12 @@ export const useAIChatSessions = (lessonId?: string) => {
       const { data, error } = await query;
       
       if (error) throw error;
-      return data as AIChatSession[];
+      
+      // Transform the data to match our TypeScript interface
+      return (data || []).map(session => ({
+        ...session,
+        session_data: Array.isArray(session.session_data) ? session.session_data as ChatMessage[] : []
+      })) as AIChatSession[];
     },
     enabled: !!user?.id,
   });

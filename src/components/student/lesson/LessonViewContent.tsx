@@ -117,7 +117,6 @@ export const LessonViewContent = ({
       <AIChatWidget
         lessonId={currentLesson.id}
         companyId={companyId}
-        aiConfigurationId={undefined}
       />
     </div>
   );
