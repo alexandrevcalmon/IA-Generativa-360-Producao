@@ -11,7 +11,7 @@ export const StudentPageHeader = ({ title, subtitle, children }: StudentPageHead
   return (
     <div className="bg-white border-b p-4 md:p-6">
       <div className="flex items-center gap-4">
-        <SidebarTrigger className="md:hidden" />
+        <SidebarTrigger className="flex md:hidden" />
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <div>

@@ -2,7 +2,7 @@
 import { ReactNode } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { StudentSidebar } from './StudentSidebar';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/auth';
 
 const StudentLayout = () => {
@@ -39,12 +39,12 @@ const StudentLayout = () => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <StudentSidebar />
-        <main className="flex-1 overflow-auto">
+        <SidebarInset className="flex-1">
           <Outlet />
-        </main>
+        </SidebarInset>
       </div>
     </SidebarProvider>
   );

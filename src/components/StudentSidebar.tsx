@@ -74,24 +74,24 @@ export function StudentSidebar() {
   const { user, userRole } = useAuth();
 
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b">
-        <div className="flex items-center gap-2 px-4 py-2">
+    <Sidebar className="border-r">
+      <SidebarHeader className="border-b p-4">
+        <div className="flex items-center gap-2">
           <img 
             src="/logo-calmon-academy.png" 
             alt="Calmon Academy" 
-            className="h-8 w-8"
+            className="h-8 w-8 flex-shrink-0"
           />
-          <div className="flex flex-col">
-            <span className="font-semibold text-sm">Calmon Academy</span>
-            <span className="text-xs text-muted-foreground capitalize">
+          <div className="flex flex-col min-w-0">
+            <span className="font-semibold text-sm truncate">Calmon Academy</span>
+            <span className="text-xs text-muted-foreground capitalize truncate">
               {userRole === 'collaborator' ? 'Colaborador' : 'Estudante'}
             </span>
           </div>
         </div>
       </SidebarHeader>
       
-      <SidebarContent>
+      <SidebarContent className="overflow-y-auto">
         <SidebarGroup>
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -100,8 +100,8 @@ export function StudentSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link to={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -111,7 +111,7 @@ export function StudentSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t">
+      <SidebarFooter className="border-t p-2">
         <UserMenu />
       </SidebarFooter>
     </Sidebar>

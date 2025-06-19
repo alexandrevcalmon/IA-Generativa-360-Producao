@@ -8,7 +8,7 @@ import { StudentStatsGrid } from '@/components/student/StudentStatsGrid';
 import { StudentQuickActions } from '@/components/student/StudentQuickActions';
 import { StudentRecentActivities } from '@/components/student/StudentRecentActivities';
 import { StudentAchievements } from '@/components/student/StudentAchievements';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { StudentPageHeader } from '@/components/student/StudentPageHeader';
 
 const StudentDashboard = () => {
   const { companyUserData } = useAuth();
@@ -44,12 +44,10 @@ const StudentDashboard = () => {
 
   return (
     <div className="flex flex-col h-full bg-calmon-bg-gradient">
-      {/* Mobile trigger for sidebar */}
-      <div className="md:hidden p-4 bg-calmon-gradient">
-        <SidebarTrigger className="text-white" />
-      </div>
-      
-      <StudentDashboardHeader totalPoints={totalPoints} currentStreak={currentStreak} />
+      <StudentPageHeader
+        title={`Olá, ${companyUserData?.name || 'Estudante'}! 👋`}
+        subtitle="Continue sua jornada de aprendizado"
+      />
       
       <div className="flex-1 overflow-auto p-4 md:p-6">
         <div className="space-y-6">
