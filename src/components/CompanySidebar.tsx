@@ -85,9 +85,11 @@ export function CompanySidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <Link to="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-calmon-600 rounded flex items-center justify-center text-white font-bold">
-            C
-          </div>
+          <img 
+            src="/logo-calmon-academy.png" 
+            alt="Calmon Academy" 
+            className="h-8 w-8 object-contain"
+          />
           <div className="flex flex-col">
             <span className="font-bold text-lg">Calmon Academy</span>
             {companyData?.name && (

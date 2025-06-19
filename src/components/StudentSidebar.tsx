@@ -75,11 +75,12 @@ export function StudentSidebar() {
   const { user, userRole } = useAuth();
   const { data: collaboratorData } = useCollaboratorData();
 
-  // Determine display information based on user role
+  // Always use Calmon Academy logo, but display collaborator info
   const displayInfo = {
-    logo: collaboratorData?.company?.logo_url || "/logo-calmon-academy.png",
-    title: collaboratorData?.company?.name || "Calmon Academy",
+    logo: "/logo-calmon-academy.png", // Always Calmon Academy logo
+    platformTitle: "Calmon Academy",
     userName: collaboratorData?.name || user?.email || "Usuário",
+    companyName: collaboratorData?.company?.name,
     userRole: userRole === 'collaborator' ? 'Colaborador' : 'Estudante'
   };
 
@@ -89,20 +90,21 @@ export function StudentSidebar() {
         <div className="flex items-center gap-2">
           <img 
             src={displayInfo.logo}
-            alt={displayInfo.title}
+            alt={displayInfo.platformTitle}
             className="h-8 w-8 flex-shrink-0 object-contain"
-            onError={(e) => {
-              // Fallback to default logo if company logo fails to load
-              e.currentTarget.src = "/logo-calmon-academy.png";
-            }}
           />
           <div className="flex flex-col min-w-0">
             <span className="font-semibold text-sm text-amber-800 truncate">
-              {displayInfo.title}
+              {displayInfo.platformTitle}
             </span>
             <span className="text-xs text-amber-600 truncate">
               {displayInfo.userName}
             </span>
+            {displayInfo.companyName && (
+              <span className="text-xs text-amber-500 truncate">
+                {displayInfo.companyName}
+              </span>
+            )}
             <span className="text-xs text-amber-500 truncate">
               {displayInfo.userRole}
             </span>

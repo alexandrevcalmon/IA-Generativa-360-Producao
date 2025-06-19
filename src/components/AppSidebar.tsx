@@ -171,9 +171,11 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <BookOpen className="h-4 w-4" />
-          </div>
+          <img 
+            src="/logo-calmon-academy.png" 
+            alt="Calmon Academy" 
+            className="h-8 w-8 object-contain"
+          />
           <div className="flex flex-col">
             <span className="text-sm font-semibold">Calmon Academy</span>
             <span className="text-xs text-muted-foreground capitalize">{userRole}</span>
