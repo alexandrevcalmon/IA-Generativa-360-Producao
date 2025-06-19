@@ -1,7 +1,7 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StudentPageHeader } from "@/components/student/StudentPageHeader";
 import {
   BarChart3,
   TrendingUp,
@@ -17,63 +17,59 @@ const StudentAnalytics = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="border-b bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Meu Progresso</h1>
-            <p className="text-gray-600">Acompanhe seu desenvolvimento e estatísticas de aprendizagem</p>
-          </div>
-        </div>
-      </header>
+      <StudentPageHeader
+        title="Meu Progresso"
+        subtitle="Acompanhe seu desenvolvimento e estatísticas de aprendizagem"
+      />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-6 bg-gray-50">
+      <div className="flex-1 overflow-auto p-4 md:p-6 bg-gray-50">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
-                  <BookOpen className="h-8 w-8 text-blue-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Cursos Iniciados</p>
-                    <p className="text-2xl font-bold text-gray-900">0</p>
+                  <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Cursos Iniciados</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">0</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
-                  <Award className="h-8 w-8 text-green-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Cursos Concluídos</p>
-                    <p className="text-2xl font-bold text-gray-900">0</p>
+                  <Award className="h-6 w-6 md:h-8 md:w-8 text-green-600" />
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Cursos Concluídos</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">0</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
-                  <Clock className="h-8 w-8 text-purple-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Horas de Estudo</p>
-                    <p className="text-2xl font-bold text-gray-900">0h</p>
+                  <Clock className="h-6 w-6 md:h-8 md:w-8 text-purple-600" />
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Horas de Estudo</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">0h</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
-                  <Target className="h-8 w-8 text-orange-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Meta Semanal</p>
-                    <p className="text-2xl font-bold text-gray-900">0%</p>
+                  <Target className="h-6 w-6 md:h-8 md:w-8 text-orange-600" />
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Meta Semanal</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">0%</p>
                   </div>
                 </div>
               </CardContent>
@@ -82,7 +78,7 @@ const StudentAnalytics = () => {
 
           {/* Analytics Tabs */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList>
+            <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="overview">Visão Geral</TabsTrigger>
               <TabsTrigger value="courses">Cursos</TabsTrigger>
               <TabsTrigger value="time">Tempo de Estudo</TabsTrigger>

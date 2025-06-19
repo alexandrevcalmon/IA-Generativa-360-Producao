@@ -5,6 +5,7 @@ import { ArrowLeft, BookOpen, Clock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { VideoPlayer } from '@/components/student/VideoPlayer';
 import { LessonNavigation } from '@/components/student/LessonNavigation';
 import { LessonProgress } from '@/components/student/LessonProgress';
@@ -71,12 +72,25 @@ const StudentLessonView = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <StudentLessonHeader 
-        currentLesson={studentLesson} 
-        course={course} 
-        courseId={courseId!} 
-      />
+      {/* Mobile Header with Sidebar Trigger */}
+      <div className="md:hidden bg-white border-b p-4">
+        <div className="flex items-center gap-4">
+          <SidebarTrigger />
+          <div className="flex-1">
+            <h1 className="text-lg font-semibold truncate">{currentLesson.title}</h1>
+            <p className="text-sm text-gray-600 truncate">{course.title}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden md:block">
+        <StudentLessonHeader 
+          currentLesson={studentLesson} 
+          course={course} 
+          courseId={courseId!} 
+        />
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

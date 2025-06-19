@@ -9,6 +9,7 @@ import { useCommunityTopics } from '@/hooks/useCommunityTopics';
 import { CreateTopicDialog } from '@/components/community/CreateTopicDialog';
 import { EditTopicDialog } from '@/components/community/EditTopicDialog';
 import { TopicCard } from '@/components/community/TopicCard';
+import { StudentPageHeader } from '@/components/student/StudentPageHeader';
 import type { CommunityTopic } from '@/hooks/useCommunityTopics';
 
 const StudentCommunity = () => {
@@ -40,20 +41,19 @@ const StudentCommunity = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="bg-white border-b p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Comunidade</h1>
-            <p className="text-gray-600">Conecte-se com outros estudantes e tire suas dúvidas</p>
-          </div>
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Tópico
-          </Button>
-        </div>
+      <StudentPageHeader
+        title="Comunidade"
+        subtitle="Conecte-se com outros estudantes e tire suas dúvidas"
+      >
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">Novo Tópico</span>
+        </Button>
+      </StudentPageHeader>
 
-        {/* Filters */}
-        <div className="flex gap-4">
+      {/* Filters */}
+      <div className="bg-white border-b p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -64,7 +64,7 @@ const StudentCommunity = () => {
             />
           </div>
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
@@ -81,7 +81,7 @@ const StudentCommunity = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6 bg-gray-50">
+      <div className="flex-1 overflow-auto p-4 md:p-6 bg-gray-50">
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
             <div className="text-center">
