@@ -59,6 +59,7 @@ const StudentLessonView = () => {
     completed: false, // This would come from progress data
     watch_time_seconds: 0, // This would come from progress data
     video_file_url: currentLesson.video_file_url || null, // Ensure this is explicitly set
+    material_url: currentLesson.material_url || null, // Ensure this is explicitly set
   };
 
   // Get user's company_id from company_users table or provide fallback
