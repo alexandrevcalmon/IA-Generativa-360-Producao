@@ -1,15 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Clock, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { VideoPlayer } from '@/components/student/VideoPlayer';
-import { LessonNavigation } from '@/components/student/LessonNavigation';
-import { LessonProgress } from '@/components/student/LessonProgress';
-import { StudentLessonHeader } from '@/components/student/StudentLessonHeader';
+import { LessonHeader } from '@/components/student/lesson/LessonHeader';
+import { LessonVideoSection } from '@/components/student/lesson/LessonVideoSection';
+import { LessonContent } from '@/components/student/lesson/LessonContent';
+import { LessonSidebar } from '@/components/student/lesson/LessonSidebar';
 import { AIChatWidget } from '@/components/lesson/AIChatWidget';
 import { useAuth } from '@/hooks/useAuth';
 import { useLessonInCourse } from '@/hooks/useLessonInCourse';
@@ -43,19 +38,41 @@ const StudentLessonView = () => {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Carregando...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Carregando...</div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="flex items-center justify-center h-screen">Erro ao carregar: {error.message}</div>;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Erro ao carregar</h2>
+            <p className="text-gray-600">{error.message}</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  if (!course) {
-    return <div className="flex items-center justify-center h-screen">Curso não encontrado</div>;
-  }
-
-  if (!currentLesson) {
-    return <div className="flex items-center justify-center h-screen">Lição não encontrada</div>;
+  if (!course || !currentLesson) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Conteúdo não encontrado</h2>
+            <p className="text-gray-600">
+              {!course ? 'Curso não encontrado' : 'Lição não encontrada'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Convert lesson to StudentLesson format for components
@@ -70,116 +87,67 @@ const StudentLessonView = () => {
   // Get user's company_id from company_users table or provide fallback
   const companyId = user?.user_metadata?.company_id || '';
 
-  // Check if lesson has video content
-  const hasVideo = currentLesson.video_url || currentLesson.video_file_url;
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header with Sidebar Trigger */}
-      <div className="md:hidden bg-white border-b p-4">
-        <div className="flex items-center gap-4">
-          <SidebarTrigger />
-          <div className="flex-1">
-            <h1 className="text-lg font-semibold truncate">{currentLesson.title}</h1>
-            <p className="text-sm text-gray-600 truncate">{course.title}</p>
-          </div>
+      {/* Header */}
+      <LessonHeader 
+        currentLesson={studentLesson} 
+        course={course} 
+        courseId={courseId!}
+        currentModule={currentModule}
+      />
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
+        {/* Mobile Layout - Stack vertically */}
+        <div className="block lg:hidden space-y-4">
+          {/* Video Section */}
+          <LessonVideoSection
+            currentLesson={studentLesson}
+            course={course}
+            onTimeUpdate={handleTimeUpdate}
+          />
+          
+          {/* Progress and Navigation */}
+          <LessonSidebar
+            currentLesson={studentLesson}
+            courseId={courseId!}
+            watchTime={watchTime}
+            duration={duration}
+            prevLesson={prevLesson ? { id: prevLesson.id, title: prevLesson.title } : undefined}
+            nextLesson={nextLesson ? { id: nextLesson.id, title: nextLesson.title } : undefined}
+          />
+          
+          {/* Content */}
+          <LessonContent 
+            currentLesson={studentLesson} 
+            currentModule={currentModule}
+          />
         </div>
-      </div>
 
-      {/* Desktop Header */}
-      <div className="hidden md:block">
-        <StudentLessonHeader 
-          currentLesson={studentLesson} 
-          course={course} 
-          courseId={courseId!} 
-        />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Main Content */}
+        {/* Desktop Layout - Grid */}
+        <div className="hidden lg:grid lg:grid-cols-4 gap-6">
+          {/* Main Content - Left side */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Video Player or No Video Message */}
-            {hasVideo ? (
-              <Card>
-                <CardContent className="p-0">
-                  <VideoPlayer
-                    currentLesson={studentLesson}
-                    course={course}
-                    onTimeUpdate={handleTimeUpdate}
-                  />
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="text-gray-400 mb-4">
-                    <BookOpen className="mx-auto h-16 w-16" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Esta lição não possui vídeo</h3>
-                  <p className="text-gray-600">
-                    O conteúdo desta lição está disponível no texto abaixo.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Lesson Content */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  Conteúdo da Lição
-                </CardTitle>
-                {currentModule && (
-                  <div className="text-sm text-gray-600">
-                    Módulo: {currentModule.title}
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="prose max-w-none">
-                  {currentLesson.content ? (
-                    <div dangerouslySetInnerHTML={{ __html: currentLesson.content }} />
-                  ) : (
-                    <p className="text-gray-500">Nenhum conteúdo adicional disponível.</p>
-                  )}
-                </div>
-                
-                {/* Lesson Materials */}
-                {currentLesson.material_url && (
-                  <div className="mt-6 pt-6 border-t">
-                    <h3 className="font-semibold mb-2">Material de Apoio</h3>
-                    <Button asChild variant="outline">
-                      <a href={currentLesson.material_url} target="_blank" rel="noopener noreferrer">
-                        Download do Material
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <LessonVideoSection
+              currentLesson={studentLesson}
+              course={course}
+              onTimeUpdate={handleTimeUpdate}
+            />
+            
+            <LessonContent 
+              currentLesson={studentLesson} 
+              currentModule={currentModule}
+            />
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Lesson Progress */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Progresso</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <LessonProgress 
-                  currentLesson={studentLesson}
-                  watchTime={watchTime}
-                  duration={duration}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Lesson Navigation */}
-            <LessonNavigation
+          {/* Sidebar - Right side */}
+          <div className="lg:col-span-1">
+            <LessonSidebar
+              currentLesson={studentLesson}
               courseId={courseId!}
+              watchTime={watchTime}
+              duration={duration}
               prevLesson={prevLesson ? { id: prevLesson.id, title: prevLesson.title } : undefined}
               nextLesson={nextLesson ? { id: nextLesson.id, title: nextLesson.title } : undefined}
             />
@@ -191,7 +159,7 @@ const StudentLessonView = () => {
       <AIChatWidget
         lessonId={lessonId!}
         companyId={companyId}
-        aiConfigurationId={undefined} // This could be fetched from company settings
+        aiConfigurationId={undefined}
       />
     </div>
   );

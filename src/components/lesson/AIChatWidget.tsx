@@ -83,10 +83,10 @@ export const AIChatWidget = ({ lessonId, companyId, aiConfigurationId }: AIChatW
       <div className="fixed bottom-4 right-4 z-50">
         <Button
           onClick={handleStartChat}
-          className="rounded-full h-14 w-14 shadow-lg"
+          className="rounded-full h-12 w-12 md:h-14 md:w-14 shadow-lg"
           size="lg"
         >
-          <Bot className="h-6 w-6" />
+          <Bot className="h-5 w-5 md:h-6 md:w-6" />
         </Button>
       </div>
     );
@@ -94,12 +94,12 @@ export const AIChatWidget = ({ lessonId, companyId, aiConfigurationId }: AIChatW
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <Card className="w-80 h-96 shadow-xl">
+      <Card className="w-80 sm:w-96 h-80 sm:h-96 shadow-xl">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
-              <CardTitle className="text-sm">Assistente de IA</CardTitle>
+              <Bot className="h-4 w-4 md:h-5 md:w-5" />
+              <CardTitle className="text-sm md:text-base">Assistente de IA</CardTitle>
             </div>
             <Button
               variant="ghost"
@@ -113,13 +113,13 @@ export const AIChatWidget = ({ lessonId, companyId, aiConfigurationId }: AIChatW
             Pergunte sobre o conteúdo da lição
           </Badge>
         </CardHeader>
-        <CardContent className="p-0 flex flex-col h-80">
+        <CardContent className="p-0 flex flex-col h-64 sm:h-80">
           <ScrollArea className="flex-1 p-4">
             <div className="space-y-3">
               {!messages?.length && (
                 <div className="text-center text-gray-500 text-sm py-8">
-                  <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  Faça uma pergunta sobre o conteúdo desta lição
+                  <MessageCircle className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs md:text-sm">Faça uma pergunta sobre o conteúdo desta lição</p>
                 </div>
               )}
               {messages?.map((msg) => (
@@ -128,7 +128,7 @@ export const AIChatWidget = ({ lessonId, companyId, aiConfigurationId }: AIChatW
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                    className={`max-w-[85%] rounded-lg px-3 py-2 text-xs md:text-sm ${
                       msg.role === 'user'
                         ? 'bg-blue-500 text-white'
                         : 'bg-gray-100 text-gray-900'
@@ -141,14 +141,14 @@ export const AIChatWidget = ({ lessonId, companyId, aiConfigurationId }: AIChatW
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
-          <div className="p-4 border-t">
+          <div className="p-3 md:p-4 border-t">
             <div className="flex gap-2">
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Digite sua pergunta..."
-                className="flex-1"
+                className="flex-1 text-sm"
                 disabled={createMessage.isPending}
               />
               <Button
@@ -156,7 +156,7 @@ export const AIChatWidget = ({ lessonId, companyId, aiConfigurationId }: AIChatW
                 disabled={!message.trim() || createMessage.isPending}
                 size="sm"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-3 w-3 md:h-4 md:w-4" />
               </Button>
             </div>
           </div>

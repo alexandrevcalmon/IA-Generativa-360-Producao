@@ -35,24 +35,25 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
   if (!videoUrl) {
     return (
       <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
-        <p className="text-white text-lg">Vídeo não disponível</p>
+        <p className="text-white text-sm md:text-lg">Vídeo não disponível</p>
       </div>
     );
   }
 
   return (
     <div 
-      className="relative bg-black rounded-lg overflow-hidden group"
+      className="relative bg-black rounded-lg overflow-hidden group w-full"
       onMouseEnter={() => !isMobile && setShowControls(true)}
       onMouseLeave={() => !isMobile && setShowControls(false)}
       onTouchStart={() => isMobile && setShowControls(true)}
     >
       <video
         ref={videoRef}
-        className="w-full aspect-video"
+        className="w-full aspect-video object-contain"
         src={videoUrl}
         onClick={togglePlay}
         playsInline
+        preload="metadata"
       />
       
       {/* Controls Overlay */}
@@ -64,9 +65,9 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
             <Button
               onClick={togglePlay}
               size="lg"
-              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-3 md:p-4 touch-manipulation"
+              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-3 md:p-4 touch-manipulation backdrop-blur-sm"
             >
-              <Play className="h-6 w-6 md:h-8 md:w-8" />
+              <Play className="h-5 w-5 md:h-8 md:w-8" />
             </Button>
           </div>
         )}
