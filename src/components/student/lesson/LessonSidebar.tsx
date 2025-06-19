@@ -24,11 +24,11 @@ export const LessonSidebar = ({
   return (
     <div className="space-y-4 w-full">
       {/* Progress Card */}
-      <Card className="w-full">
-        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-          <CardTitle className="text-base sm:text-lg">Progresso</CardTitle>
+      <Card className="w-full border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 shadow-lg">
+        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+          <CardTitle className="text-base sm:text-lg font-semibold">Progresso</CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+        <CardContent className="pt-4 px-4 sm:px-6 pb-4 sm:pb-6">
           <LessonProgress 
             currentLesson={currentLesson}
             watchTime={watchTime}

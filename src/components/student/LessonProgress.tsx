@@ -62,19 +62,18 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
       currentLesson && 
       user?.id &&
       watchTime > 0 && 
-      !autoCompletedRef.current // Don't save if auto-completion is in progress
+      !autoCompletedRef.current
     ) {
-      const currentSaveInterval = Math.floor(watchTime / 45); // Save every 45 seconds
+      const currentSaveInterval = Math.floor(watchTime / 45);
       
       if (
-        currentSaveInterval > saveIntervalRef.current && // New interval reached
-        Math.floor(watchTime) !== lastSavedTimeRef.current // Avoid duplicate saves
+        currentSaveInterval > saveIntervalRef.current &&
+        Math.floor(watchTime) !== lastSavedTimeRef.current
       ) {
         console.log('💾 Saving lesson progress (debounced) at interval:', currentSaveInterval, 'time:', Math.floor(watchTime));
         lastSavedTimeRef.current = Math.floor(watchTime);
         saveIntervalRef.current = currentSaveInterval;
         
-        // Use debounced update to prevent conflicts
         debouncedMutate({
           lessonId: currentLesson.id,
           completed: currentLesson.completed || false,
@@ -98,18 +97,18 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
       {/* Progress Bar */}
       <div className="mb-4 sm:mb-6">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium">Progresso da Aula</span>
-          <span className="text-sm text-gray-600 font-mono">
+          <span className="text-sm font-medium text-blue-800">Progresso da Aula</span>
+          <span className="text-sm text-blue-600 font-mono">
             {formatTime(watchTime)} / {formatTime(duration)}
           </span>
         </div>
-        <Progress value={progressPercentage} className="h-2 sm:h-3" />
+        <Progress value={progressPercentage} className="h-3 sm:h-4 bg-blue-100 [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-purple-500" />
         <div className="flex justify-between items-center mt-2">
-          <span className="text-xs sm:text-sm text-gray-500">
+          <span className="text-xs sm:text-sm text-blue-600">
             {progressPercentage.toFixed(1)}% assistido
           </span>
           {currentLesson.completed && (
-            <div className="flex items-center text-green-600 text-xs sm:text-sm">
+            <div className="flex items-center text-green-600 text-xs sm:text-sm font-medium">
               <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               Concluída
             </div>
@@ -120,7 +119,11 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-3">
         {currentLesson.material_url && (
-          <Button variant="outline" asChild className="h-11 touch-manipulation">
+          <Button 
+            variant="outline" 
+            asChild 
+            className="h-11 touch-manipulation border-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-700 font-medium"
+          >
             <a href={currentLesson.material_url} download>
               <FileText className="h-4 w-4 mr-2" />
               Material de Apoio
