@@ -1,167 +1,231 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, Send, MessageCircle, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { useAIChatSessions, useAIChatMessages, useCreateAIChatSession, useCreateAIChatMessage } from '@/hooks/useAIChatSessions';
+import { MessageCircle, Send, Bot, User, Loader2, X } from 'lucide-react';
+import { useAIChatSessions, useCreateChatSession, useSendChatMessage, ChatMessage } from '@/hooks/useAIChatSessions';
+import { useAuth } from '@/hooks/auth';
+import { toast } from 'sonner';
 
 interface AIChatWidgetProps {
-  lessonId: string;
-  companyId: string;
-  aiConfigurationId?: string;
+  lessonId?: string;
+  companyId?: string;
+  className?: string;
 }
 
-export const AIChatWidget = ({ lessonId, companyId, aiConfigurationId }: AIChatWidgetProps) => {
+export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetProps) => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [message, setMessage] = useState('');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: sessions } = useAIChatSessions(lessonId);
-  const { data: messages } = useAIChatMessages(currentSessionId || undefined);
-  const createSession = useCreateAIChatSession();
-  const createMessage = useCreateAIChatMessage();
+  const { data: sessions = [] } = useAIChatSessions(lessonId);
+  const createSessionMutation = useCreateChatSession();
+  const sendMessageMutation = useSendChatMessage();
 
-  const currentSession = sessions?.[0];
-
-  useEffect(() => {
-    if (currentSession && !currentSessionId) {
-      setCurrentSessionId(currentSession.id);
-    }
-  }, [currentSession, currentSessionId]);
-
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleStartChat = async () => {
-    if (!currentSession) {
-      const result = await createSession.mutateAsync({
+  // Load existing session or create new one when widget opens
+  useEffect(() => {
+    if (isOpen && !currentSessionId && sessions.length > 0) {
+      const latestSession = sessions[0];
+      setCurrentSessionId(latestSession.id);
+      setMessages(latestSession.session_data || []);
+    }
+  }, [isOpen, sessions, currentSessionId]);
+
+  const handleCreateSession = async () => {
+    try {
+      const session = await createSessionMutation.mutateAsync({
         lessonId,
-        companyId,
-        aiConfigurationId
+        companyId
       });
-      setCurrentSessionId(result.id);
-    }
-    setIsOpen(true);
-  };
-
-  const handleSendMessage = async () => {
-    if (!message.trim() || !currentSessionId) return;
-
-    const userMessage = message;
-    setMessage('');
-
-    await createMessage.mutateAsync({
-      sessionId: currentSessionId,
-      role: 'user',
-      content: userMessage
-    });
-
-    // Simulate AI response (in a real implementation, this would call your AI service)
-    setTimeout(async () => {
-      await createMessage.mutateAsync({
-        sessionId: currentSessionId,
+      setCurrentSessionId(session.id);
+      setMessages([]);
+      
+      // Add welcome message from assistant
+      const welcomeMessage: ChatMessage = {
         role: 'assistant',
-        content: `Esta é uma resposta simulada do assistente de IA sobre: "${userMessage}". Em uma implementação real, isso seria processado por um modelo de IA usando o conteúdo da lição como contexto.`
-      });
-    }, 1000);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+        content: lessonId 
+          ? 'Olá! Sou seu assistente de IA para esta lição. Como posso ajudá-lo com o conteúdo?' 
+          : 'Olá! Sou seu assistente de IA. Como posso ajudá-lo hoje?',
+        timestamp: new Date().toISOString()
+      };
+      setMessages([welcomeMessage]);
+    } catch (error) {
+      console.error('Error creating session:', error);
+      toast.error('Erro ao iniciar conversa com IA');
     }
   };
 
-  if (!isOpen) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button
-          onClick={handleStartChat}
-          className="rounded-full h-12 w-12 md:h-14 md:w-14 shadow-lg"
-          size="lg"
-        >
-          <Bot className="h-5 w-5 md:h-6 md:w-6" />
-        </Button>
-      </div>
-    );
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!inputMessage.trim() || !currentSessionId) return;
+
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: inputMessage.trim(),
+      timestamp: new Date().toISOString()
+    };
+
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setInputMessage('');
+
+    try {
+      const response = await sendMessageMutation.mutateAsync({
+        sessionId: currentSessionId,
+        messages: updatedMessages,
+        lessonId
+      });
+
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: response.message,
+        timestamp: new Date().toISOString()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Remove the user message if sending fails
+      setMessages(messages);
+    }
+  };
+
+  const handleOpenChat = () => {
+    setIsOpen(true);
+    if (!currentSessionId && sessions.length === 0) {
+      handleCreateSession();
+    }
+  };
+
+  if (!user) {
+    return null;
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <Card className="w-80 sm:w-96 h-80 sm:h-96 shadow-xl">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Bot className="h-4 w-4 md:h-5 md:w-5" />
-              <CardTitle className="text-sm md:text-base">Assistente de IA</CardTitle>
-            </div>
+    <>
+      {/* Chat Toggle Button */}
+      {!isOpen && (
+        <Button
+          onClick={handleOpenChat}
+          className={`fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg z-50 ${className}`}
+          size="lg"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </Button>
+      )}
+
+      {/* Chat Widget */}
+      {isOpen && (
+        <Card className="fixed bottom-4 right-4 w-80 h-96 shadow-xl z-50 flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Bot className="h-4 w-4" />
+              Assistente IA
+            </CardTitle>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(false)}
+              className="h-6 w-6 p-0"
             >
               <X className="h-4 w-4" />
             </Button>
-          </div>
-          <Badge variant="secondary" className="text-xs w-fit">
-            Pergunte sobre o conteúdo da lição
-          </Badge>
-        </CardHeader>
-        <CardContent className="p-0 flex flex-col h-64 sm:h-80">
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-3">
-              {!messages?.length && (
-                <div className="text-center text-gray-500 text-sm py-8">
-                  <MessageCircle className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-xs md:text-sm">Faça uma pergunta sobre o conteúdo desta lição</p>
-                </div>
-              )}
-              {messages?.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+          </CardHeader>
+          
+          <CardContent className="flex-1 flex flex-col p-3 space-y-2">
+            {/* Messages Area */}
+            <ScrollArea className="flex-1 pr-2">
+              <div className="space-y-3">
+                {messages.map((message, index) => (
                   <div
-                    className={`max-w-[85%] rounded-lg px-3 py-2 text-xs md:text-sm ${
-                      msg.role === 'user'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-900'
+                    key={index}
+                    className={`flex gap-2 ${
+                      message.role === 'user' ? 'justify-end' : 'justify-start'
                     }`}
                   >
-                    {msg.content}
+                    {message.role === 'assistant' && (
+                      <Bot className="h-6 w-6 mt-1 text-blue-600 flex-shrink-0" />
+                    )}
+                    <div
+                      className={`max-w-[70%] p-2 rounded-lg text-sm ${
+                        message.role === 'user'
+                          ? 'bg-blue-600 text-white ml-auto'
+                          : 'bg-gray-100 text-gray-900'
+                      }`}
+                    >
+                      {message.content}
+                    </div>
+                    {message.role === 'user' && (
+                      <User className="h-6 w-6 mt-1 text-gray-600 flex-shrink-0" />
+                    )}
                   </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-          <div className="p-3 md:p-4 border-t">
-            <div className="flex gap-2">
+                ))}
+                
+                {sendMessageMutation.isPending && (
+                  <div className="flex gap-2 justify-start">
+                    <Bot className="h-6 w-6 mt-1 text-blue-600 flex-shrink-0" />
+                    <div className="bg-gray-100 p-2 rounded-lg text-sm flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Pensando...
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+
+            {/* Input Area */}
+            <form onSubmit={handleSendMessage} className="flex gap-2">
               <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Digite sua pergunta..."
                 className="flex-1 text-sm"
-                disabled={createMessage.isPending}
+                disabled={sendMessageMutation.isPending || !currentSessionId}
               />
               <Button
-                onClick={handleSendMessage}
-                disabled={!message.trim() || createMessage.isPending}
+                type="submit"
                 size="sm"
+                disabled={!inputMessage.trim() || sendMessageMutation.isPending || !currentSessionId}
               >
-                <Send className="h-3 w-3 md:h-4 md:w-4" />
+                <Send className="h-4 w-4" />
               </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            </form>
+
+            {!currentSessionId && (
+              <div className="text-center">
+                <Button
+                  onClick={handleCreateSession}
+                  variant="outline"
+                  size="sm"
+                  disabled={createSessionMutation.isPending}
+                >
+                  {createSessionMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Iniciando...
+                    </>
+                  ) : (
+                    'Iniciar Conversa'
+                  )}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </>
   );
 };

@@ -1,38 +1,42 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/auth';
 import { toast } from 'sonner';
 
-export interface AIChatMessage {
-  id: string;
-  session_id: string;
+export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
-  created_at: string;
+  timestamp?: string;
 }
 
 export interface AIChatSession {
   id: string;
-  lesson_id: string;
+  lesson_id: string | null;
   user_id: string;
-  company_id: string;
+  company_id: string | null;
   ai_configuration_id: string | null;
-  session_data: any;
+  session_data: ChatMessage[];
   created_at: string;
   updated_at: string;
 }
 
 export const useAIChatSessions = (lessonId?: string) => {
+  const { user } = useAuth();
+
   return useQuery({
-    queryKey: ['ai-chat-sessions', lessonId],
+    queryKey: ['ai-chat-sessions', lessonId, user?.id],
     queryFn: async () => {
-      let query = supabase
+      if (!user?.id) return [];
+
+      const query = supabase
         .from('ai_chat_sessions')
         .select('*')
-        .order('created_at', { ascending: false });
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
 
       if (lessonId) {
-        query = query.eq('lesson_id', lessonId);
+        query.eq('lesson_id', lessonId);
       }
 
       const { data, error } = await query;
@@ -40,93 +44,124 @@ export const useAIChatSessions = (lessonId?: string) => {
       if (error) throw error;
       return data as AIChatSession[];
     },
-    enabled: !!lessonId,
+    enabled: !!user?.id,
   });
 };
 
-export const useAIChatMessages = (sessionId?: string) => {
-  return useQuery({
-    queryKey: ['ai-chat-messages', sessionId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('ai_chat_messages')
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: true });
-      
-      if (error) throw error;
-      return data as AIChatMessage[];
-    },
-    enabled: !!sessionId,
-  });
-};
-
-export const useCreateAIChatSession = () => {
+export const useCreateChatSession = () => {
   const queryClient = useQueryClient();
-  
+  const { user } = useAuth();
+
   return useMutation({
-    mutationFn: async ({ lessonId, companyId, aiConfigurationId }: {
-      lessonId: string;
-      companyId: string;
-      aiConfigurationId?: string;
-    }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+    mutationFn: async ({ lessonId, companyId }: { lessonId?: string; companyId?: string }) => {
+      if (!user?.id) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
         .from('ai_chat_sessions')
         .insert({
-          lesson_id: lessonId,
+          lesson_id: lessonId || null,
           user_id: user.id,
-          company_id: companyId,
-          ai_configuration_id: aiConfigurationId,
-          session_data: {}
+          company_id: companyId || null,
+          session_data: []
         })
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-chat-sessions'] });
-      console.log('AI chat session created:', data);
     },
     onError: (error) => {
-      console.error('Error creating AI chat session:', error);
+      console.error('Error creating chat session:', error);
       toast.error('Erro ao criar sessão de chat');
     },
   });
 };
 
-export const useCreateAIChatMessage = () => {
+export const useSendChatMessage = () => {
   const queryClient = useQueryClient();
-  
+  const { user } = useAuth();
+
   return useMutation({
-    mutationFn: async ({ sessionId, role, content }: {
-      sessionId: string;
-      role: 'user' | 'assistant' | 'system';
-      content: string;
+    mutationFn: async ({ 
+      sessionId, 
+      messages, 
+      lessonId 
+    }: { 
+      sessionId: string; 
+      messages: ChatMessage[];
+      lessonId?: string;
     }) => {
-      const { data, error } = await supabase
-        .from('ai_chat_messages')
-        .insert({
-          session_id: sessionId,
-          role,
-          content
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
+      if (!user?.id) throw new Error('User not authenticated');
+
+      console.log('Sending chat message to edge function:', {
+        sessionId,
+        messageCount: messages.length,
+        lessonId
+      });
+
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: {
+          sessionId,
+          messages,
+          lessonId,
+          userId: user.id
+        }
+      });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
+
+      if (data.error) {
+        console.error('AI Chat error:', data.error);
+        throw new Error(data.error);
+      }
+
+      console.log('AI response received:', {
+        model: data.model,
+        provider: data.provider,
+        messageLength: data.message?.length
+      });
+
+      return {
+        message: data.message,
+        model: data.model,
+        provider: data.provider
+      };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['ai-chat-messages', data.session_id] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-chat-sessions'] });
     },
     onError: (error) => {
-      console.error('Error creating AI chat message:', error);
-      toast.error('Erro ao enviar mensagem');
+      console.error('Error sending chat message:', error);
+      toast.error('Erro ao enviar mensagem para IA');
+    },
+  });
+};
+
+export const useDeleteChatSession = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const { error } = await supabase
+        .from('ai_chat_sessions')
+        .delete()
+        .eq('id', sessionId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-chat-sessions'] });
+      toast.success('Sessão de chat excluída');
+    },
+    onError: (error) => {
+      console.error('Error deleting chat session:', error);
+      toast.error('Erro ao excluir sessão de chat');
     },
   });
 };
