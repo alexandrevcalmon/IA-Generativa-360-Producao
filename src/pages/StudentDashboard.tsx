@@ -43,7 +43,7 @@ const StudentDashboard = () => {
   }));
 
   return (
-    <div className="flex flex-col h-full bg-calmon-bg-gradient">
+    <div className="flex flex-col h-full bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50">
       <StudentPageHeader
         title={`Olá, ${companyUserData?.name || 'Estudante'}! 👋`}
         subtitle="Continue sua jornada de aprendizado"
@@ -51,25 +51,21 @@ const StudentDashboard = () => {
       
       <div className="flex-1 overflow-auto p-4 md:p-6">
         <div className="space-y-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
-            <StudentStatsGrid 
-              coursesInProgress={coursesInProgress}
-              completedCourses={completedCourses}
-              hoursStudied={hoursStudied}
-              totalPoints={totalPoints}
-            />
-          </div>
+          <StudentStatsGrid 
+            coursesInProgress={coursesInProgress}
+            completedCourses={completedCourses}
+            hoursStudied={hoursStudied}
+            totalPoints={totalPoints}
+          />
           
           <div className="grid lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-1 shadow-lg border border-amber-200">
                 <StudentQuickActions />
               </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
-                <StudentRecentActivities activities={recentActivities} />
-              </div>
+              <StudentRecentActivities activities={recentActivities} />
             </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+            <div className="bg-white/60 backdrop-blur-sm rounded-lg p-1 shadow-lg border border-amber-200">
               <StudentAchievements 
                 coursesInProgress={coursesInProgress} 
                 completedCourses={completedCourses} 

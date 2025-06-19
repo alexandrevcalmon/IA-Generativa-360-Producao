@@ -23,7 +23,7 @@ const ProducerDashboard = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-6 bg-gray-50">
+      <div className="flex-1 overflow-auto p-6 bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50">
         <div className="space-y-6">
           {/* Stats Grid */}
           <ProducerStatsGrid 
