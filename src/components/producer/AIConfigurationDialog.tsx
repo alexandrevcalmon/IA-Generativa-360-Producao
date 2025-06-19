@@ -9,13 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { useAIProviders } from '@/hooks/useAIProviders';
 import { AIConfiguration } from '@/hooks/useAIConfigurations';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AIConfigurationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   config?: AIConfiguration | null;
   onSave: (config: Partial<AIConfiguration>) => void;
-  companyId?: string;
 }
 
 export const AIConfigurationDialog = ({
@@ -23,9 +23,9 @@ export const AIConfigurationDialog = ({
   onOpenChange,
   config,
   onSave,
-  companyId
 }: AIConfigurationDialogProps) => {
   const { data: providers = [] } = useAIProviders();
+  const { userRole } = useAuth();
   const [formData, setFormData] = useState({
     provider_id: '',
     model_name: '',
@@ -65,7 +65,8 @@ export const AIConfigurationDialog = ({
   const handleSave = () => {
     const configData = {
       ...formData,
-      company_id: companyId,
+      // For producers, company_id will be set to null in the mutation hook
+      // For companies, this would be handled by the company-specific hook
       ...(config ? { id: config.id } : {}),
     };
     onSave(configData);
@@ -78,6 +79,9 @@ export const AIConfigurationDialog = ({
         <DialogHeader>
           <DialogTitle>
             {config ? 'Editar Configuração de IA' : 'Nova Configuração de IA'}
+            {userRole === 'producer' && (
+              <span className="text-sm text-gray-500 ml-2">(Configuração Global)</span>
+            )}
           </DialogTitle>
         </DialogHeader>
 

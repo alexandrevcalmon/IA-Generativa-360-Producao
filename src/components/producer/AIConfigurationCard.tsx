@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Settings, Trash2, Eye, EyeOff, Globe } from 'lucide-react';
 import { AIConfiguration } from '@/hooks/useAIConfigurations';
 
 interface AIConfigurationCardProps {
@@ -19,12 +19,17 @@ export const AIConfigurationCard = ({
   onDelete, 
   onToggleStatus 
 }: AIConfigurationCardProps) => {
+  const isGlobalConfig = !config.company_id;
+
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">
+          <CardTitle className="text-lg flex items-center gap-2">
             {config.ai_providers?.display_name || 'Provider'}
+            {isGlobalConfig && (
+              <Globe className="h-4 w-4 text-blue-600" title="Configuração Global" />
+            )}
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant={config.is_active ? "default" : "secondary"}>
@@ -39,6 +44,9 @@ export const AIConfigurationCard = ({
             </Button>
           </div>
         </div>
+        {isGlobalConfig && (
+          <p className="text-xs text-blue-600">Configuração disponível para todas as empresas</p>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">

@@ -2,10 +2,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface AIConfiguration {
   id: string;
-  company_id: string;
+  company_id: string | null;
   provider_id: string;
   model_name: string;
   api_key_encrypted: string | null;
@@ -48,12 +49,18 @@ export const useAIConfigurations = () => {
 
 export const useCreateAIConfiguration = () => {
   const queryClient = useQueryClient();
+  const { userRole } = useAuth();
   
   return useMutation({
     mutationFn: async (config: Omit<AIConfiguration, 'id' | 'created_at' | 'updated_at'>) => {
+      // For producers, set company_id to null for global configurations
+      const configData = userRole === 'producer' 
+        ? { ...config, company_id: null }
+        : config;
+
       const { data, error } = await supabase
         .from('ai_configurations')
-        .insert(config)
+        .insert(configData)
         .select()
         .single();
       
