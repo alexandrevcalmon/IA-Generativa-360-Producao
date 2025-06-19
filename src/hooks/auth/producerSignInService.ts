@@ -15,13 +15,8 @@ export const createProducerSignInService = (toast: any) => {
     }
     
     if (data.user) {
-      // Check if user is actually a producer
-      const { data: producerData, error: producerError } = await supabase
-        .from('producers')
-        .select('id, is_active')
-        .eq('auth_user_id', data.user.id)
-        .eq('is_active', true)
-        .single();
+      // Check if user is actually a producer using the new function
+      const { data: producerData, error: producerError } = await supabase.rpc('is_current_user_producer_new');
 
       if (producerError || !producerData) {
         console.error(`[ProducerSignIn] User ${email} is not a producer or is inactive`);

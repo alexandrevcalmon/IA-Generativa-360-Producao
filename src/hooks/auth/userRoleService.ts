@@ -20,15 +20,10 @@ export const createUserRoleService = () => {
       // Fallback to original logic if function fails
       console.log(`[UserRoleService] Falling back to original role logic`);
       
-      // First check if user is a producer
-      const { data: producerData, error: producerError } = await supabase
-        .from('producers')
-        .select('id, is_active')
-        .eq('auth_user_id', userId)
-        .eq('is_active', true)
-        .single();
+      // First check if user is a producer using the new table
+      const { data: producerCheck, error: producerError } = await supabase.rpc('is_current_user_producer_new');
 
-      if (!producerError && producerData) {
+      if (!producerError && producerCheck) {
         console.log(`[UserRoleService] User is a producer`);
         return 'producer';
       }
@@ -115,16 +110,19 @@ export const fetchUserRoleAuxiliaryData = async (user: User) => {
   console.log(`[fetchUserRoleAuxiliaryData] Fetching auxiliary data for user: ${user.email}`);
   
   try {
-    // First priority: Check if user is a producer
-    const { data: producerData, error: producerError } = await supabase
-      .from('producers')
-      .select('*')
-      .eq('auth_user_id', user.id)
-      .eq('is_active', true)
-      .single();
+    // First priority: Check if user is a producer using the new function
+    const { data: producerCheck, error: producerError } = await supabase.rpc('is_current_user_producer_new');
 
-    if (!producerError && producerData) {
+    if (!producerError && producerCheck) {
       console.log('[fetchUserRoleAuxiliaryData] User is a producer');
+      
+      // Get producer data for additional info
+      const { data: producerData, error: producerDataError } = await supabase
+        .from('producers')
+        .select('*')
+        .eq('auth_user_id', user.id)
+        .eq('is_active', true)
+        .single();
       
       // Update profiles table to ensure consistency
       await supabase
@@ -136,7 +134,7 @@ export const fetchUserRoleAuxiliaryData = async (user: User) => {
         profileData: { role: 'producer' },
         companyData: null,
         collaboratorData: null,
-        producerData
+        producerData: producerDataError ? null : producerData
       };
     }
 
