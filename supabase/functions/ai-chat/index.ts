@@ -48,6 +48,94 @@ serve(async (req) => {
 
     console.log('Using AI configuration:', aiConfig.id, 'Provider:', aiConfig.ai_providers?.name);
 
+    // Fetch lesson content and materials if lessonId is provided
+    let lessonContext = '';
+    if (lessonId) {
+      console.log('Fetching lesson content for:', lessonId);
+      
+      // Get lesson details
+      const { data: lesson, error: lessonError } = await supabase
+        .from('lessons')
+        .select(`
+          id,
+          title,
+          content,
+          module_id,
+          course_modules (
+            title,
+            course_id,
+            courses (
+              title,
+              description
+            )
+          )
+        `)
+        .eq('id', lessonId)
+        .single();
+
+      if (!lessonError && lesson) {
+        console.log('Lesson found:', lesson.title);
+        
+        // Build lesson context
+        const courseInfo = lesson.course_modules?.courses;
+        const moduleInfo = lesson.course_modules;
+        
+        lessonContext += `\n=== CONTEXTO DA LIÇÃO ===\n`;
+        if (courseInfo) {
+          lessonContext += `Curso: ${courseInfo.title}\n`;
+          if (courseInfo.description) {
+            lessonContext += `Descrição do Curso: ${courseInfo.description}\n`;
+          }
+        }
+        if (moduleInfo) {
+          lessonContext += `Módulo: ${moduleInfo.title}\n`;
+        }
+        lessonContext += `Lição: ${lesson.title}\n`;
+        
+        if (lesson.content) {
+          lessonContext += `\nConteúdo da Lição:\n${lesson.content}\n`;
+        }
+
+        // Get lesson materials
+        const { data: materials, error: materialsError } = await supabase
+          .from('lesson_materials')
+          .select('file_name, extracted_content, file_type')
+          .eq('lesson_id', lessonId);
+
+        if (!materialsError && materials && materials.length > 0) {
+          console.log('Found materials:', materials.length);
+          lessonContext += `\n=== MATERIAIS DA LIÇÃO ===\n`;
+          
+          materials.forEach((material, index) => {
+            lessonContext += `\nMaterial ${index + 1}: ${material.file_name} (${material.file_type})\n`;
+            if (material.extracted_content) {
+              lessonContext += `Conteúdo:\n${material.extracted_content}\n`;
+            }
+          });
+        }
+        
+        lessonContext += `\n=== FIM DO CONTEXTO ===\n`;
+      } else {
+        console.log('Lesson not found or error:', lessonError);
+      }
+    }
+
+    // Enhanced system prompt with lesson context
+    let enhancedSystemPrompt = aiConfig.system_prompt;
+    
+    if (lessonContext) {
+      enhancedSystemPrompt = `${aiConfig.system_prompt}
+
+${lessonContext}
+
+INSTRUÇÕES IMPORTANTES:
+- Use APENAS as informações fornecidas no contexto da lição acima para responder perguntas específicas sobre o conteúdo.
+- Se a pergunta for sobre o conteúdo da lição, cite especificamente as informações do contexto.
+- Se a pergunta não puder ser respondida com as informações do contexto, informe que você precisa de mais informações sobre esse tópico específico.
+- Seja didático e organize suas respostas de forma clara e estruturada.
+- Quando apropriado, faça referência aos materiais específicos mencionados no contexto.`;
+    }
+
     // Prepare the request based on the provider
     let apiResponse;
     
@@ -70,9 +158,11 @@ serve(async (req) => {
           maxOutputTokens: aiConfig.max_tokens,
         },
         systemInstruction: {
-          parts: [{ text: aiConfig.system_prompt }]
+          parts: [{ text: enhancedSystemPrompt }]
         }
       };
+
+      console.log('Sending request to Gemini with enhanced context');
 
       apiResponse = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${aiConfig.model_name}:generateContent?key=${apiKey}`,
@@ -94,12 +184,14 @@ serve(async (req) => {
       const requestBody = {
         model: aiConfig.model_name,
         messages: [
-          { role: 'system', content: aiConfig.system_prompt },
+          { role: 'system', content: enhancedSystemPrompt },
           ...messages
         ],
         temperature: aiConfig.temperature,
         max_tokens: aiConfig.max_tokens,
       };
+
+      console.log('Sending request to OpenAI-compatible API with enhanced context');
 
       apiResponse = await fetch(aiConfig.ai_providers?.api_endpoint || 'https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -125,6 +217,7 @@ serve(async (req) => {
       if (data.candidates && data.candidates[0] && data.candidates[0].content) {
         assistantMessage = data.candidates[0].content.parts[0].text;
       } else {
+        console.error('Invalid Gemini response:', data);
         throw new Error('Invalid response from Gemini API');
       }
     } else {
@@ -132,9 +225,12 @@ serve(async (req) => {
       if (data.choices && data.choices[0] && data.choices[0].message) {
         assistantMessage = data.choices[0].message.content;
       } else {
+        console.error('Invalid OpenAI response:', data);
         throw new Error('Invalid response from AI API');
       }
     }
+
+    console.log('AI response generated successfully');
 
     // Save messages to database if sessionId is provided
     if (sessionId && userId) {
@@ -167,7 +263,8 @@ serve(async (req) => {
       JSON.stringify({ 
         message: assistantMessage,
         model: aiConfig.model_name,
-        provider: aiConfig.ai_providers?.display_name 
+        provider: aiConfig.ai_providers?.display_name,
+        hasLessonContext: !!lessonContext
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

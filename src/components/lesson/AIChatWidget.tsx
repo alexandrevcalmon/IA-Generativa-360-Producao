@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, Send, Bot, User, Loader2, X } from 'lucide-react';
+import { MessageCircle, Send, Bot, User, Loader2, X, BookOpen } from 'lucide-react';
 import { useAIChatSessions, useCreateChatSession, useSendChatMessage, ChatMessage } from '@/hooks/useAIChatSessions';
+import { useLessonMaterials } from '@/hooks/useLessonMaterials';
 import { useAuth } from '@/hooks/auth';
 import { toast } from 'sonner';
 
@@ -21,9 +22,11 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
+  const [hasLessonContext, setHasLessonContext] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data: sessions = [] } = useAIChatSessions(lessonId);
+  const { data: materials = [] } = useLessonMaterials(lessonId || '');
   const createSessionMutation = useCreateChatSession();
   const sendMessageMutation = useSendChatMessage();
 
@@ -54,7 +57,7 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
       const welcomeMessage: ChatMessage = {
         role: 'assistant',
         content: lessonId 
-          ? 'Olá! Sou seu assistente de IA para esta lição. Como posso ajudá-lo com o conteúdo?' 
+          ? `Olá! Sou seu assistente de IA para esta lição. Tenho acesso ao conteúdo da lição${materials.length > 0 ? ' e aos materiais de apoio' : ''}. Como posso ajudá-lo com o conteúdo?` 
           : 'Olá! Sou seu assistente de IA. Como posso ajudá-lo hoje?',
         timestamp: new Date().toISOString()
       };
@@ -94,6 +97,11 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Update context indicator if response includes lesson context
+      if ('hasLessonContext' in response) {
+        setHasLessonContext(response.hasLessonContext);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       // Remove the user message if sending fails
@@ -132,6 +140,12 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Bot className="h-4 w-4" />
               Assistente IA
+              {lessonId && (
+                <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                  <BookOpen className="h-3 w-3" />
+                  Contexto da Lição
+                </div>
+              )}
             </CardTitle>
             <Button
               variant="ghost"
@@ -144,6 +158,13 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
           </CardHeader>
           
           <CardContent className="flex-1 flex flex-col p-3 space-y-2">
+            {/* Context Indicator */}
+            {lessonId && materials.length > 0 && (
+              <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded text-center">
+                📚 Tenho acesso ao conteúdo da lição e {materials.length} material(is) de apoio
+              </div>
+            )}
+
             {/* Messages Area */}
             <ScrollArea className="flex-1 pr-2">
               <div className="space-y-3">
@@ -177,7 +198,7 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
                     <Bot className="h-6 w-6 mt-1 text-blue-600 flex-shrink-0" />
                     <div className="bg-gray-100 p-2 rounded-lg text-sm flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Pensando...
+                      Analisando conteúdo...
                     </div>
                   </div>
                 )}
@@ -191,7 +212,7 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Digite sua pergunta..."
+                placeholder={lessonId ? "Pergunte sobre a lição..." : "Digite sua pergunta..."}
                 className="flex-1 text-sm"
                 disabled={sendMessageMutation.isPending || !currentSessionId}
               />

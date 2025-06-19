@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/auth';
@@ -130,13 +131,15 @@ export const useSendChatMessage = () => {
       console.log('AI response received:', {
         model: data.model,
         provider: data.provider,
-        messageLength: data.message?.length
+        messageLength: data.message?.length,
+        hasLessonContext: data.hasLessonContext
       });
 
       return {
         message: data.message,
         model: data.model,
-        provider: data.provider
+        provider: data.provider,
+        hasLessonContext: data.hasLessonContext || false
       };
     },
     onSuccess: () => {
