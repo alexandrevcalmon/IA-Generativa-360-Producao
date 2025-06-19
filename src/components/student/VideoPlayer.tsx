@@ -35,14 +35,14 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
   if (!videoUrl) {
     return (
       <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
-        <p className="text-white text-sm md:text-lg">Vídeo não disponível</p>
+        <p className="text-white text-xs sm:text-sm md:text-lg">Vídeo não disponível</p>
       </div>
     );
   }
 
   return (
     <div 
-      className="relative bg-black rounded-lg overflow-hidden group w-full"
+      className="relative bg-black rounded-lg overflow-hidden group w-full touch-manipulation"
       onMouseEnter={() => !isMobile && setShowControls(true)}
       onMouseLeave={() => !isMobile && setShowControls(false)}
       onTouchStart={() => isMobile && setShowControls(true)}

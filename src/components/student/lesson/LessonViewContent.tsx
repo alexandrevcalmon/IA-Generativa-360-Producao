@@ -54,9 +54,9 @@ export const LessonViewContent = ({
       />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 md:py-6">
         {/* Mobile Layout - Stack vertically */}
-        <div className="block lg:hidden space-y-4">
+        <div className="block md:hidden space-y-3">
           {/* Video Section */}
           <LessonVideoSection
             currentLesson={studentLesson}
@@ -82,9 +82,9 @@ export const LessonViewContent = ({
         </div>
 
         {/* Desktop Layout - Grid */}
-        <div className="hidden lg:grid lg:grid-cols-4 gap-6">
+        <div className="hidden md:grid md:grid-cols-4 gap-4 lg:gap-6">
           {/* Main Content - Left side */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="md:col-span-3 space-y-4 lg:space-y-6">
             <LessonVideoSection
               currentLesson={studentLesson}
               course={course}
@@ -98,7 +98,7 @@ export const LessonViewContent = ({
           </div>
 
           {/* Sidebar - Right side */}
-          <div className="lg:col-span-1">
+          <div className="md:col-span-1">
             <LessonSidebar
               currentLesson={studentLesson}
               courseId={courseId}

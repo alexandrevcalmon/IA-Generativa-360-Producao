@@ -15,28 +15,28 @@ export const LessonNavigation = ({ courseId, prevLesson, nextLesson }: LessonNav
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Navegação</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm md:text-base lg:text-lg">Navegação</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2 sm:space-y-3 pt-0">
         {prevLesson && (
           <Button 
             variant="outline" 
-            className="w-full justify-start"
+            className="w-full justify-start text-xs sm:text-sm h-8 sm:h-9"
             onClick={() => navigate(`/student/courses/${courseId}/lessons/${prevLesson.id}`)}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Aula Anterior
+            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+            <span className="truncate">Aula Anterior</span>
           </Button>
         )}
         
         {nextLesson && (
           <Button 
-            className="w-full justify-start"
+            className="w-full justify-start text-xs sm:text-sm h-8 sm:h-9"
             onClick={() => navigate(`/student/courses/${courseId}/lessons/${nextLesson.id}`)}
           >
-            Próxima Aula
-            <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
+            <span className="truncate">Próxima Aula</span>
+            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 ml-2 rotate-180" />
           </Button>
         )}
       </CardContent>
