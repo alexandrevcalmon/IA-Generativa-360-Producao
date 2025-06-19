@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { BookOpen, Download } from 'lucide-react';
 import { StudentLesson } from '@/hooks/useStudentCourses';
 import { LessonMaterialsSection } from '@/components/lesson/LessonMaterialsSection';
+import { LessonMaterialUpload } from '@/components/lesson/LessonMaterialUpload';
+import { useAuth } from '@/hooks/auth';
 
 interface LessonContentProps {
   currentLesson: StudentLesson;
@@ -11,9 +13,14 @@ interface LessonContentProps {
 }
 
 export const LessonContent = ({ currentLesson, currentModule }: LessonContentProps) => {
+  const { user } = useAuth();
+  
   const handleDownloadClick = () => {
     console.log('Download material clicked');
   };
+
+  // Check if user can upload materials (company owners and producers)
+  const canUploadMaterials = user?.user_metadata?.role === 'company' || user?.user_metadata?.role === 'producer';
 
   return (
     <div className="space-y-6">
@@ -61,6 +68,17 @@ export const LessonContent = ({ currentLesson, currentModule }: LessonContentPro
 
       {/* Lesson Materials Section */}
       <LessonMaterialsSection lessonId={currentLesson.id} />
+
+      {/* Material Upload Section - Only for authorized users */}
+      {canUploadMaterials && (
+        <LessonMaterialUpload 
+          lessonId={currentLesson.id}
+          onUploadComplete={() => {
+            // Optionally refresh materials or show success message
+            console.log('Materials uploaded successfully');
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -28,11 +28,21 @@ export const useChatSession = (lessonId?: string, companyId?: string) => {
       setCurrentSessionId(session.id);
       setMessages([]);
       
-      // Add welcome message from assistant
+      // Add welcome message from assistant with more context
       const welcomeMessage: ChatMessage = {
         role: 'assistant',
         content: lessonId 
-          ? `Olá! Sou seu assistente de IA para esta lição. Tenho acesso ao conteúdo da lição. Como posso ajudá-lo com o conteúdo?` 
+          ? `Olá! Sou seu assistente de IA para esta lição. Tenho acesso ao conteúdo da lição e posso responder suas dúvidas sobre o material apresentado.
+
+🎯 **Como posso ajudar:**
+• Explicar conceitos da lição
+• Esclarecer dúvidas sobre o conteúdo
+• Fornecer exemplos práticos
+• Resumir pontos importantes
+
+📚 **Dica:** Se houver materiais de apoio carregados para esta lição, terei acesso a informações ainda mais detalhadas!
+
+Como posso ajudá-lo com o conteúdo desta lição?` 
           : 'Olá! Sou seu assistente de IA. Como posso ajudá-lo hoje?',
         timestamp: new Date().toISOString()
       };
