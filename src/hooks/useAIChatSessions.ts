@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/auth';
@@ -46,7 +45,9 @@ export const useAIChatSessions = (lessonId?: string) => {
       // Transform the data to match our TypeScript interface
       return (data || []).map(session => ({
         ...session,
-        session_data: Array.isArray(session.session_data) ? session.session_data as ChatMessage[] : []
+        session_data: Array.isArray(session.session_data) 
+          ? (session.session_data as unknown as ChatMessage[]) 
+          : []
       })) as AIChatSession[];
     },
     enabled: !!user?.id,
