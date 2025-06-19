@@ -12,8 +12,34 @@ import { useAuthForm } from '@/hooks/auth/useAuthForm';
 import { AlertCircle } from 'lucide-react';
 
 export default function Auth() {
-  const { user, userRole, needsPasswordChange, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  
+  // Safely use auth hook with error boundary
+  let authData;
+  try {
+    authData = useAuth();
+  } catch (error) {
+    console.error('Auth context error:', error);
+    // If auth context is not available, show a fallback
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-12 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
+            <h3 className="text-lg font-medium mb-2">Erro de Autenticação</h3>
+            <p className="text-muted-foreground mb-4">
+              Erro no sistema de autenticação. Tente recarregar a página.
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Recarregar Página
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const { user, userRole, needsPasswordChange, loading: authLoading } = authData;
   
   const {
     email,

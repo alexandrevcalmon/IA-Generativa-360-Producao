@@ -7,6 +7,8 @@ import { useAuthMethods } from './useAuthMethods';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  console.log('🔧 AuthProvider: Initializing...');
+  
   const authState = useAuthInitialization();
   
   const {
@@ -49,7 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isCompany,
     isStudent,
     isCollaborator,
-    loading: loading || !isInitialized
+    loading: loading || !isInitialized,
+    isInitialized
   });
 
   const value = {
@@ -64,6 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     companyUserData,
     ...authMethods,
   };
+
+  console.log('🔧 AuthProvider: Providing context value');
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

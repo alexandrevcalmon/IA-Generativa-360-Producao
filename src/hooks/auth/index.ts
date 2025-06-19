@@ -1,4 +1,5 @@
 
-export { AuthProvider } from './AuthProvider';
+// Main auth module exports
 export { useAuth } from './useAuth';
-export type { AuthContextType, UserRoleData } from './types';
+export { AuthProvider, AuthContext } from './AuthProvider';
+export type { AuthContextType } from './types';
