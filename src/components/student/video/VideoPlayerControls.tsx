@@ -34,7 +34,7 @@ export const VideoPlayerControls = ({
   onToggleFullscreen,
 }: VideoPlayerControlsProps) => {
   return (
-    <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4 space-y-2 md:space-y-3">
+    <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-5 space-y-3 sm:space-y-4">
       {/* Progress Bar */}
       <VideoPlayerProgress
         currentTime={currentTime}
@@ -44,34 +44,32 @@ export const VideoPlayerControls = ({
 
       {/* Control Buttons */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-1 md:space-x-2">
+        <div className="flex items-center space-x-2 sm:space-x-3">
           <Button
             onClick={onTogglePlay}
             size="sm"
             variant="ghost"
-            className="text-white hover:bg-white/20 touch-manipulation p-2"
+            className="text-white hover:bg-white/20 touch-manipulation h-11 w-11 sm:h-12 sm:w-12 p-0"
           >
-            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            {isPlaying ? <Pause className="h-5 w-5 sm:h-6 sm:w-6" /> : <Play className="h-5 w-5 sm:h-6 sm:w-6" />}
           </Button>
 
           <Button
             onClick={() => onSkip(-10)}
             size="sm"
             variant="ghost"
-            className="text-white hover:bg-white/20 touch-manipulation p-2"
+            className="text-white hover:bg-white/20 touch-manipulation h-11 w-11 sm:h-12 sm:w-12 p-0"
           >
-            <RotateCcw className="h-4 w-4" />
-            <span className="ml-1 text-xs hidden md:inline">10s</span>
+            <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>
 
           <Button
             onClick={() => onSkip(10)}
             size="sm"
             variant="ghost"
-            className="text-white hover:bg-white/20 touch-manipulation p-2"
+            className="text-white hover:bg-white/20 touch-manipulation h-11 w-11 sm:h-12 sm:w-12 p-0"
           >
-            <RotateCw className="h-4 w-4" />
-            <span className="ml-1 text-xs hidden md:inline">10s</span>
+            <RotateCw className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>
 
           {/* Volume controls - hidden on mobile */}
@@ -89,9 +87,9 @@ export const VideoPlayerControls = ({
           onClick={onToggleFullscreen}
           size="sm"
           variant="ghost"
-          className="text-white hover:bg-white/20 touch-manipulation p-2"
+          className="text-white hover:bg-white/20 touch-manipulation h-11 w-11 sm:h-12 sm:w-12 p-0"
         >
-          <Maximize className="h-4 w-4" />
+          <Maximize className="h-5 w-5 sm:h-6 sm:w-6" />
         </Button>
       </div>
     </div>

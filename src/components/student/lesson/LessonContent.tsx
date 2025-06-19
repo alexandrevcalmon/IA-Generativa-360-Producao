@@ -12,19 +12,19 @@ interface LessonContentProps {
 export const LessonContent = ({ currentLesson, currentModule }: LessonContentProps) => {
   return (
     <Card className="w-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm sm:text-base md:text-lg lg:text-xl">
-          <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+      <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
+          <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
           Conteúdo da Lição
         </CardTitle>
         {currentModule && (
-          <div className="text-xs sm:text-sm text-gray-600">
+          <div className="text-sm text-gray-600 mt-1">
             Módulo: {currentModule.title}
           </div>
         )}
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="prose prose-sm sm:prose md:prose-base max-w-none">
+      <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+        <div className="prose prose-sm sm:prose lg:prose-base max-w-none">
           {currentLesson.content ? (
             <div dangerouslySetInnerHTML={{ __html: currentLesson.content }} />
           ) : (
@@ -36,7 +36,7 @@ export const LessonContent = ({ currentLesson, currentModule }: LessonContentPro
         {currentLesson.material_url && (
           <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
             <h3 className="font-semibold mb-3 text-sm sm:text-base">Material de Apoio</h3>
-            <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+            <Button asChild variant="outline" className="w-full sm:w-auto h-11 touch-manipulation">
               <a href={currentLesson.material_url} target="_blank" rel="noopener noreferrer">
                 <Download className="h-4 w-4 mr-2" />
                 Download do Material

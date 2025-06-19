@@ -54,51 +54,18 @@ export const LessonViewContent = ({
       />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 md:py-6">
-        {/* Mobile Layout - Stack vertically */}
-        <div className="block md:hidden space-y-3">
-          {/* Video Section */}
-          <LessonVideoSection
-            currentLesson={studentLesson}
-            course={course}
-            onTimeUpdate={handleTimeUpdate}
-          />
-          
-          {/* Progress and Navigation */}
-          <LessonSidebar
-            currentLesson={studentLesson}
-            courseId={courseId}
-            watchTime={watchTime}
-            duration={duration}
-            prevLesson={prevLesson}
-            nextLesson={nextLesson}
-          />
-          
-          {/* Content */}
-          <LessonContent 
-            currentLesson={studentLesson} 
-            currentModule={currentModule}
-          />
-        </div>
-
-        {/* Desktop Layout - Grid */}
-        <div className="hidden md:grid md:grid-cols-4 gap-4 lg:gap-6">
-          {/* Main Content - Left side */}
-          <div className="md:col-span-3 space-y-4 lg:space-y-6">
+      <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Mobile Layout - Stack vertically */}
+          <div className="block lg:hidden space-y-4">
+            {/* Video Section */}
             <LessonVideoSection
               currentLesson={studentLesson}
               course={course}
               onTimeUpdate={handleTimeUpdate}
             />
             
-            <LessonContent 
-              currentLesson={studentLesson} 
-              currentModule={currentModule}
-            />
-          </div>
-
-          {/* Sidebar - Right side */}
-          <div className="md:col-span-1">
+            {/* Progress and Navigation */}
             <LessonSidebar
               currentLesson={studentLesson}
               courseId={courseId}
@@ -107,6 +74,41 @@ export const LessonViewContent = ({
               prevLesson={prevLesson}
               nextLesson={nextLesson}
             />
+            
+            {/* Content */}
+            <LessonContent 
+              currentLesson={studentLesson} 
+              currentModule={currentModule}
+            />
+          </div>
+
+          {/* Desktop Layout - Grid */}
+          <div className="hidden lg:grid lg:grid-cols-4 gap-6">
+            {/* Main Content - Left side */}
+            <div className="lg:col-span-3 space-y-6">
+              <LessonVideoSection
+                currentLesson={studentLesson}
+                course={course}
+                onTimeUpdate={handleTimeUpdate}
+              />
+              
+              <LessonContent 
+                currentLesson={studentLesson} 
+                currentModule={currentModule}
+              />
+            </div>
+
+            {/* Sidebar - Right side */}
+            <div className="lg:col-span-1">
+              <LessonSidebar
+                currentLesson={studentLesson}
+                courseId={courseId}
+                watchTime={watchTime}
+                duration={duration}
+                prevLesson={prevLesson}
+                nextLesson={nextLesson}
+              />
+            </div>
           </div>
         </div>
       </div>

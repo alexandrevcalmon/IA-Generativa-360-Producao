@@ -96,21 +96,21 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
   return (
     <>
       {/* Progress Bar */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium">Progresso da Aula</span>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-gray-600 font-mono">
             {formatTime(watchTime)} / {formatTime(duration)}
           </span>
         </div>
-        <Progress value={progressPercentage} className="h-2" />
-        <div className="flex justify-between items-center mt-1">
-          <span className="text-xs text-gray-500">
+        <Progress value={progressPercentage} className="h-2 sm:h-3" />
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-xs sm:text-sm text-gray-500">
             {progressPercentage.toFixed(1)}% assistido
           </span>
           {currentLesson.completed && (
-            <div className="flex items-center text-green-600 text-xs">
-              <CheckCircle className="w-3 h-3 mr-1" />
+            <div className="flex items-center text-green-600 text-xs sm:text-sm">
+              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               Concluída
             </div>
           )}
@@ -120,7 +120,7 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-3">
         {currentLesson.material_url && (
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="h-11 touch-manipulation">
             <a href={currentLesson.material_url} download>
               <FileText className="h-4 w-4 mr-2" />
               Material de Apoio

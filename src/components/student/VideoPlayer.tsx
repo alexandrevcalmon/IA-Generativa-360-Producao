@@ -35,7 +35,7 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
   if (!videoUrl) {
     return (
       <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
-        <p className="text-white text-xs sm:text-sm md:text-lg">Vídeo não disponível</p>
+        <p className="text-white text-sm sm:text-base lg:text-lg">Vídeo não disponível</p>
       </div>
     );
   }
@@ -57,7 +57,7 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
       />
       
       {/* Controls Overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 ${showControls || !isPlaying || isMobile ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`absolute inset-0 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300 ${showControls || !isPlaying || isMobile ? 'opacity-100' : 'opacity-0'}`}>
         
         {/* Play/Pause Button (Center) */}
         {!isPlaying && (
@@ -65,9 +65,9 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
             <Button
               onClick={togglePlay}
               size="lg"
-              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-3 md:p-4 touch-manipulation backdrop-blur-sm"
+              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-4 sm:p-5 lg:p-6 touch-manipulation backdrop-blur-sm min-h-[56px] min-w-[56px] sm:min-h-[64px] sm:min-w-[64px]"
             >
-              <Play className="h-5 w-5 md:h-8 md:w-8" />
+              <Play className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10" />
             </Button>
           </div>
         )}

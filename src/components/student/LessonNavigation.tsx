@@ -15,28 +15,28 @@ export const LessonNavigation = ({ courseId, prevLesson, nextLesson }: LessonNav
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm md:text-base lg:text-lg">Navegação</CardTitle>
+      <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+        <CardTitle className="text-base sm:text-lg">Navegação</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 sm:space-y-3 pt-0">
+      <CardContent className="space-y-3 pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
         {prevLesson && (
           <Button 
             variant="outline" 
-            className="w-full justify-start text-xs sm:text-sm h-8 sm:h-9"
+            className="w-full justify-start text-sm h-11 touch-manipulation"
             onClick={() => navigate(`/student/courses/${courseId}/lessons/${prevLesson.id}`)}
           >
-            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4 mr-2 flex-shrink-0" />
             <span className="truncate">Aula Anterior</span>
           </Button>
         )}
         
         {nextLesson && (
           <Button 
-            className="w-full justify-start text-xs sm:text-sm h-8 sm:h-9"
+            className="w-full justify-start text-sm h-11 touch-manipulation"
             onClick={() => navigate(`/student/courses/${courseId}/lessons/${nextLesson.id}`)}
           >
             <span className="truncate">Próxima Aula</span>
-            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 ml-2 rotate-180" />
+            <ArrowLeft className="h-4 w-4 ml-2 rotate-180 flex-shrink-0" />
           </Button>
         )}
       </CardContent>

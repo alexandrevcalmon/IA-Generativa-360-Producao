@@ -15,18 +15,20 @@ export const VideoPlayerProgress = ({ currentTime, duration, onSeek }: VideoPlay
   };
 
   return (
-    <div className="flex items-center space-x-2">
-      <span className="text-white text-xs md:text-sm font-mono">
+    <div className="flex items-center space-x-3 sm:space-x-4">
+      <span className="text-white text-sm sm:text-base font-mono min-w-[45px] sm:min-w-[50px]">
         {formatTime(currentTime)}
       </span>
-      <Slider
-        value={[currentTime]}
-        onValueChange={onSeek}
-        max={duration || 100}
-        step={1}
-        className="flex-1"
-      />
-      <span className="text-white text-xs md:text-sm font-mono">
+      <div className="flex-1 px-1">
+        <Slider
+          value={[currentTime]}
+          onValueChange={onSeek}
+          max={duration || 100}
+          step={1}
+          className="w-full [&>.slider-track]:h-2 sm:[&>.slider-track]:h-3 [&>.slider-thumb]:h-4 [&>.slider-thumb]:w-4 sm:[&>.slider-thumb]:h-5 sm:[&>.slider-thumb]:w-5 [&>.slider-thumb]:touch-manipulation"
+        />
+      </div>
+      <span className="text-white text-sm sm:text-base font-mono min-w-[45px] sm:min-w-[50px]">
         {formatTime(duration)}
       </span>
     </div>

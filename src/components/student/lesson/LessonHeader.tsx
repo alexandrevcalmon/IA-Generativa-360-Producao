@@ -19,47 +19,61 @@ export const LessonHeader = ({ currentLesson, course, courseId, currentModule }:
   return (
     <>
       {/* Mobile Header */}
-      <div className="md:hidden bg-white border-b">
-        <div className="flex items-center justify-between p-3">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <SidebarTrigger className="flex-shrink-0" />
+      <div className="lg:hidden bg-white border-b">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <SidebarTrigger className="flex-shrink-0 h-10 w-10" />
             <Button 
               variant="ghost" 
               size="sm"
               onClick={() => navigate(`/student/courses/${courseId}`)}
-              className="flex-shrink-0 p-1.5"
+              className="flex-shrink-0 h-10 w-10 p-0"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="min-w-0 flex-1">
-              <h1 className="text-sm font-semibold truncate leading-tight">{currentLesson.title}</h1>
-              <p className="text-xs text-gray-600 truncate">{course.title}</p>
-              {currentModule && (
-                <p className="text-xs text-gray-500 truncate">{currentModule.title}</p>
-              )}
+              <h1 className="text-base font-semibold truncate leading-tight text-gray-900">
+                {currentLesson.title}
+              </h1>
+              <p className="text-sm text-gray-600 truncate mt-0.5">
+                {course.title}
+              </p>
             </div>
           </div>
           {currentLesson.completed && (
-            <Badge className="bg-green-500 text-white flex-shrink-0 text-xs px-2 py-0.5">
+            <Badge className="bg-green-500 text-white flex-shrink-0 text-xs px-2 py-1 h-7">
               <CheckCircle className="w-3 h-3 mr-1" />
-              <span className="hidden xs:inline">OK</span>
+              <span className="hidden sm:inline">Concluída</span>
+              <span className="sm:hidden">OK</span>
             </Badge>
           )}
         </div>
+        {/* Module info on separate line for mobile when present */}
+        {currentModule && (
+          <div className="px-4 pb-3">
+            <p className="text-sm text-gray-500 truncate">
+              Módulo: {currentModule.title}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Desktop Header */}
-      <div className="hidden md:block bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 lg:py-6">
+      <div className="hidden lg:block bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 lg:space-x-4">
-              <Button variant="ghost" onClick={() => navigate(`/student/courses/${courseId}`)}>
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate(`/student/courses/${courseId}`)}
+                className="h-10"
+              >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar ao Curso
               </Button>
               <div>
-                <h1 className="text-xl lg:text-2xl font-bold text-gray-900">{currentLesson.title}</h1>
-                <div className="flex items-center gap-2 text-sm lg:text-base text-gray-600 mt-1">
+                <h1 className="text-2xl font-bold text-gray-900">{currentLesson.title}</h1>
+                <div className="flex items-center gap-2 text-base text-gray-600 mt-1">
                   <span>{course.title}</span>
                   {currentModule && (
                     <>
@@ -72,8 +86,8 @@ export const LessonHeader = ({ currentLesson, course, courseId, currentModule }:
             </div>
             <div className="flex items-center space-x-3">
               {currentLesson.completed && (
-                <Badge className="bg-green-500 text-white">
-                  <CheckCircle className="w-3 h-3 mr-1" />
+                <Badge className="bg-green-500 text-white h-8">
+                  <CheckCircle className="w-4 h-4 mr-2" />
                   Concluída
                 </Badge>
               )}

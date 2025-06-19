@@ -22,13 +22,13 @@ export const LessonSidebar = ({
   nextLesson 
 }: LessonSidebarProps) => {
   return (
-    <div className="space-y-3 md:space-y-4">
+    <div className="space-y-4">
       {/* Progress Card */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm md:text-base lg:text-lg">Progresso</CardTitle>
+        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+          <CardTitle className="text-base sm:text-lg">Progresso</CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
           <LessonProgress 
             currentLesson={currentLesson}
             watchTime={watchTime}
