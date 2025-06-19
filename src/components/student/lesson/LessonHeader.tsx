@@ -19,7 +19,7 @@ export const LessonHeader = ({ currentLesson, course, courseId, currentModule }:
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden bg-gradient-to-r from-blue-900 to-purple-800 text-white border-b border-blue-700">
+      <div className="lg:hidden bg-gradient-to-r from-orange-600 to-orange-700 text-white border-b border-orange-800">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <SidebarTrigger className="flex-shrink-0 h-10 w-10 text-white hover:bg-white/10" />
@@ -35,13 +35,13 @@ export const LessonHeader = ({ currentLesson, course, courseId, currentModule }:
               <h1 className="text-base font-semibold truncate leading-tight text-white">
                 {currentLesson.title}
               </h1>
-              <p className="text-sm text-blue-100 truncate mt-0.5">
+              <p className="text-sm text-orange-100 truncate mt-0.5">
                 {course.title}
               </p>
             </div>
           </div>
           {currentLesson.completed && (
-            <Badge className="bg-green-500 hover:bg-green-600 text-white flex-shrink-0 text-xs px-2 py-1 h-7 border-0">
+            <Badge className="bg-green-600 hover:bg-green-700 text-white flex-shrink-0 text-xs px-2 py-1 h-7 border-0">
               <CheckCircle className="w-3 h-3 mr-1" />
               <span className="hidden sm:inline">Concluída</span>
               <span className="sm:hidden">OK</span>
@@ -51,7 +51,7 @@ export const LessonHeader = ({ currentLesson, course, courseId, currentModule }:
         {/* Module info on separate line for mobile when present */}
         {currentModule && (
           <div className="px-4 pb-3">
-            <p className="text-sm text-blue-200 truncate">
+            <p className="text-sm text-orange-200 truncate">
               Módulo: {currentModule.title}
             </p>
           </div>
@@ -59,7 +59,7 @@ export const LessonHeader = ({ currentLesson, course, courseId, currentModule }:
       </div>
 
       {/* Desktop Header */}
-      <div className="hidden lg:block bg-gradient-to-r from-blue-900 to-purple-800 text-white border-b border-blue-700">
+      <div className="hidden lg:block bg-gradient-to-r from-orange-600 to-orange-700 text-white border-b border-orange-800">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -73,7 +73,7 @@ export const LessonHeader = ({ currentLesson, course, courseId, currentModule }:
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-white">{currentLesson.title}</h1>
-                <div className="flex items-center gap-2 text-base text-blue-100 mt-1">
+                <div className="flex items-center gap-2 text-base text-orange-100 mt-1">
                   <span>{course.title}</span>
                   {currentModule && (
                     <>
@@ -86,7 +86,7 @@ export const LessonHeader = ({ currentLesson, course, courseId, currentModule }:
             </div>
             <div className="flex items-center space-x-3">
               {currentLesson.completed && (
-                <Badge className="bg-green-500 hover:bg-green-600 text-white h-8 border-0">
+                <Badge className="bg-green-600 hover:bg-green-700 text-white h-8 border-0">
                   <CheckCircle className="w-4 h-4 mr-2" />
                   Concluída
                 </Badge>

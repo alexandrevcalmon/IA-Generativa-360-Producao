@@ -97,14 +97,14 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
       {/* Progress Bar */}
       <div className="mb-4 sm:mb-6">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-blue-800">Progresso da Aula</span>
-          <span className="text-sm text-blue-600 font-mono">
+          <span className="text-sm font-medium text-orange-800">Progresso da Aula</span>
+          <span className="text-sm text-orange-600 font-mono">
             {formatTime(watchTime)} / {formatTime(duration)}
           </span>
         </div>
-        <Progress value={progressPercentage} className="h-3 sm:h-4 bg-blue-100 [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-purple-500" />
+        <Progress value={progressPercentage} className="h-3 sm:h-4 bg-orange-100 [&>div]:bg-gradient-to-r [&>div]:from-orange-500 [&>div]:to-orange-600" />
         <div className="flex justify-between items-center mt-2">
-          <span className="text-xs sm:text-sm text-blue-600">
+          <span className="text-xs sm:text-sm text-orange-600">
             {progressPercentage.toFixed(1)}% assistido
           </span>
           {currentLesson.completed && (
@@ -122,7 +122,7 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
           <Button 
             variant="outline" 
             asChild 
-            className="h-11 touch-manipulation border-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-700 font-medium"
+            className="h-11 touch-manipulation border-2 border-amber-200 hover:bg-amber-50 hover:border-amber-300 text-amber-700 font-medium"
           >
             <a href={currentLesson.material_url} download>
               <FileText className="h-4 w-4 mr-2" />
