@@ -7,7 +7,7 @@ export function Features() {
   const navigate = useNavigate();
 
   const handleProducerClick = () => {
-    console.log('Producer button clicked');
+    console.log('Producer button clicked - navigating to producer auth');
     navigate('/auth?role=producer');
   };
 
@@ -53,7 +53,7 @@ export function Features() {
               onClick={handleProducerClick}
               className="w-full bg-calmon-600 hover:bg-calmon-700 text-white h-12 sm:h-14 text-base sm:text-lg font-medium touch-manipulation"
             >
-              Acessar Painel do Produtor →
+              Acesso Produtor →
             </Button>
           </div>
 

@@ -1624,6 +1624,36 @@ export type Database = {
         }
         Relationships: []
       }
+      producers: {
+        Row: {
+          auth_user_id: string
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          auth_user_id: string
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          auth_user_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1926,6 +1956,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      get_user_role_enhanced: {
+        Args: { user_id: string }
+        Returns: string
+      }
       get_user_role_safe: {
         Args: { user_id: string }
         Returns: string
@@ -1935,6 +1969,10 @@ export type Database = {
         Returns: boolean
       }
       is_current_user_producer: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_current_user_producer_new: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }

@@ -20,6 +20,7 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
       userRole,
       needsPasswordChange,
       currentPath: location.pathname,
+      search: location.search,
       timestamp: new Date().toISOString()
     });
 
@@ -41,6 +42,53 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
     if (isOnCorrectDashboard) {
       console.log('✅ User already on correct dashboard, no redirect needed');
       return;
+    }
+
+    // Check for role-specific auth page access
+    const urlParams = new URLSearchParams(location.search);
+    const requestedRole = urlParams.get('role');
+    
+    // If user is on auth page with specific role request
+    if (location.pathname === '/auth' && requestedRole) {
+      console.log('🔍 Auth page with role request:', { requestedRole, userRole });
+      
+      // If requesting producer access but user is not a producer
+      if (requestedRole === 'producer' && userRole !== 'producer') {
+        console.log('❌ Producer access denied - user is not a producer');
+        // Stay on auth page to show error or redirect to appropriate dashboard
+        if (userRole) {
+          switch (userRole) {
+            case 'company':
+              navigate('/company-dashboard', { replace: true });
+              break;
+            case 'student':
+            case 'collaborator':
+              navigate('/student/dashboard', { replace: true });
+              break;
+            default:
+              console.log('Unknown role, staying on auth page');
+          }
+        }
+        return;
+      }
+      
+      // If user has the requested role, redirect to appropriate dashboard
+      if (requestedRole === userRole) {
+        console.log('✅ Role matches request, redirecting to dashboard');
+        switch (userRole) {
+          case 'producer':
+            navigate('/producer/dashboard', { replace: true });
+            break;
+          case 'company':
+            navigate('/company-dashboard', { replace: true });
+            break;
+          case 'student':
+          case 'collaborator':
+            navigate('/student/dashboard', { replace: true });
+            break;
+        }
+        return;
+      }
     }
 
     // Only redirect from specific "entry" pages
@@ -83,5 +131,5 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
       console.warn('⚠️ User has no role assigned, redirecting to auth');
       navigate('/auth', { replace: true });
     }
-  }, [user, userRole, authLoading, needsPasswordChange, navigate, location.pathname]);
+  }, [user, userRole, authLoading, needsPasswordChange, navigate, location.pathname, location.search]);
 }

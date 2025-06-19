@@ -15,10 +15,34 @@ export const createProducerSignInService = (toast: any) => {
     }
     
     if (data.user) {
+      // Check if user is actually a producer
+      const { data: producerData, error: producerError } = await supabase
+        .from('producers')
+        .select('id, is_active')
+        .eq('auth_user_id', data.user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (producerError || !producerData) {
+        console.error(`[ProducerSignIn] User ${email} is not a producer or is inactive`);
+        toast({ 
+          title: "Acesso Negado", 
+          description: "Esta conta não tem permissões de produtor ou está inativa.", 
+          variant: "destructive" 
+        });
+        // Sign out the user since they don't have producer access
+        await supabase.auth.signOut();
+        return { error: new Error("User is not a producer") };
+      }
+
+      console.log(`[ProducerSignIn] Producer login confirmed for ${email}`);
+      
+      // Update user metadata to ensure consistency
       if (data.user.user_metadata?.role !== 'producer') {
         console.log(`[ProducerSignIn] Updating metadata to 'producer' for ${email}`);
         await updateUserMetadata({ role: 'producer' });
       }
+      
       toast({ title: "Login de Produtor bem-sucedido!", description: "Bem-vindo!" });
       return { error: null, user: data.user, session: data.session, needsPasswordChange: false };
     }

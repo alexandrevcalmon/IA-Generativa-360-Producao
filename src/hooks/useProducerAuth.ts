@@ -13,8 +13,8 @@ export const useProducerAuth = () => {
 
       console.log('[useProducerAuth] Checking producer auth for user:', user.id);
 
-      // Use the safe function we created
-      const { data, error } = await supabase.rpc('is_current_user_producer');
+      // Use the new producer-specific function
+      const { data, error } = await supabase.rpc('is_current_user_producer_new');
 
       if (error) {
         console.error('[useProducerAuth] Error checking producer auth:', error);

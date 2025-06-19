@@ -7,7 +7,33 @@ export const createUserRoleService = () => {
     try {
       console.log(`[UserRoleService] Getting role for user: ${userId}`);
       
-      // First check if user is a company owner
+      // Use the new enhanced function that checks producers first
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role_enhanced', {
+        user_id: userId
+      });
+
+      if (!roleError && roleData) {
+        console.log(`[UserRoleService] Enhanced role check result: ${roleData}`);
+        return roleData;
+      }
+
+      // Fallback to original logic if function fails
+      console.log(`[UserRoleService] Falling back to original role logic`);
+      
+      // First check if user is a producer
+      const { data: producerData, error: producerError } = await supabase
+        .from('producers')
+        .select('id, is_active')
+        .eq('auth_user_id', userId)
+        .eq('is_active', true)
+        .single();
+
+      if (!producerError && producerData) {
+        console.log(`[UserRoleService] User is a producer`);
+        return 'producer';
+      }
+
+      // Then check if user is a company owner
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('id, name')
@@ -84,12 +110,37 @@ export const createUserRoleService = () => {
   };
 };
 
-// Enhanced function that prioritizes company ownership
+// Enhanced function that prioritizes producer check
 export const fetchUserRoleAuxiliaryData = async (user: User) => {
   console.log(`[fetchUserRoleAuxiliaryData] Fetching auxiliary data for user: ${user.email}`);
   
   try {
-    // First priority: Check if user is a company owner
+    // First priority: Check if user is a producer
+    const { data: producerData, error: producerError } = await supabase
+      .from('producers')
+      .select('*')
+      .eq('auth_user_id', user.id)
+      .eq('is_active', true)
+      .single();
+
+    if (!producerError && producerData) {
+      console.log('[fetchUserRoleAuxiliaryData] User is a producer');
+      
+      // Update profiles table to ensure consistency
+      await supabase
+        .from('profiles')
+        .upsert({ id: user.id, role: 'producer' });
+      
+      return {
+        role: 'producer',
+        profileData: { role: 'producer' },
+        companyData: null,
+        collaboratorData: null,
+        producerData
+      };
+    }
+
+    // Second priority: Check if user is a company owner
     const { data: companyData, error: companyError } = await supabase
       .from('companies')
       .select('*')
@@ -108,11 +159,12 @@ export const fetchUserRoleAuxiliaryData = async (user: User) => {
         role: 'company',
         profileData: { role: 'company' },
         companyData,
-        collaboratorData: null
+        collaboratorData: null,
+        producerData: null
       };
     }
 
-    // Second priority: Check profiles table
+    // Third priority: Check profiles table
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('role')
@@ -125,11 +177,12 @@ export const fetchUserRoleAuxiliaryData = async (user: User) => {
         role: profileData.role,
         profileData,
         companyData: null,
-        collaboratorData: null
+        collaboratorData: null,
+        producerData: null
       };
     }
 
-    // Third priority: Check if user is a company collaborator
+    // Fourth priority: Check if user is a company collaborator
     const { data: collaboratorData, error: collaboratorError } = await supabase
       .from('company_users')
       .select(`
@@ -148,7 +201,8 @@ export const fetchUserRoleAuxiliaryData = async (user: User) => {
         collaboratorData: {
           ...collaboratorData,
           company_name: collaboratorData.companies?.name || 'Unknown Company'
-        }
+        },
+        producerData: null
       };
     }
 
@@ -158,7 +212,8 @@ export const fetchUserRoleAuxiliaryData = async (user: User) => {
       role: 'student',
       profileData,
       companyData: null,
-      collaboratorData: null
+      collaboratorData: null,
+      producerData: null
     };
 
   } catch (error) {
@@ -167,7 +222,8 @@ export const fetchUserRoleAuxiliaryData = async (user: User) => {
       role: 'student',
       profileData: null,
       companyData: null,
-      collaboratorData: null
+      collaboratorData: null,
+      producerData: null
     };
   }
 };
