@@ -1,4 +1,3 @@
-
 export interface LessonFormData {
   title: string;
   content?: string;
@@ -8,4 +7,11 @@ export interface LessonFormData {
   image_url?: string;
   video_file_url?: string;
   material_url?: string;
+}
+
+export interface LessonViewProps {
+  lessonId: string;
+  courseId: string;
+  companyId?: string;
+  aiConfigurationId?: string;
 }
