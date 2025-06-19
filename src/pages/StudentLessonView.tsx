@@ -70,6 +70,9 @@ const StudentLessonView = () => {
   // Get user's company_id from company_users table or provide fallback
   const companyId = user?.user_metadata?.company_id || '';
 
+  // Check if lesson has video content
+  const hasVideo = currentLesson.video_url || currentLesson.video_file_url;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header with Sidebar Trigger */}
@@ -96,8 +99,8 @@ const StudentLessonView = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Video Player */}
-            {currentLesson.video_url && (
+            {/* Video Player or No Video Message */}
+            {hasVideo ? (
               <Card>
                 <CardContent className="p-0">
                   <VideoPlayer
@@ -105,6 +108,18 @@ const StudentLessonView = () => {
                     course={course}
                     onTimeUpdate={handleTimeUpdate}
                   />
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="text-gray-400 mb-4">
+                    <BookOpen className="mx-auto h-16 w-16" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Esta lição não possui vídeo</h3>
+                  <p className="text-gray-600">
+                    O conteúdo desta lição está disponível no texto abaixo.
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -149,11 +164,18 @@ const StudentLessonView = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Lesson Progress */}
-            <LessonProgress 
-              currentLesson={studentLesson}
-              watchTime={watchTime}
-              duration={duration}
-            />
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Progresso</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LessonProgress 
+                  currentLesson={studentLesson}
+                  watchTime={watchTime}
+                  duration={duration}
+                />
+              </CardContent>
+            </Card>
 
             {/* Lesson Navigation */}
             <LessonNavigation

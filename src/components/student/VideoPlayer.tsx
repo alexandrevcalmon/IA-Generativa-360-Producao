@@ -20,10 +20,22 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   const { debouncedMutate } = useDebouncedLessonProgress();
 
   const videoUrl = currentLesson.video_file_url || currentLesson.video_url;
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -155,18 +167,20 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
   return (
     <div 
       className="relative bg-black rounded-lg overflow-hidden group"
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
+      onMouseEnter={() => !isMobile && setShowControls(true)}
+      onMouseLeave={() => !isMobile && setShowControls(false)}
+      onTouchStart={() => isMobile && setShowControls(true)}
     >
       <video
         ref={videoRef}
         className="w-full aspect-video"
         src={videoUrl}
         onClick={togglePlay}
+        playsInline
       />
       
       {/* Controls Overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 ${showControls || !isPlaying || isMobile ? 'opacity-100' : 'opacity-0'}`}>
         
         {/* Play/Pause Button (Center) */}
         {!isPlaying && (
@@ -174,18 +188,18 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
             <Button
               onClick={togglePlay}
               size="lg"
-              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-4"
+              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-3 md:p-4 touch-manipulation"
             >
-              <Play className="h-8 w-8" />
+              <Play className="h-6 w-6 md:h-8 md:w-8" />
             </Button>
           </div>
         )}
 
         {/* Bottom Controls */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3">
+        <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4 space-y-2 md:space-y-3">
           {/* Progress Bar */}
           <div className="flex items-center space-x-2">
-            <span className="text-white text-sm font-mono">
+            <span className="text-white text-xs md:text-sm font-mono">
               {formatTime(currentTime)}
             </span>
             <Slider
@@ -195,19 +209,19 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
               step={1}
               className="flex-1"
             />
-            <span className="text-white text-sm font-mono">
+            <span className="text-white text-xs md:text-sm font-mono">
               {formatTime(duration)}
             </span>
           </div>
 
           {/* Control Buttons */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 md:space-x-2">
               <Button
                 onClick={togglePlay}
                 size="sm"
                 variant="ghost"
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 touch-manipulation p-2"
               >
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
@@ -216,46 +230,49 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
                 onClick={() => skip(-10)}
                 size="sm"
                 variant="ghost"
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 touch-manipulation p-2"
               >
                 <RotateCcw className="h-4 w-4" />
-                <span className="ml-1 text-xs">10s</span>
+                <span className="ml-1 text-xs hidden md:inline">10s</span>
               </Button>
 
               <Button
                 onClick={() => skip(10)}
                 size="sm"
                 variant="ghost"
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 touch-manipulation p-2"
               >
                 <RotateCw className="h-4 w-4" />
-                <span className="ml-1 text-xs">10s</span>
+                <span className="ml-1 text-xs hidden md:inline">10s</span>
               </Button>
 
-              <div className="flex items-center space-x-2 ml-4">
-                <Button
-                  onClick={toggleMute}
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20"
-                >
-                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                </Button>
-                <Slider
-                  value={[isMuted ? 0 : volume]}
-                  onValueChange={handleVolumeChange}
-                  max={1}
-                  step={0.1}
-                  className="w-20"
-                />
-              </div>
+              {/* Volume controls - hidden on mobile */}
+              {!isMobile && (
+                <div className="flex items-center space-x-2 ml-4">
+                  <Button
+                    onClick={toggleMute}
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20"
+                  >
+                    {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                  </Button>
+                  <Slider
+                    value={[isMuted ? 0 : volume]}
+                    onValueChange={handleVolumeChange}
+                    max={1}
+                    step={0.1}
+                    className="w-20"
+                  />
+                </div>
+              )}
             </div>
 
             <Button
               onClick={toggleFullscreen}
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 touch-manipulation p-2"
             >
               <Maximize className="h-4 w-4" />
             </Button>
