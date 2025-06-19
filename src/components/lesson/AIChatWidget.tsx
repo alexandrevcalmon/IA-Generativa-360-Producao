@@ -36,15 +36,35 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
     sendMessageMutation
   } = useChatMessages();
 
+  console.log('AIChatWidget render:', {
+    isOpen,
+    inputMessage,
+    currentSessionId,
+    messagesCount: messages.length,
+    isDisabled: sendMessageMutation.isPending || !currentSessionId
+  });
+
   const handleOpenChat = () => {
+    console.log('Opening chat...');
     setIsOpen(true);
     if (!currentSessionId && sessions.length === 0) {
       handleCreateSession();
     }
   };
 
+  const handleInputChange = (value: string) => {
+    console.log('Input changed in widget:', value);
+    setInputMessage(value);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting message:', inputMessage);
+    
+    if (!inputMessage.trim() || !currentSessionId) {
+      console.log('Cannot submit: empty message or no session');
+      return;
+    }
     
     await handleSendMessage(
       inputMessage,
@@ -79,35 +99,42 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
             onClose={() => setIsOpen(false)}
           />
           
-          <CardContent className="flex-1 flex flex-col p-3 space-y-2">
+          <CardContent className="flex-1 flex flex-col p-0 space-y-0">
             {/* Context Indicator */}
-            <ChatContextIndicator
-              lessonId={lessonId}
-              materialsCount={materials.length}
-            />
+            {lessonId && materials.length > 0 && (
+              <div className="p-3 pb-0">
+                <ChatContextIndicator
+                  lessonId={lessonId}
+                  materialsCount={materials.length}
+                />
+              </div>
+            )}
 
             {/* Messages Area */}
-            <ChatMessages
-              messages={messages}
-              isLoading={sendMessageMutation.isPending}
-            />
+            <div className="flex-1 p-3 pb-0">
+              <ChatMessages
+                messages={messages}
+                isLoading={sendMessageMutation.isPending}
+              />
+            </div>
 
-            {/* Input Area */}
-            <ChatInput
-              inputMessage={inputMessage}
-              onInputChange={setInputMessage}
-              onSubmit={handleSubmit}
-              isDisabled={sendMessageMutation.isPending || !currentSessionId}
-              lessonId={lessonId}
-            />
-
-            {!currentSessionId && (
-              <div className="text-center">
+            {/* Input Area - Always at bottom */}
+            {currentSessionId ? (
+              <ChatInput
+                inputMessage={inputMessage}
+                onInputChange={handleInputChange}
+                onSubmit={handleSubmit}
+                isDisabled={sendMessageMutation.isPending}
+                lessonId={lessonId}
+              />
+            ) : (
+              <div className="p-3 border-t bg-white">
                 <Button
                   onClick={handleCreateSession}
                   variant="outline"
                   size="sm"
                   disabled={createSessionMutation.isPending}
+                  className="w-full"
                 >
                   {createSessionMutation.isPending ? (
                     <>

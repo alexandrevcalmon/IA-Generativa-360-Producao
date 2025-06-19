@@ -12,22 +12,45 @@ export const ChatInput = ({
   isDisabled, 
   lessonId 
 }: ChatInputProps) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Form submitted with message:', inputMessage);
+    onSubmit(e);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('Input value changed:', e.target.value);
+    onInputChange(e.target.value);
+  };
+
+  console.log('ChatInput render:', { 
+    inputMessage, 
+    isDisabled, 
+    hasLessonId: !!lessonId,
+    inputLength: inputMessage?.length || 0
+  });
+
   return (
-    <form onSubmit={onSubmit} className="flex gap-2">
-      <Input
-        value={inputMessage}
-        onChange={(e) => onInputChange(e.target.value)}
-        placeholder={lessonId ? "Pergunte sobre a lição..." : "Digite sua pergunta..."}
-        className="flex-1 text-sm"
-        disabled={isDisabled}
-      />
-      <Button
-        type="submit"
-        size="sm"
-        disabled={!inputMessage.trim() || isDisabled}
-      >
-        <Send className="h-4 w-4" />
-      </Button>
-    </form>
+    <div className="border-t bg-white p-3">
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <Input
+          value={inputMessage || ''}
+          onChange={handleInputChange}
+          placeholder={lessonId ? "Pergunte sobre a lição..." : "Digite sua pergunta..."}
+          className="flex-1 text-sm"
+          disabled={isDisabled}
+          autoComplete="off"
+          autoFocus={false}
+        />
+        <Button
+          type="submit"
+          size="sm"
+          disabled={!inputMessage?.trim() || isDisabled}
+          className="px-3"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+      </form>
+    </div>
   );
 };
