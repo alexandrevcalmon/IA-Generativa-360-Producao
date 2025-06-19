@@ -32,6 +32,23 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
 
   const videoUrl = currentLesson.video_file_url || currentLesson.video_url;
 
+  const handleVideoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log('Video clicked');
+    if (isMobile) {
+      setShowControls(!showControls);
+    } else {
+      togglePlay();
+    }
+  };
+
+  const handleCenterPlayClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Center play button clicked');
+    togglePlay();
+  };
+
   if (!videoUrl) {
     return (
       <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
@@ -49,23 +66,24 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
     >
       <video
         ref={videoRef}
-        className="w-full aspect-video object-contain"
+        className="w-full aspect-video object-contain cursor-pointer"
         src={videoUrl}
-        onClick={togglePlay}
+        onClick={handleVideoClick}
         playsInline
         preload="metadata"
       />
       
       {/* Controls Overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300 ${showControls || !isPlaying || isMobile ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 pointer-events-none ${showControls || !isPlaying || isMobile ? 'opacity-100' : 'opacity-0'}`}>
         
         {/* Play/Pause Button (Center) */}
         {!isPlaying && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
             <Button
-              onClick={togglePlay}
+              onClick={handleCenterPlayClick}
               size="lg"
-              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-4 sm:p-5 lg:p-6 touch-manipulation backdrop-blur-sm min-h-[56px] min-w-[56px] sm:min-h-[64px] sm:min-w-[64px]"
+              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-4 sm:p-5 lg:p-6 touch-manipulation backdrop-blur-sm min-h-[64px] min-w-[64px] sm:min-h-[72px] sm:min-w-[72px] lg:min-h-[80px] lg:min-w-[80px]"
+              aria-label="Reproduzir vídeo"
             >
               <Play className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10" />
             </Button>

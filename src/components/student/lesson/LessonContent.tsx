@@ -10,6 +10,10 @@ interface LessonContentProps {
 }
 
 export const LessonContent = ({ currentLesson, currentModule }: LessonContentProps) => {
+  const handleDownloadClick = () => {
+    console.log('Download material clicked');
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
@@ -36,7 +40,12 @@ export const LessonContent = ({ currentLesson, currentModule }: LessonContentPro
         {currentLesson.material_url && (
           <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
             <h3 className="font-semibold mb-3 text-sm sm:text-base">Material de Apoio</h3>
-            <Button asChild variant="outline" className="w-full sm:w-auto h-11 touch-manipulation">
+            <Button 
+              asChild 
+              variant="outline" 
+              className="w-full sm:w-auto h-12 sm:h-14 touch-manipulation font-medium"
+              onClick={handleDownloadClick}
+            >
               <a href={currentLesson.material_url} target="_blank" rel="noopener noreferrer">
                 <Download className="h-4 w-4 mr-2" />
                 Download do Material

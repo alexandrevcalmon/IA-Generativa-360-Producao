@@ -13,6 +13,20 @@ interface LessonNavigationProps {
 export const LessonNavigation = ({ courseId, prevLesson, nextLesson }: LessonNavigationProps) => {
   const navigate = useNavigate();
 
+  const handlePrevClick = () => {
+    console.log('Previous lesson clicked:', prevLesson?.id);
+    if (prevLesson) {
+      navigate(`/student/courses/${courseId}/lessons/${prevLesson.id}`);
+    }
+  };
+
+  const handleNextClick = () => {
+    console.log('Next lesson clicked:', nextLesson?.id);
+    if (nextLesson) {
+      navigate(`/student/courses/${courseId}/lessons/${nextLesson.id}`);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
@@ -22,8 +36,8 @@ export const LessonNavigation = ({ courseId, prevLesson, nextLesson }: LessonNav
         {prevLesson && (
           <Button 
             variant="outline" 
-            className="w-full justify-start text-sm h-11 touch-manipulation"
-            onClick={() => navigate(`/student/courses/${courseId}/lessons/${prevLesson.id}`)}
+            className="w-full justify-start text-sm h-12 sm:h-14 touch-manipulation font-medium"
+            onClick={handlePrevClick}
           >
             <ArrowLeft className="h-4 w-4 mr-2 flex-shrink-0" />
             <span className="truncate">Aula Anterior</span>
@@ -32,8 +46,8 @@ export const LessonNavigation = ({ courseId, prevLesson, nextLesson }: LessonNav
         
         {nextLesson && (
           <Button 
-            className="w-full justify-start text-sm h-11 touch-manipulation"
-            onClick={() => navigate(`/student/courses/${courseId}/lessons/${nextLesson.id}`)}
+            className="w-full justify-start text-sm h-12 sm:h-14 touch-manipulation font-medium"
+            onClick={handleNextClick}
           >
             <span className="truncate">Próxima Aula</span>
             <ArrowLeft className="h-4 w-4 ml-2 rotate-180 flex-shrink-0" />
