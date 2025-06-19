@@ -15,12 +15,24 @@ export const ChatInput = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Form submitted with message:', inputMessage);
-    onSubmit(e);
+    if (inputMessage?.trim() && !isDisabled) {
+      onSubmit(e);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('Input value changed:', e.target.value);
     onInputChange(e.target.value);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (inputMessage?.trim() && !isDisabled) {
+        const fakeEvent = new Event('submit') as any;
+        handleSubmit(fakeEvent);
+      }
+    }
   };
 
   console.log('ChatInput render:', { 
@@ -36,6 +48,7 @@ export const ChatInput = ({
         <Input
           value={inputMessage || ''}
           onChange={handleInputChange}
+          onKeyPress={handleKeyPress}
           placeholder={lessonId ? "Pergunte sobre a lição..." : "Digite sua pergunta..."}
           className="flex-1 text-sm"
           disabled={isDisabled}
@@ -46,7 +59,7 @@ export const ChatInput = ({
           type="submit"
           size="sm"
           disabled={!inputMessage?.trim() || isDisabled}
-          className="px-3"
+          className="px-3 flex-shrink-0"
         >
           <Send className="h-4 w-4" />
         </Button>

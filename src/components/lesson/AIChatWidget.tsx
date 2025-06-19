@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useLessonMaterials } from '@/hooks/useLessonMaterials';
 import { useAuth } from '@/hooks/auth';
@@ -93,16 +93,18 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
 
       {/* Chat Widget */}
       {isOpen && (
-        <Card className="fixed bottom-4 right-4 w-80 h-96 shadow-xl z-50 flex flex-col">
+        <Card className="fixed bottom-4 right-4 w-80 h-[500px] shadow-xl z-50 flex flex-col">
+          {/* Header - Fixed at top */}
           <ChatHeader
             lessonId={lessonId}
             onClose={() => setIsOpen(false)}
           />
           
-          <CardContent className="flex-1 flex flex-col p-0 space-y-0">
-            {/* Context Indicator */}
+          {/* Content area - Takes remaining space */}
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Context Indicator - Only show when there are materials */}
             {lessonId && materials.length > 0 && (
-              <div className="p-3 pb-0">
+              <div className="px-3 pt-2 flex-shrink-0">
                 <ChatContextIndicator
                   lessonId={lessonId}
                   materialsCount={materials.length}
@@ -110,44 +112,46 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
               </div>
             )}
 
-            {/* Messages Area */}
-            <div className="flex-1 p-3 pb-0">
+            {/* Messages Area - Scrollable flex area */}
+            <div className="flex-1 min-h-0 px-3 py-2">
               <ChatMessages
                 messages={messages}
                 isLoading={sendMessageMutation.isPending}
               />
             </div>
 
-            {/* Input Area - Always at bottom */}
-            {currentSessionId ? (
-              <ChatInput
-                inputMessage={inputMessage}
-                onInputChange={handleInputChange}
-                onSubmit={handleSubmit}
-                isDisabled={sendMessageMutation.isPending}
-                lessonId={lessonId}
-              />
-            ) : (
-              <div className="p-3 border-t bg-white">
-                <Button
-                  onClick={handleCreateSession}
-                  variant="outline"
-                  size="sm"
-                  disabled={createSessionMutation.isPending}
-                  className="w-full"
-                >
-                  {createSessionMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Iniciando...
-                    </>
-                  ) : (
-                    'Iniciar Conversa'
-                  )}
-                </Button>
-              </div>
-            )}
-          </CardContent>
+            {/* Input Area - Fixed at bottom */}
+            <div className="flex-shrink-0">
+              {currentSessionId ? (
+                <ChatInput
+                  inputMessage={inputMessage}
+                  onInputChange={handleInputChange}
+                  onSubmit={handleSubmit}
+                  isDisabled={sendMessageMutation.isPending}
+                  lessonId={lessonId}
+                />
+              ) : (
+                <div className="p-3 border-t bg-white">
+                  <Button
+                    onClick={handleCreateSession}
+                    variant="outline"
+                    size="sm"
+                    disabled={createSessionMutation.isPending}
+                    className="w-full"
+                  >
+                    {createSessionMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Iniciando...
+                      </>
+                    ) : (
+                      'Iniciar Conversa'
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </Card>
       )}
     </>
