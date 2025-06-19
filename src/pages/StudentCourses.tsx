@@ -23,9 +23,9 @@ const StudentCourses = () => {
           title="Catálogo de Cursos"
           subtitle="Carregando..."
         />
-        <div className="flex-1 overflow-auto p-4 md:p-6 bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50">
+        <div className="flex-1 overflow-auto p-4 md:p-6 bg-gray-50">
           <div className="flex items-center justify-center h-64">
-            <div className="text-lg text-amber-700">Carregando cursos...</div>
+            <div className="text-lg text-gray-600">Carregando cursos...</div>
           </div>
         </div>
       </div>
@@ -41,7 +41,7 @@ const StudentCourses = () => {
         <CourseViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
       </StudentPageHeader>
 
-      <div className="flex-1 overflow-auto p-4 md:p-6 bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50">
+      <div className="flex-1 overflow-auto p-4 md:p-6 bg-gray-50">
         <div className="space-y-6">
           <CourseSearchFilters categories={categories} levels={levels} />
           <StudentCourseTabs 

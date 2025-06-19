@@ -40,7 +40,7 @@ export const StudentCourseCard = ({ course, isListView = false, index }: Student
   };
 
   return (
-    <Card className={`border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${isListView ? 'flex flex-col sm:flex-row' : ''}`}>
+    <Card className={`hover-lift transition-all duration-200 ${isListView ? 'flex flex-col sm:flex-row' : ''}`}>
       <div className={`${isListView ? 'w-full sm:w-48 flex-shrink-0' : 'w-full'}`}>
         <div className={`relative ${isListView ? 'h-48 sm:h-32' : 'h-48'} overflow-hidden ${isListView ? 'rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none' : 'rounded-t-lg'}`}>
           <img 
@@ -56,7 +56,7 @@ export const StudentCourseCard = ({ course, isListView = false, index }: Student
             }}
           />
           {course.progress_percentage > 0 && (
-            <Badge className="absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white border-0">
+            <Badge className="absolute top-2 right-2 bg-green-500">
               {course.progress_percentage === 100 ? 'Concluído' : `${Math.round(course.progress_percentage)}%`}
             </Badge>
           )}
@@ -67,39 +67,39 @@ export const StudentCourseCard = ({ course, isListView = false, index }: Student
         <CardHeader className={`p-4 ${isListView ? 'pb-2' : ''}`}>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle className={`${isListView ? 'text-lg' : 'text-xl'} mb-2 line-clamp-2 text-amber-800`}>
+              <CardTitle className={`${isListView ? 'text-lg' : 'text-xl'} mb-2 line-clamp-2`}>
                 {course.title}
               </CardTitle>
-              <CardDescription className={`${isListView ? 'line-clamp-2' : 'line-clamp-3'} mb-3 text-sm text-amber-600`}>
+              <CardDescription className={`${isListView ? 'line-clamp-2' : 'line-clamp-3'} mb-3 text-sm`}>
                 {course.description}
               </CardDescription>
             </div>
           </div>
           
           <div className="flex flex-wrap gap-2 mb-3">
-            <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 bg-amber-100">{course.category}</Badge>
-            <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 bg-amber-100">{course.difficulty_level}</Badge>
+            <Badge variant="outline" className="text-xs">{course.category}</Badge>
+            <Badge variant="outline" className="text-xs">{course.difficulty_level}</Badge>
           </div>
         </CardHeader>
 
         <CardContent className={`p-4 pt-0 ${isListView ? '' : ''}`}>
           <div className={`${isListView ? 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4' : 'space-y-3'}`}>
             <div className={`${isListView ? 'flex flex-wrap gap-4 text-sm' : 'space-y-2 text-sm'}`}>
-              <div className="flex items-center text-amber-600">
+              <div className="flex items-center text-gray-600">
                 <Clock className="h-4 w-4 mr-1" />
                 {course.estimated_hours}h
               </div>
-              <div className="flex items-center text-amber-600">
+              <div className="flex items-center text-gray-600">
                 <BookOpen className="h-4 w-4 mr-1" />
                 {course.modules?.length || 0} módulos
               </div>
-              <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 bg-amber-100">
+              <Badge variant="outline" className="text-xs">
                 {course.difficulty_level}
               </Badge>
             </div>
             
             <div className={`${isListView ? 'flex items-center gap-2' : 'flex justify-between items-center'}`}>
-              <Button asChild className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white text-sm px-4 py-2 shadow-lg">
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2">
                 <Link to={`/student/courses/${course.id}`}>
                   {course.progress_percentage > 0 ? 'Continuar' : 'Começar Curso'}
                 </Link>
@@ -109,11 +109,11 @@ export const StudentCourseCard = ({ course, isListView = false, index }: Student
           
           {course.progress_percentage > 0 && course.progress_percentage < 100 && (
             <div className="mt-4">
-              <div className="flex justify-between text-sm mb-1 text-amber-700">
+              <div className="flex justify-between text-sm mb-1">
                 <span>Progresso</span>
                 <span>{Math.round(course.progress_percentage)}%</span>
               </div>
-              <Progress value={course.progress_percentage} className="h-2 bg-amber-100 [&>div]:bg-gradient-to-r [&>div]:from-amber-500 [&>div]:to-yellow-500" />
+              <Progress value={course.progress_percentage} className="h-2" />
             </div>
           )}
         </CardContent>

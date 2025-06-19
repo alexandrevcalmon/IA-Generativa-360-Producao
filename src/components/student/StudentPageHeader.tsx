@@ -9,15 +9,15 @@ interface StudentPageHeaderProps {
 
 export const StudentPageHeader = ({ title, subtitle, children }: StudentPageHeaderProps) => {
   return (
-    <div className="bg-gradient-to-r from-amber-600 to-yellow-600 border-b border-amber-700 p-4 md:p-6 shadow-lg">
+    <div className="bg-white border-b p-4 md:p-6">
       <div className="flex items-center gap-4">
-        <SidebarTrigger className="flex md:hidden text-white hover:bg-white/10" />
+        <SidebarTrigger className="flex md:hidden" />
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-white">{title}</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h1>
               {subtitle && (
-                <p className="text-sm md:text-base text-amber-100 mt-1">{subtitle}</p>
+                <p className="text-sm md:text-base text-gray-600 mt-1">{subtitle}</p>
               )}
             </div>
             {children && (

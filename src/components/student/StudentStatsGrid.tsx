@@ -16,49 +16,49 @@ export const StudentStatsGrid = ({
   totalPoints 
 }: StudentStatsGridProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
-      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg hover:shadow-xl transition-shadow">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-amber-700">Cursos em Andamento</p>
-              <p className="text-2xl font-bold text-amber-800">{coursesInProgress}</p>
+              <p className="text-sm text-gray-600">Cursos em Andamento</p>
+              <p className="text-2xl font-bold text-gray-900">{coursesInProgress}</p>
             </div>
-            <BookOpen className="h-8 w-8 text-amber-600" />
+            <BookOpen className="h-8 w-8 text-blue-600" />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg hover:shadow-xl transition-shadow">
+      <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-amber-700">Cursos Concluídos</p>
-              <p className="text-2xl font-bold text-amber-800">{completedCourses}</p>
+              <p className="text-sm text-gray-600">Cursos Concluídos</p>
+              <p className="text-2xl font-bold text-gray-900">{completedCourses}</p>
             </div>
             <Award className="h-8 w-8 text-green-600" />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg hover:shadow-xl transition-shadow">
+      <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-amber-700">Horas Estudadas</p>
-              <p className="text-2xl font-bold text-amber-800">{Math.round(hoursStudied)}h</p>
+              <p className="text-sm text-gray-600">Horas Estudadas</p>
+              <p className="text-2xl font-bold text-gray-900">{Math.round(hoursStudied)}h</p>
             </div>
-            <Clock className="h-8 w-8 text-amber-600" />
+            <Clock className="h-8 w-8 text-purple-600" />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg hover:shadow-xl transition-shadow">
+      <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-amber-700">Total de Pontos</p>
-              <p className="text-2xl font-bold text-amber-800">{totalPoints}</p>
+              <p className="text-sm text-gray-600">Total de Pontos</p>
+              <p className="text-2xl font-bold text-gray-900">{totalPoints}</p>
             </div>
             <Star className="h-8 w-8 text-yellow-600" />
           </div>
