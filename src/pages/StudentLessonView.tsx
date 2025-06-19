@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Clock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,19 +11,28 @@ import { LessonProgress } from '@/components/student/LessonProgress';
 import { StudentLessonHeader } from '@/components/student/StudentLessonHeader';
 import { AIChatWidget } from '@/components/lesson/AIChatWidget';
 import { useLessons } from '@/hooks/useLessons';
-import { useStudentProgress } from '@/hooks/useStudentProgress';
+import { useUpdateLessonProgress } from '@/hooks/useStudentProgress';
 import { useAuth } from '@/hooks/useAuth';
+import { useStudentCourses } from '@/hooks/useStudentCourses';
 
 const StudentLessonView = () => {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [watchTime, setWatchTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   
   const { data: lessons, isLoading: lessonsLoading } = useLessons(courseId);
-  const { markLessonCompleted, updateLessonProgress } = useStudentProgress();
+  const { data: studentCourse } = useStudentCourses();
+  const updateProgress = useUpdateLessonProgress();
 
   const currentLesson = lessons?.find(lesson => lesson.id === lessonId);
   const currentIndex = lessons?.findIndex(lesson => lesson.id === lessonId) || 0;
+  const course = studentCourse?.find(c => c.id === courseId);
+
+  // Find previous and next lessons
+  const prevLesson = currentIndex > 0 ? lessons?.[currentIndex - 1] : undefined;
+  const nextLesson = currentIndex < (lessons?.length || 0) - 1 ? lessons?.[currentIndex + 1] : undefined;
 
   useEffect(() => {
     if (!courseId || !lessonId) {
@@ -31,37 +40,37 @@ const StudentLessonView = () => {
     }
   }, [courseId, lessonId, navigate]);
 
-  const handleProgress = (watchTimeSeconds: number) => {
-    if (lessonId && user) {
-      updateLessonProgress.mutate({
-        lessonId,
-        watchTimeSeconds,
-        userId: user.id,
-      });
-    }
-  };
-
-  const handleComplete = () => {
-    if (lessonId && user) {
-      markLessonCompleted.mutate({
-        lessonId,
-        userId: user.id,
-      });
-    }
+  const handleTimeUpdate = (currentTime: number, videoDuration: number) => {
+    setWatchTime(currentTime);
+    setDuration(videoDuration);
   };
 
   if (lessonsLoading) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   }
 
-  if (!currentLesson) {
+  if (!currentLesson || !course) {
     return <div className="flex items-center justify-center h-screen">Lição não encontrada</div>;
   }
+
+  // Convert lesson to StudentLesson format for components
+  const studentLesson = {
+    ...currentLesson,
+    completed: false, // This would come from progress data
+    watch_time_seconds: 0, // This would come from progress data
+  };
+
+  // Get user's company_id from company_users table or provide fallback
+  const companyId = user?.user_metadata?.company_id || '';
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <StudentLessonHeader lesson={currentLesson} onBack={() => navigate(`/student/courses/${courseId}`)} />
+      <StudentLessonHeader 
+        currentLesson={studentLesson} 
+        course={course} 
+        courseId={courseId!} 
+      />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -72,9 +81,9 @@ const StudentLessonView = () => {
               <Card>
                 <CardContent className="p-0">
                   <VideoPlayer
-                    videoUrl={currentLesson.video_url}
-                    onProgress={handleProgress}
-                    onComplete={handleComplete}
+                    currentLesson={studentLesson}
+                    course={course}
+                    onTimeUpdate={handleTimeUpdate}
                   />
                 </CardContent>
               </Card>
@@ -115,13 +124,17 @@ const StudentLessonView = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Lesson Progress */}
-            <LessonProgress lesson={currentLesson} />
+            <LessonProgress 
+              currentLesson={studentLesson}
+              watchTime={watchTime}
+              duration={duration}
+            />
 
             {/* Lesson Navigation */}
             <LessonNavigation
-              lessons={lessons || []}
-              currentIndex={currentIndex}
               courseId={courseId!}
+              prevLesson={prevLesson ? { id: prevLesson.id, title: prevLesson.title } : undefined}
+              nextLesson={nextLesson ? { id: nextLesson.id, title: nextLesson.title } : undefined}
             />
           </div>
         </div>
@@ -130,7 +143,7 @@ const StudentLessonView = () => {
       {/* AI Chat Widget */}
       <AIChatWidget
         lessonId={lessonId!}
-        companyId={user?.company_id || ''}
+        companyId={companyId}
         aiConfigurationId={undefined} // This could be fetched from company settings
       />
     </div>
