@@ -74,8 +74,8 @@ export function StudentSidebar() {
   const { user, userRole } = useAuth();
 
   return (
-    <Sidebar className="border-r">
-      <SidebarHeader className="border-b p-4">
+    <Sidebar className="border-r border-sidebar-border bg-sidebar">
+      <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2">
           <img 
             src="/logo-calmon-academy.png" 
@@ -83,8 +83,8 @@ export function StudentSidebar() {
             className="h-8 w-8 flex-shrink-0"
           />
           <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-sm truncate">Calmon Academy</span>
-            <span className="text-xs text-muted-foreground capitalize truncate">
+            <span className="font-semibold text-sm text-sidebar-foreground truncate">Calmon Academy</span>
+            <span className="text-xs text-sidebar-foreground/70 capitalize truncate">
               {userRole === 'collaborator' ? 'Colaborador' : 'Estudante'}
             </span>
           </div>
@@ -93,12 +93,12 @@ export function StudentSidebar() {
       
       <SidebarContent className="overflow-y-auto">
         <SidebarGroup>
-          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground/70">Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {studentMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                     <Link to={item.url}>
                       <item.icon className="h-4 w-4 flex-shrink-0" />
                       <span className="truncate">{item.title}</span>
@@ -111,7 +111,7 @@ export function StudentSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-2">
+      <SidebarFooter className="border-t border-sidebar-border p-2">
         <UserMenu />
       </SidebarFooter>
     </Sidebar>
