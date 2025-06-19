@@ -32,6 +32,56 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
       return;
     }
 
+    // Check for role-specific route access violations
+    const isOnProducerRoute = location.pathname.startsWith('/producer');
+    const isOnCompanyRoute = location.pathname.startsWith('/company');
+    const isOnStudentRoute = location.pathname.startsWith('/student');
+
+    // Handle unauthorized access to producer routes
+    if (isOnProducerRoute && userRole !== 'producer') {
+      console.warn('🚫 Unauthorized producer route access:', {
+        user: user.email,
+        userRole,
+        attemptedRoute: location.pathname
+      });
+      
+      // Redirect to appropriate dashboard based on role
+      switch (userRole) {
+        case 'company':
+          navigate('/company/dashboard', { replace: true });
+          break;
+        case 'student':
+        case 'collaborator':
+          navigate('/student/dashboard', { replace: true });
+          break;
+        default:
+          navigate('/auth?error=unauthorized_access', { replace: true });
+      }
+      return;
+    }
+
+    // Handle unauthorized access to company routes
+    if (isOnCompanyRoute && userRole !== 'company') {
+      console.warn('🚫 Unauthorized company route access:', {
+        user: user.email,
+        userRole,
+        attemptedRoute: location.pathname
+      });
+      
+      switch (userRole) {
+        case 'producer':
+          navigate('/producer/dashboard', { replace: true });
+          break;
+        case 'student':
+        case 'collaborator':
+          navigate('/student/dashboard', { replace: true });
+          break;
+        default:
+          navigate('/auth?error=unauthorized_access', { replace: true });
+      }
+      return;
+    }
+
     // Don't redirect if user is already on the correct dashboard
     const isOnCorrectDashboard = 
       (userRole === 'producer' && location.pathname.startsWith('/producer')) ||
@@ -126,11 +176,11 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
           break;
         default:
           console.warn('❓ Unknown role, redirecting to auth. Role:', userRole);
-          navigate('/auth', { replace: true });
+          navigate('/auth?error=unknown_role', { replace: true });
       }
     } else {
       console.warn('⚠️ User has no role assigned, redirecting to auth');
-      navigate('/auth', { replace: true });
+      navigate('/auth?error=no_role', { replace: true });
     }
   }, [user, userRole, authLoading, needsPasswordChange, navigate, location.pathname, location.search]);
 }

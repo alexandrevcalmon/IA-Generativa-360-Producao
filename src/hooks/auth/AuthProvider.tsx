@@ -40,6 +40,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isProducer = userRole === 'producer';
   const isCompany = userRole === 'company';
   const isStudent = userRole === 'student';
+  const isCollaborator = userRole === 'collaborator';
+
+  console.log('🔍 AuthProvider current state:', {
+    user: user?.email,
+    userRole,
+    isProducer,
+    isCompany,
+    isStudent,
+    isCollaborator,
+    loading: loading || !isInitialized
+  });
 
   const value = {
     user,

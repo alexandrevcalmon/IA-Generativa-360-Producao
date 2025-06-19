@@ -5,8 +5,7 @@ import { AppSidebar } from './AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const ProdutorLayout = () => {
-  // Add debugging to see what's happening
-  console.log('ProdutorLayout: Attempting to use auth hook...');
+  console.log('🏭 ProdutorLayout: Initializing...');
   
   let user, loading, userRole;
   
@@ -15,15 +14,18 @@ const ProdutorLayout = () => {
     user = authData.user;
     loading = authData.loading;
     userRole = authData.userRole;
-    console.log('ProdutorLayout: Auth hook successful', { user: user?.email, userRole, loading });
+    console.log('🏭 ProdutorLayout: Auth data retrieved', { 
+      user: user?.email, 
+      userRole, 
+      loading 
+    });
   } catch (error) {
-    console.error('ProdutorLayout: Error using auth hook:', error);
-    // If we can't access auth context, redirect to auth page
-    return <Navigate to="/auth" replace />;
+    console.error('🏭 ProdutorLayout: Error using auth hook:', error);
+    return <Navigate to="/auth?error=auth_context_error" replace />;
   }
 
   if (loading) {
-    console.log('ProdutorLayout: Auth loading...');
+    console.log('🏭 ProdutorLayout: Auth loading...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Carregando...</div>
@@ -32,29 +34,37 @@ const ProdutorLayout = () => {
   }
 
   if (!user) {
-    console.log('ProdutorLayout: No user, redirecting to auth');
-    return <Navigate to="/auth" replace />;
+    console.log('🏭 ProdutorLayout: No user, redirecting to auth');
+    return <Navigate to="/auth?error=no_user" replace />;
   }
 
+  // Enhanced role checking with better error messages
   if (userRole !== 'producer') {
-    console.log('ProdutorLayout: User role mismatch', { userRole, expected: 'producer' });
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
-          <p className="text-gray-600 mb-4">Você não tem permissão para acessar esta área.</p>
-          <button 
-            onClick={() => window.location.href = '/auth'}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Fazer Login
-          </button>
-        </div>
-      </div>
-    );
+    console.warn('🏭 ProdutorLayout: Access denied', { 
+      userEmail: user.email,
+      userId: user.id,
+      currentRole: userRole, 
+      requiredRole: 'producer' 
+    });
+    
+    // Redirect based on actual user role
+    const redirectPath = (() => {
+      switch (userRole) {
+        case 'company':
+          return '/company/dashboard';
+        case 'student':
+        case 'collaborator':
+          return '/student/dashboard';
+        default:
+          return '/auth';
+      }
+    })();
+
+    console.log('🏭 ProdutorLayout: Redirecting to appropriate dashboard:', redirectPath);
+    return <Navigate to={redirectPath} replace />;
   }
 
-  console.log('ProdutorLayout: Rendering producer layout for user:', user.email);
+  console.log('🏭 ProdutorLayout: Access granted for producer:', user.email);
 
   return (
     <SidebarProvider>
