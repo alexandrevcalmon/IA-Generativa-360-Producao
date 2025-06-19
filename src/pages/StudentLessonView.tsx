@@ -53,11 +53,12 @@ const StudentLessonView = () => {
     return <div className="flex items-center justify-center h-screen">Lição não encontrada</div>;
   }
 
-  // Convert lesson to StudentLesson format for components
+  // Convert lesson to StudentLesson format for components - ensuring all required properties are present
   const studentLesson = {
     ...currentLesson,
     completed: false, // This would come from progress data
     watch_time_seconds: 0, // This would come from progress data
+    video_file_url: currentLesson.video_file_url || null, // Ensure this is explicitly set
   };
 
   // Get user's company_id from company_users table or provide fallback
