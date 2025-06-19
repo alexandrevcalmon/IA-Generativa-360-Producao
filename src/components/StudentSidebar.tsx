@@ -77,7 +77,6 @@ export function StudentSidebar() {
 
   // Always use Calmon Academy logo, but display collaborator info
   const displayInfo = {
-    logo: "/logo-calmon-academy.png", // Always Calmon Academy logo
     platformTitle: "Calmon Academy",
     userName: collaboratorData?.name || user?.email || "Usuário",
     companyName: collaboratorData?.company?.name,
@@ -88,11 +87,6 @@ export function StudentSidebar() {
     <Sidebar className="border-r border-yellow-200 bg-gradient-to-b from-yellow-50 to-amber-50">
       <SidebarHeader className="border-b border-yellow-200 p-4 bg-gradient-to-r from-amber-100 to-yellow-100">
         <div className="flex items-center gap-2">
-          <img 
-            src={displayInfo.logo}
-            alt={displayInfo.platformTitle}
-            className="h-8 w-8 flex-shrink-0 object-contain"
-          />
           <div className="flex flex-col min-w-0">
             <span className="font-semibold text-sm text-amber-800 truncate">
               {displayInfo.platformTitle}
