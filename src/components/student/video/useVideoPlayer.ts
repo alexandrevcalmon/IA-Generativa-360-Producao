@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { useDebouncedLessonProgress } from '@/hooks/progress';
+import { useSimplifiedLessonProgress } from '@/hooks/progress/useSimplifiedLessonProgress';
 import { StudentLesson, StudentCourse } from '@/hooks/useStudentCourses';
 
 interface UseVideoPlayerProps {
@@ -19,7 +19,7 @@ export const useVideoPlayer = ({ currentLesson, course, onTimeUpdate }: UseVideo
   const [showControls, setShowControls] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
-  const { debouncedMutate } = useDebouncedLessonProgress();
+  const { mutate: updateProgress } = useSimplifiedLessonProgress();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -44,12 +44,6 @@ export const useVideoPlayer = ({ currentLesson, course, onTimeUpdate }: UseVideo
       if (onTimeUpdate) {
         onTimeUpdate(current, video.duration);
       }
-
-      // Update progress with debouncing
-      debouncedMutate({
-        lessonId: currentLesson.id,
-        watchTimeSeconds: Math.floor(current),
-      });
     };
 
     const handleLoadedMetadata = () => {
@@ -65,7 +59,7 @@ export const useVideoPlayer = ({ currentLesson, course, onTimeUpdate }: UseVideo
       setIsPlaying(false);
       
       // Mark lesson as completed when video ends
-      debouncedMutate({
+      updateProgress({
         lessonId: currentLesson.id,
         completed: true,
         watchTimeSeconds: Math.floor(video.duration),
@@ -81,7 +75,7 @@ export const useVideoPlayer = ({ currentLesson, course, onTimeUpdate }: UseVideo
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('ended', handleEnded);
     };
-  }, [currentLesson.id, currentLesson.watch_time_seconds, debouncedMutate, onTimeUpdate]);
+  }, [currentLesson.id, currentLesson.watch_time_seconds, updateProgress, onTimeUpdate]);
 
   const togglePlay = () => {
     const video = videoRef.current;

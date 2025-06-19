@@ -1,3 +1,4 @@
+
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast } from "sonner"
 
@@ -10,6 +11,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      position="bottom-right"
+      offset={16}
+      visibleToasts={3}
+      closeButton
+      richColors
       toastOptions={{
         classNames: {
           toast:
@@ -19,7 +25,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+          closeButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground hover:group-[.toast]:bg-muted-foreground hover:group-[.toast]:text-muted",
         },
+        style: {
+          zIndex: 9997, // Below chat widget but above most other content
+        }
       }}
       {...props}
     />

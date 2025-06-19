@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, FileText } from 'lucide-react';
 import { StudentLesson } from '@/hooks/useStudentCourses';
-import { useUpdateLessonProgress, useDebouncedLessonProgress } from '@/hooks/useStudentProgress';
+import { useSimplifiedLessonProgress } from '@/hooks/progress/useSimplifiedLessonProgress';
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/auth';
 
@@ -15,8 +15,7 @@ interface LessonProgressProps {
 
 export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonProgressProps) => {
   const { user } = useAuth();
-  const updateProgress = useUpdateLessonProgress();
-  const { debouncedMutate } = useDebouncedLessonProgress();
+  const { mutate: updateProgress, resetCompletionToasts } = useSimplifiedLessonProgress();
   
   // Refs to track state and prevent unnecessary updates
   const lastSavedTimeRef = useRef<number>(0);
@@ -46,7 +45,7 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
       console.log('🎯 Auto-completing lesson at 95% progress');
       autoCompletedRef.current = true;
       
-      updateProgress.mutate({
+      updateProgress({
         lessonId: currentLesson.id,
         completed: true,
         watchTimeSeconds: Math.floor(watchTime)
@@ -56,7 +55,7 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
     lastProgressPercentageRef.current = progressPercentage;
   }, [currentLesson, progressPercentage, duration, watchTime, updateProgress, user?.id]);
 
-  // Improved periodic save with better timing and conflict prevention
+  // Periodic save with better timing
   useEffect(() => {
     if (
       currentLesson && 
@@ -64,24 +63,24 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
       watchTime > 0 && 
       !autoCompletedRef.current
     ) {
-      const currentSaveInterval = Math.floor(watchTime / 45);
+      const currentSaveInterval = Math.floor(watchTime / 60); // Save every minute
       
       if (
         currentSaveInterval > saveIntervalRef.current &&
         Math.floor(watchTime) !== lastSavedTimeRef.current
       ) {
-        console.log('💾 Saving lesson progress (debounced) at interval:', currentSaveInterval, 'time:', Math.floor(watchTime));
+        console.log('💾 Saving lesson progress at interval:', currentSaveInterval);
         lastSavedTimeRef.current = Math.floor(watchTime);
         saveIntervalRef.current = currentSaveInterval;
         
-        debouncedMutate({
+        updateProgress({
           lessonId: currentLesson.id,
           completed: currentLesson.completed || false,
           watchTimeSeconds: Math.floor(watchTime)
         });
       }
     }
-  }, [watchTime, currentLesson, debouncedMutate, user?.id]);
+  }, [watchTime, currentLesson, updateProgress, user?.id]);
 
   // Reset all tracking refs when lesson changes
   useEffect(() => {
@@ -92,8 +91,8 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
     saveIntervalRef.current = 0;
     
     // Reset completion toasts for this lesson
-    updateProgress.resetCompletionToasts?.(currentLesson?.id);
-  }, [currentLesson?.id, updateProgress]);
+    resetCompletionToasts(currentLesson?.id);
+  }, [currentLesson?.id, resetCompletionToasts]);
 
   return (
     <>

@@ -4,7 +4,8 @@ export {
   useUpdateLessonProgress, 
   useMarkLessonComplete, 
   useEnrollInCourse, 
-  useDebouncedLessonProgress 
+  useDebouncedLessonProgress,
+  useSimplifiedLessonProgress
 } from './progress';
 
 // Add the missing useStudentProgress alias

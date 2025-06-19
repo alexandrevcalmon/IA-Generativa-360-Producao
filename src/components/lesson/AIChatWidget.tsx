@@ -36,16 +36,7 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
     sendMessageMutation
   } = useChatMessages();
 
-  console.log('AIChatWidget render:', {
-    isOpen,
-    inputMessage,
-    currentSessionId,
-    messagesCount: messages.length,
-    isDisabled: sendMessageMutation.isPending || !currentSessionId
-  });
-
   const handleOpenChat = () => {
-    console.log('Opening chat...');
     setIsOpen(true);
     if (!currentSessionId && sessions.length === 0) {
       handleCreateSession();
@@ -53,16 +44,13 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
   };
 
   const handleInputChange = (value: string) => {
-    console.log('Input changed in widget:', value);
     setInputMessage(value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Submitting message:', inputMessage);
     
     if (!inputMessage.trim() || !currentSessionId) {
-      console.log('Cannot submit: empty message or no session');
       return;
     }
     
@@ -91,7 +79,7 @@ export const AIChatWidget = ({ lessonId, companyId, className }: AIChatWidgetPro
         />
       )}
 
-      {/* Chat Widget - Enhanced z-index to stay above toasts */}
+      {/* Chat Widget - Highest z-index to stay above everything */}
       {isOpen && (
         <Card className="fixed bottom-4 right-4 w-80 h-[500px] shadow-xl z-[9999] flex flex-col">
           {/* Header - Fixed at top */}
