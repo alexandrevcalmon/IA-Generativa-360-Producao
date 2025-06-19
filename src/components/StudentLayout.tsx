@@ -4,9 +4,11 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { StudentSidebar } from './StudentSidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/auth';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const StudentLayout = () => {
   const { user, loading, userRole } = useAuth();
+  const isMobile = useIsMobile();
 
   if (loading) {
     return (
@@ -39,7 +41,7 @@ const StudentLayout = () => {
   }
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="min-h-screen flex w-full bg-background">
         <StudentSidebar />
         <SidebarInset className="flex-1 flex flex-col">
