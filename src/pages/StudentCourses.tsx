@@ -16,10 +16,6 @@ import {
   BookOpen,
   Search,
   Clock,
-  Users,
-  Star,
-  Play,
-  Award,
   Filter,
   Grid,
   List
@@ -27,6 +23,7 @@ import {
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useStudentCourses } from "@/hooks/useStudentCourses";
+import { StudentPageHeader } from "@/components/student/StudentPageHeader";
 
 const StudentCourses = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -53,11 +50,9 @@ const StudentCourses = () => {
   };
 
   const getImageUrl = (course: any, index: number) => {
-    // Log para debug das imagens
     console.log('Course thumbnail URL:', course.thumbnail_url);
     console.log('Course title:', course.title);
     
-    // Se há thumbnail_url, tenta usar ela. Se falhar, usa placeholder
     if (course.thumbnail_url) {
       return course.thumbnail_url;
     }
@@ -66,9 +61,9 @@ const StudentCourses = () => {
   };
 
   const CourseCard = ({ course, isListView = false, index }: { course: any, isListView?: boolean, index: number }) => (
-    <Card className={`hover-lift transition-all duration-200 ${isListView ? 'flex flex-row' : ''}`}>
-      <div className={`${isListView ? 'w-48 flex-shrink-0' : 'w-full'}`}>
-        <div className={`relative ${isListView ? 'h-32' : 'h-48'} overflow-hidden ${isListView ? 'rounded-l-lg rounded-tr-none' : 'rounded-t-lg'}`}>
+    <Card className={`hover-lift transition-all duration-200 ${isListView ? 'flex flex-col sm:flex-row' : ''}`}>
+      <div className={`${isListView ? 'w-full sm:w-48 flex-shrink-0' : 'w-full'}`}>
+        <div className={`relative ${isListView ? 'h-48 sm:h-32' : 'h-48'} overflow-hidden ${isListView ? 'rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none' : 'rounded-t-lg'}`}>
           <img 
             src={getImageUrl(course, index)}
             alt={course.title}
@@ -90,13 +85,13 @@ const StudentCourses = () => {
       </div>
       
       <div className={`${isListView ? 'flex-1' : ''}`}>
-        <CardHeader className={isListView ? 'pb-2' : ''}>
+        <CardHeader className={`p-4 ${isListView ? 'pb-2' : ''}`}>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle className={`${isListView ? 'text-lg' : 'text-xl'} mb-2`}>
+              <CardTitle className={`${isListView ? 'text-lg' : 'text-xl'} mb-2 line-clamp-2`}>
                 {course.title}
               </CardTitle>
-              <CardDescription className={`${isListView ? 'line-clamp-2' : 'line-clamp-3'} mb-3`}>
+              <CardDescription className={`${isListView ? 'line-clamp-2' : 'line-clamp-3'} mb-3 text-sm`}>
                 {course.description}
               </CardDescription>
             </div>
@@ -108,9 +103,9 @@ const StudentCourses = () => {
           </div>
         </CardHeader>
 
-        <CardContent className={isListView ? 'pt-0' : ''}>
-          <div className={`${isListView ? 'flex items-center justify-between' : 'space-y-3'}`}>
-            <div className={`${isListView ? 'flex items-center space-x-4 text-sm' : 'space-y-2 text-sm'}`}>
+        <CardContent className={`p-4 pt-0 ${isListView ? '' : ''}`}>
+          <div className={`${isListView ? 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4' : 'space-y-3'}`}>
+            <div className={`${isListView ? 'flex flex-wrap gap-4 text-sm' : 'space-y-2 text-sm'}`}>
               <div className="flex items-center text-gray-600">
                 <Clock className="h-4 w-4 mr-1" />
                 {course.estimated_hours}h
@@ -119,22 +114,17 @@ const StudentCourses = () => {
                 <BookOpen className="h-4 w-4 mr-1" />
                 {course.modules?.length || 0} módulos
               </div>
+              <Badge variant="outline" className="text-xs">
+                {course.difficulty_level}
+              </Badge>
             </div>
             
-            <div className={`${isListView ? 'flex items-center space-x-3' : 'flex justify-between items-center'}`}>
-              <div className={`${isListView ? 'text-right' : ''}`}>
-                <Badge variant="outline" className="mb-2">
-                  {course.difficulty_level}
-                </Badge>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Link to={`/student/courses/${course.id}`}>
-                    {course.progress_percentage > 0 ? 'Continuar' : 'Começar Curso'}
-                  </Link>
-                </Button>
-              </div>
+            <div className={`${isListView ? 'flex items-center gap-2' : 'flex justify-between items-center'}`}>
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2">
+                <Link to={`/student/courses/${course.id}`}>
+                  {course.progress_percentage > 0 ? 'Continuar' : 'Começar Curso'}
+                </Link>
+              </Button>
             </div>
           </div>
           
@@ -155,11 +145,11 @@ const StudentCourses = () => {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
-        <div className="bg-white border-b p-6">
-          <h1 className="text-2xl font-bold text-gray-900">Catálogo de Cursos</h1>
-          <p className="text-gray-600">Carregando...</p>
-        </div>
-        <div className="flex-1 overflow-auto p-6 bg-gray-50">
+        <StudentPageHeader
+          title="Catálogo de Cursos"
+          subtitle="Carregando..."
+        />
+        <div className="flex-1 overflow-auto p-4 md:p-6 bg-gray-50">
           <div className="flex items-center justify-center h-64">
             <div className="text-lg text-gray-600">Carregando cursos...</div>
           </div>
@@ -170,39 +160,34 @@ const StudentCourses = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <header className="border-b bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Catálogo de Cursos</h1>
-            <p className="text-gray-600">Explore nossa biblioteca completa de conhecimento</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+      <StudentPageHeader
+        title="Catálogo de Cursos"
+        subtitle="Explore nossa biblioteca completa de conhecimento"
+      >
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('grid')}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
         </div>
-      </header>
+      </StudentPageHeader>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto p-6 bg-gray-50">
+      <div className="flex-1 overflow-auto p-4 md:p-6 bg-gray-50">
         <div className="space-y-6">
           {/* Search and Filters */}
           <Card>
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-4">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col gap-4">
                 <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -212,9 +197,9 @@ const StudentCourses = () => {
                     />
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Select defaultValue="Todos">
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full sm:w-48">
                       <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
                     <SelectContent>
@@ -227,7 +212,7 @@ const StudentCourses = () => {
                   </Select>
                   
                   <Select defaultValue="Todos os níveis">
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full sm:w-48">
                       <SelectValue placeholder="Nível" />
                     </SelectTrigger>
                     <SelectContent>
@@ -239,7 +224,7 @@ const StudentCourses = () => {
                     </SelectContent>
                   </Select>
                   
-                  <Button variant="outline">
+                  <Button variant="outline" className="w-full sm:w-auto">
                     <Filter className="h-4 w-4 mr-2" />
                     Filtros
                   </Button>
@@ -250,20 +235,22 @@ const StudentCourses = () => {
 
           {/* Course Tabs */}
           <Tabs defaultValue="all" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4">
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
-              <TabsTrigger value="completed">Concluídos</TabsTrigger>
-              <TabsTrigger value="bookmarked">Favoritos</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto">
+              <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4">
+                <TabsTrigger value="all">Todos</TabsTrigger>
+                <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
+                <TabsTrigger value="completed">Concluídos</TabsTrigger>
+                <TabsTrigger value="bookmarked">Favoritos</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="all" className="space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-lg font-semibold">
                   {courses?.length || 0} cursos disponíveis
                 </h2>
                 <Select defaultValue="newest">
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-full sm:w-48">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -276,7 +263,7 @@ const StudentCourses = () => {
               </div>
 
               {courses && courses.length > 0 ? (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
+                <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6' : 'space-y-4'}>
                   {courses.map((course, index) => (
                     <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
                   ))}
@@ -295,13 +282,13 @@ const StudentCourses = () => {
             </TabsContent>
 
             <TabsContent value="in-progress" className="space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-lg font-semibold">
                   {inProgressCourses.length} cursos em andamento
                 </h2>
               </div>
 
-              <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6' : 'space-y-4'}>
                 {inProgressCourses.map((course, index) => (
                   <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
                 ))}
@@ -309,13 +296,13 @@ const StudentCourses = () => {
             </TabsContent>
 
             <TabsContent value="completed" className="space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-lg font-semibold">
                   {completedCourses.length} cursos concluídos
                 </h2>
               </div>
 
-              <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6' : 'space-y-4'}>
                 {completedCourses.map((course, index) => (
                   <CourseCard key={course.id} course={course} isListView={viewMode === 'list'} index={index} />
                 ))}
