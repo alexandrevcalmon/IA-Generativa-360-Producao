@@ -10,10 +10,8 @@ import { LessonNavigation } from '@/components/student/LessonNavigation';
 import { LessonProgress } from '@/components/student/LessonProgress';
 import { StudentLessonHeader } from '@/components/student/StudentLessonHeader';
 import { AIChatWidget } from '@/components/lesson/AIChatWidget';
-import { useLessons } from '@/hooks/useLessons';
-import { useUpdateLessonProgress } from '@/hooks/useStudentProgress';
 import { useAuth } from '@/hooks/useAuth';
-import { useStudentCourses } from '@/hooks/useStudentCourses';
+import { useLessonInCourse } from '@/hooks/useLessonInCourse';
 
 const StudentLessonView = () => {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
@@ -22,17 +20,15 @@ const StudentLessonView = () => {
   const [watchTime, setWatchTime] = useState(0);
   const [duration, setDuration] = useState(0);
   
-  const { data: lessons, isLoading: lessonsLoading } = useLessons(courseId);
-  const { data: studentCourse } = useStudentCourses();
-  const updateProgress = useUpdateLessonProgress();
-
-  const currentLesson = lessons?.find(lesson => lesson.id === lessonId);
-  const currentIndex = lessons?.findIndex(lesson => lesson.id === lessonId) || 0;
-  const course = studentCourse?.find(c => c.id === courseId);
-
-  // Find previous and next lessons
-  const prevLesson = currentIndex > 0 ? lessons?.[currentIndex - 1] : undefined;
-  const nextLesson = currentIndex < (lessons?.length || 0) - 1 ? lessons?.[currentIndex + 1] : undefined;
+  const { 
+    lesson: currentLesson, 
+    module: currentModule, 
+    course, 
+    prevLesson, 
+    nextLesson, 
+    isLoading,
+    error 
+  } = useLessonInCourse(courseId!, lessonId!);
 
   useEffect(() => {
     if (!courseId || !lessonId) {
@@ -45,21 +41,29 @@ const StudentLessonView = () => {
     setDuration(videoDuration);
   };
 
-  if (lessonsLoading) {
+  if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   }
 
-  if (!currentLesson || !course) {
+  if (error) {
+    return <div className="flex items-center justify-center h-screen">Erro ao carregar: {error.message}</div>;
+  }
+
+  if (!course) {
+    return <div className="flex items-center justify-center h-screen">Curso não encontrado</div>;
+  }
+
+  if (!currentLesson) {
     return <div className="flex items-center justify-center h-screen">Lição não encontrada</div>;
   }
 
-  // Convert lesson to StudentLesson format for components - ensuring all required properties are present
+  // Convert lesson to StudentLesson format for components
   const studentLesson = {
     ...currentLesson,
-    completed: false, // This would come from progress data
-    watch_time_seconds: 0, // This would come from progress data
-    video_file_url: currentLesson.video_file_url || null, // Ensure this is explicitly set
-    material_url: currentLesson.material_url || null, // Ensure this is explicitly set
+    completed: currentLesson.completed || false,
+    watch_time_seconds: currentLesson.watch_time_seconds || 0,
+    video_file_url: currentLesson.video_file_url || null,
+    material_url: currentLesson.material_url || null,
   };
 
   // Get user's company_id from company_users table or provide fallback
@@ -98,6 +102,11 @@ const StudentLessonView = () => {
                   <BookOpen className="h-5 w-5" />
                   Conteúdo da Lição
                 </CardTitle>
+                {currentModule && (
+                  <div className="text-sm text-gray-600">
+                    Módulo: {currentModule.title}
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
