@@ -1,3 +1,4 @@
+
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
@@ -46,6 +47,20 @@
     --calmon-secondary: 38 92% 50%; /* Deeper gold */
     --calmon-accent: 48 100% 67%; /* Lighter gold accent */
     --calmon-dark: 25 45% 37%; /* Dark bronze for contrast */
+
+    /* Dark Theme Lesson Colors */
+    --lesson-dark-bg: 220 27% 8%;
+    --lesson-dark-surface: 220 22% 12%;
+    --lesson-dark-elevated: 220 18% 16%;
+    --lesson-primary-blue: 212 100% 60%;
+    --lesson-primary-blue-muted: 212 50% 45%;
+    --lesson-accent-green: 142 76% 45%;
+    --lesson-accent-green-muted: 142 40% 35%;
+    --lesson-text-primary: 0 0% 95%;
+    --lesson-text-secondary: 0 0% 70%;
+    --lesson-text-muted: 0 0% 50%;
+    --lesson-border: 220 15% 20%;
+    --lesson-border-subtle: 220 12% 18%;
   }
 
   .dark {
@@ -97,6 +112,94 @@
 }
 
 @layer components {
+  /* Dark Theme Lesson Styles */
+  .lesson-dark-theme {
+    background: hsl(var(--lesson-dark-bg));
+    color: hsl(var(--lesson-text-primary));
+  }
+
+  .lesson-dark-surface {
+    background: hsl(var(--lesson-dark-surface));
+    border: 1px solid hsl(var(--lesson-border-subtle));
+  }
+
+  .lesson-dark-elevated {
+    background: hsl(var(--lesson-dark-elevated));
+    border: 1px solid hsl(var(--lesson-border));
+  }
+
+  .lesson-dark-header {
+    background: linear-gradient(135deg, hsl(var(--lesson-dark-elevated)) 0%, hsl(var(--lesson-dark-surface)) 100%);
+    border-bottom: 1px solid hsl(var(--lesson-border));
+  }
+
+  .lesson-dark-card {
+    background: hsl(var(--lesson-dark-surface));
+    border: 1px solid hsl(var(--lesson-border-subtle));
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+
+  .lesson-dark-card:hover {
+    background: hsl(var(--lesson-dark-elevated));
+    border-color: hsl(var(--lesson-border));
+  }
+
+  .lesson-primary-accent {
+    background: linear-gradient(135deg, hsl(var(--lesson-primary-blue)) 0%, hsl(var(--lesson-primary-blue-muted)) 100%);
+    color: white;
+  }
+
+  .lesson-success-accent {
+    background: linear-gradient(135deg, hsl(var(--lesson-accent-green)) 0%, hsl(var(--lesson-accent-green-muted)) 100%);
+    color: white;
+  }
+
+  .lesson-text-primary {
+    color: hsl(var(--lesson-text-primary));
+  }
+
+  .lesson-text-secondary {
+    color: hsl(var(--lesson-text-secondary));
+  }
+
+  .lesson-text-muted {
+    color: hsl(var(--lesson-text-muted));
+  }
+
+  .lesson-border {
+    border-color: hsl(var(--lesson-border));
+  }
+
+  .lesson-border-subtle {
+    border-color: hsl(var(--lesson-border-subtle));
+  }
+
+  /* Video Player Dark Theme */
+  .video-dark-controls {
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+  }
+
+  .video-dark-button {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .video-dark-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Progress Bar Dark Theme */
+  .progress-dark {
+    background: hsl(var(--lesson-dark-elevated));
+    border: 1px solid hsl(var(--lesson-border-subtle));
+  }
+
+  .progress-dark-fill {
+    background: linear-gradient(90deg, hsl(var(--lesson-accent-green)) 0%, hsl(var(--lesson-primary-blue)) 100%);
+  }
+
   /* Calmon Academy Brand Gradients */
   .calmon-gradient {
     background: linear-gradient(135deg, hsl(var(--calmon-primary)) 0%, hsl(var(--calmon-secondary)) 50%, hsl(var(--calmon-dark)) 100%);

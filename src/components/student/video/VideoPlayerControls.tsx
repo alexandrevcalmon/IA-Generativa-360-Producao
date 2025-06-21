@@ -77,7 +77,7 @@ export const VideoPlayerControls = ({
             onClick={handlePlayClick}
             size="sm"
             variant="ghost"
-            className="text-white hover:bg-white/20 touch-manipulation min-h-[48px] min-w-[48px] sm:h-12 sm:w-12 lg:h-14 lg:w-14 p-0 rounded-full"
+            className="video-dark-button text-white touch-manipulation min-h-[48px] min-w-[48px] sm:h-12 sm:w-12 lg:h-14 lg:w-14 p-0 rounded-full border-0"
             aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
           >
             {isPlaying ? <Pause className="h-5 w-5 sm:h-6 sm:w-6" /> : <Play className="h-5 w-5 sm:h-6 sm:w-6" />}
@@ -87,7 +87,7 @@ export const VideoPlayerControls = ({
             onClick={handleSkipBackward}
             size="sm"
             variant="ghost"
-            className="text-white hover:bg-white/20 touch-manipulation min-h-[48px] min-w-[48px] sm:h-12 sm:w-12 lg:h-14 lg:w-14 p-0 rounded-full"
+            className="video-dark-button text-white touch-manipulation min-h-[48px] min-w-[48px] sm:h-12 sm:w-12 lg:h-14 lg:w-14 p-0 rounded-full border-0"
             aria-label="Voltar 10 segundos"
           >
             <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -97,7 +97,7 @@ export const VideoPlayerControls = ({
             onClick={handleSkipForward}
             size="sm"
             variant="ghost"
-            className="text-white hover:bg-white/20 touch-manipulation min-h-[48px] min-w-[48px] sm:h-12 sm:w-12 lg:h-14 lg:w-14 p-0 rounded-full"
+            className="video-dark-button text-white touch-manipulation min-h-[48px] min-w-[48px] sm:h-12 sm:w-12 lg:h-14 lg:w-14 p-0 rounded-full border-0"
             aria-label="Avançar 10 segundos"
           >
             <RotateCw className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -120,7 +120,7 @@ export const VideoPlayerControls = ({
           onClick={handleFullscreen}
           size="sm"
           variant="ghost"
-          className="text-white hover:bg-white/20 touch-manipulation min-h-[48px] min-w-[48px] sm:h-12 sm:w-12 lg:h-14 lg:w-14 p-0 rounded-full"
+          className="video-dark-button text-white touch-manipulation min-h-[48px] min-w-[48px] sm:h-12 sm:w-12 lg:h-14 lg:w-14 p-0 rounded-full border-0"
           aria-label="Tela cheia"
         >
           <Maximize className="h-5 w-5 sm:h-6 sm:w-6" />

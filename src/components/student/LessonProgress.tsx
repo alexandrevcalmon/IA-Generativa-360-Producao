@@ -1,11 +1,8 @@
 
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, FileText } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, Clock } from 'lucide-react';
 import { StudentLesson } from '@/hooks/useStudentCourses';
-import { useSimplifiedLessonProgress } from '@/hooks/progress/useSimplifiedLessonProgress';
-import { useEffect, useRef } from 'react';
-import { useAuth } from '@/hooks/auth';
 
 interface LessonProgressProps {
   currentLesson: StudentLesson;
@@ -14,125 +11,67 @@ interface LessonProgressProps {
 }
 
 export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonProgressProps) => {
-  const { user } = useAuth();
-  const { mutate: updateProgress, resetCompletionToasts } = useSimplifiedLessonProgress();
-  
-  // Refs to track state and prevent unnecessary updates
-  const lastSavedTimeRef = useRef<number>(0);
-  const autoCompletedRef = useRef<boolean>(false);
-  const lastProgressPercentageRef = useRef<number>(0);
-  const saveIntervalRef = useRef<number>(0);
-
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const progressPercentage = duration > 0 ? (watchTime / duration) * 100 : 0;
-
-  // Auto-complete lesson when 95% is watched (only once)
-  useEffect(() => {
-    if (
-      currentLesson && 
-      user?.id &&
-      !currentLesson.completed && 
-      !autoCompletedRef.current &&
-      duration > 0 && 
-      progressPercentage >= 95 &&
-      progressPercentage > lastProgressPercentageRef.current
-    ) {
-      console.log('🎯 Auto-completing lesson at 95% progress');
-      autoCompletedRef.current = true;
-      
-      updateProgress({
-        lessonId: currentLesson.id,
-        completed: true,
-        watchTimeSeconds: Math.floor(watchTime)
-      });
-    }
-    
-    lastProgressPercentageRef.current = progressPercentage;
-  }, [currentLesson, progressPercentage, duration, watchTime, updateProgress, user?.id]);
-
-  // Periodic save with better timing
-  useEffect(() => {
-    if (
-      currentLesson && 
-      user?.id &&
-      watchTime > 0 && 
-      !autoCompletedRef.current
-    ) {
-      const currentSaveInterval = Math.floor(watchTime / 60); // Save every minute
-      
-      if (
-        currentSaveInterval > saveIntervalRef.current &&
-        Math.floor(watchTime) !== lastSavedTimeRef.current
-      ) {
-        console.log('💾 Saving lesson progress at interval:', currentSaveInterval);
-        lastSavedTimeRef.current = Math.floor(watchTime);
-        saveIntervalRef.current = currentSaveInterval;
-        
-        updateProgress({
-          lessonId: currentLesson.id,
-          completed: currentLesson.completed || false,
-          watchTimeSeconds: Math.floor(watchTime)
-        });
-      }
-    }
-  }, [watchTime, currentLesson, updateProgress, user?.id]);
-
-  // Reset all tracking refs when lesson changes
-  useEffect(() => {
-    console.log('🔄 Lesson changed, resetting tracking refs');
-    autoCompletedRef.current = false;
-    lastSavedTimeRef.current = 0;
-    lastProgressPercentageRef.current = 0;
-    saveIntervalRef.current = 0;
-    
-    // Reset completion toasts for this lesson
-    resetCompletionToasts(currentLesson?.id);
-  }, [currentLesson?.id, resetCompletionToasts]);
+  const progressPercentage = duration > 0 ? Math.min((watchTime / duration) * 100, 100) : 0;
+  const isCompleted = currentLesson.completed;
 
   return (
-    <>
-      {/* Progress Bar */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-amber-800">Progresso da Aula</span>
-          <span className="text-sm text-amber-600 font-mono">
-            {formatTime(watchTime)} / {formatTime(duration)}
-          </span>
+    <div className="space-y-4">
+      {/* Completion Status */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 lesson-text-muted" />
+          <span className="text-sm lesson-text-secondary">Status da Lição</span>
         </div>
-        <Progress value={progressPercentage} className="h-3 sm:h-4 bg-yellow-100 [&>div]:bg-gradient-to-r [&>div]:from-amber-500 [&>div]:to-yellow-500" />
-        <div className="flex justify-between items-center mt-2">
-          <span className="text-xs sm:text-sm text-amber-600">
-            {progressPercentage.toFixed(1)}% assistido
-          </span>
-          {currentLesson.completed && (
-            <div className="flex items-center text-green-600 text-xs sm:text-sm font-medium">
-              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-              Concluída
-            </div>
+        <Badge className={`${isCompleted ? 'lesson-success-accent' : 'lesson-text-muted bg-transparent border lesson-border'} text-xs`}>
+          {isCompleted ? (
+            <>
+              <CheckCircle className="w-3 h-3 mr-1" />
+              Completa
+            </>
+          ) : (
+            'Em Progresso'
           )}
-        </div>
+        </Badge>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3">
-        {currentLesson.material_url && (
-          <Button 
-            variant="outline" 
-            asChild 
-            className="h-11 touch-manipulation border-2 border-yellow-200 hover:bg-yellow-50 hover:border-yellow-300 text-yellow-700 font-medium"
-          >
-            <a href={currentLesson.material_url} download>
-              <FileText className="h-4 w-4 mr-2" />
-              Material de Apoio
-            </a>
-          </Button>
-        )}
-      </div>
-    </>
+      {/* Progress Bar */}
+      {duration > 0 && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs lesson-text-muted">
+            <span>{formatTime(watchTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+          <div className="progress-dark rounded-full h-2 overflow-hidden">
+            <div 
+              className="progress-dark-fill h-full transition-all duration-300 ease-out"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+          <div className="text-center">
+            <span className="text-xs lesson-text-secondary">
+              {Math.round(progressPercentage)}% assistido
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Watch Time Info */}
+      {currentLesson.watch_time_seconds > 0 && (
+        <div className="pt-2 border-t lesson-border-subtle">
+          <div className="flex items-center justify-between text-xs lesson-text-muted">
+            <span>Tempo total assistido:</span>
+            <span className="font-medium lesson-text-secondary">
+              {formatTime(currentLesson.watch_time_seconds)}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
