@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LessonProgress } from '@/components/student/LessonProgress';
 import { LessonNavigation } from '@/components/student/LessonNavigation';
 import { StudentLesson } from '@/hooks/useStudentCourses';
-import { BarChart3 } from 'lucide-react';
 
 interface LessonSidebarProps {
   currentLesson: StudentLesson;
@@ -25,12 +24,9 @@ export const LessonSidebar = ({
   return (
     <div className="space-y-4 w-full">
       {/* Progress Card */}
-      <Card className="w-full lesson-dark-card border-0 shadow-xl">
-        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 lesson-primary-accent rounded-t-lg">
-          <CardTitle className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Progresso
-          </CardTitle>
+      <Card className="w-full border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg">
+        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-gradient-to-r from-amber-600 to-yellow-600 text-white rounded-t-lg">
+          <CardTitle className="text-base sm:text-lg font-semibold">Progresso</CardTitle>
         </CardHeader>
         <CardContent className="pt-4 px-4 sm:px-6 pb-4 sm:pb-6">
           <LessonProgress 

@@ -74,7 +74,7 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
       />
       
       {/* Controls Overlay */}
-      <div className={`absolute inset-0 video-dark-controls transition-opacity duration-300 pointer-events-none ${showControls || !isPlaying || isMobile ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 pointer-events-none ${showControls || !isPlaying || isMobile ? 'opacity-100' : 'opacity-0'}`}>
         
         {/* Play/Pause Button (Center) */}
         {!isPlaying && (
@@ -82,7 +82,7 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
             <Button
               onClick={handleCenterPlayClick}
               size="lg"
-              className="video-dark-button text-white rounded-full p-4 sm:p-5 lg:p-6 touch-manipulation min-h-[64px] min-w-[64px] sm:min-h-[72px] sm:min-w-[72px] lg:min-h-[80px] lg:min-w-[80px] hover:video-dark-button border-0"
+              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-4 sm:p-5 lg:p-6 touch-manipulation backdrop-blur-sm min-h-[64px] min-w-[64px] sm:min-h-[72px] sm:min-w-[72px] lg:min-h-[80px] lg:min-w-[80px]"
               aria-label="Reproduzir vídeo"
             >
               <Play className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10" />

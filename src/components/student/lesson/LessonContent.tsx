@@ -25,35 +25,35 @@ export const LessonContent = ({ currentLesson, currentModule }: LessonContentPro
   return (
     <div className="space-y-6">
       {/* Main Lesson Content */}
-      <Card className="w-full lesson-dark-card border-0 shadow-xl">
-        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 lesson-primary-accent rounded-t-lg">
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl font-semibold text-white">
+      <Card className="w-full border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 shadow-lg">
+        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-gradient-to-r from-amber-600 to-yellow-600 text-white rounded-t-lg">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl font-semibold">
             <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
             Conteúdo da Lição
           </CardTitle>
           {currentModule && (
-            <div className="text-sm text-white/80 mt-1">
+            <div className="text-sm text-amber-100 mt-1">
               Módulo: {currentModule.title}
             </div>
           )}
         </CardHeader>
         <CardContent className="pt-4 px-4 sm:px-6 pb-4 sm:pb-6">
-          <div className="prose prose-sm sm:prose lg:prose-base max-w-none lesson-text-secondary prose-headings:lesson-text-primary prose-strong:lesson-text-primary prose-a:text-blue-400 prose-a:hover:text-blue-300">
+          <div className="prose prose-sm sm:prose lg:prose-base max-w-none text-gray-700">
             {currentLesson.content ? (
               <div dangerouslySetInnerHTML={{ __html: currentLesson.content }} />
             ) : (
-              <p className="lesson-text-muted text-sm sm:text-base">Nenhum conteúdo adicional disponível.</p>
+              <p className="text-gray-500 text-sm sm:text-base">Nenhum conteúdo adicional disponível.</p>
             )}
           </div>
           
           {/* Legacy Material URL Support */}
           {currentLesson.material_url && (
-            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t lesson-border-subtle">
-              <h3 className="font-semibold mb-3 text-sm sm:text-base lesson-text-primary">Material de Apoio</h3>
+            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-yellow-200">
+              <h3 className="font-semibold mb-3 text-sm sm:text-base text-amber-800">Material de Apoio</h3>
               <Button 
                 asChild 
                 variant="outline" 
-                className="w-full sm:w-auto h-12 sm:h-14 touch-manipulation font-medium border-2 lesson-border hover:lesson-dark-elevated lesson-text-primary hover:lesson-text-primary"
+                className="w-full sm:w-auto h-12 sm:h-14 touch-manipulation font-medium border-2 border-yellow-200 hover:bg-yellow-50 hover:border-yellow-300 text-yellow-700"
                 onClick={handleDownloadClick}
               >
                 <a href={currentLesson.material_url} target="_blank" rel="noopener noreferrer">
@@ -67,21 +67,17 @@ export const LessonContent = ({ currentLesson, currentModule }: LessonContentPro
       </Card>
 
       {/* Lesson Materials Section */}
-      <div className="lesson-materials-dark">
-        <LessonMaterialsSection lessonId={currentLesson.id} />
-      </div>
+      <LessonMaterialsSection lessonId={currentLesson.id} />
 
       {/* Material Upload Section - Only for authorized users */}
       {canUploadMaterials && (
-        <div className="lesson-upload-dark">
-          <LessonMaterialUpload 
-            lessonId={currentLesson.id}
-            onUploadComplete={() => {
-              // Optionally refresh materials or show success message
-              console.log('Materials uploaded successfully');
-            }}
-          />
-        </div>
+        <LessonMaterialUpload 
+          lessonId={currentLesson.id}
+          onUploadComplete={() => {
+            // Optionally refresh materials or show success message
+            console.log('Materials uploaded successfully');
+          }}
+        />
       )}
     </div>
   );

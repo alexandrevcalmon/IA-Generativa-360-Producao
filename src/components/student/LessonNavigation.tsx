@@ -1,8 +1,8 @@
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, Navigation } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 interface LessonNavigationProps {
   courseId: string;
@@ -13,63 +13,46 @@ interface LessonNavigationProps {
 export const LessonNavigation = ({ courseId, prevLesson, nextLesson }: LessonNavigationProps) => {
   const navigate = useNavigate();
 
-  const handlePrevious = () => {
+  const handlePrevClick = () => {
+    console.log('Previous lesson clicked:', prevLesson?.id);
     if (prevLesson) {
       navigate(`/student/courses/${courseId}/lessons/${prevLesson.id}`);
     }
   };
 
-  const handleNext = () => {
+  const handleNextClick = () => {
+    console.log('Next lesson clicked:', nextLesson?.id);
     if (nextLesson) {
       navigate(`/student/courses/${courseId}/lessons/${nextLesson.id}`);
     }
   };
 
-  if (!prevLesson && !nextLesson) {
-    return null;
-  }
-
   return (
-    <Card className="w-full lesson-dark-card border-0 shadow-xl">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Navigation className="h-4 w-4 lesson-text-muted" />
-          <span className="text-sm font-medium lesson-text-primary">Navegação</span>
-        </div>
+    <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 shadow-lg">
+      <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-gradient-to-r from-yellow-600 to-amber-600 text-white rounded-t-lg">
+        <CardTitle className="text-base sm:text-lg font-semibold">Navegação</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-4 px-4 sm:px-6 pb-4 sm:pb-6">
+        {prevLesson && (
+          <Button 
+            variant="outline" 
+            className="w-full justify-start text-sm h-12 sm:h-14 touch-manipulation font-medium border-2 border-yellow-200 hover:bg-yellow-100 hover:border-yellow-300 text-yellow-700"
+            onClick={handlePrevClick}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span className="truncate">Aula Anterior</span>
+          </Button>
+        )}
         
-        <div className="flex flex-col sm:flex-row gap-2">
-          {prevLesson && (
-            <Button
-              onClick={handlePrevious}
-              variant="outline"
-              className="flex-1 h-auto p-3 lesson-border hover:lesson-dark-elevated lesson-text-primary hover:lesson-text-primary border-0"
-            >
-              <div className="flex items-center gap-2 w-full">
-                <ChevronLeft className="h-4 w-4 flex-shrink-0" />
-                <div className="text-left min-w-0 flex-1">
-                  <div className="text-xs lesson-text-muted">Anterior</div>
-                  <div className="text-sm font-medium truncate">{prevLesson.title}</div>
-                </div>
-              </div>
-            </Button>
-          )}
-          
-          {nextLesson && (
-            <Button
-              onClick={handleNext}
-              variant="outline"
-              className="flex-1 h-auto p-3 lesson-primary-accent text-white hover:opacity-90 border-0"
-            >
-              <div className="flex items-center gap-2 w-full">
-                <div className="text-left min-w-0 flex-1">
-                  <div className="text-xs text-white/80">Próxima</div>
-                  <div className="text-sm font-medium truncate">{nextLesson.title}</div>
-                </div>
-                <ChevronRight className="h-4 w-4 flex-shrink-0" />
-              </div>
-            </Button>
-          )}
-        </div>
+        {nextLesson && (
+          <Button 
+            className="w-full justify-start text-sm h-12 sm:h-14 touch-manipulation font-medium bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white shadow-lg"
+            onClick={handleNextClick}
+          >
+            <span className="truncate">Próxima Aula</span>
+            <ArrowLeft className="h-4 w-4 ml-2 rotate-180 flex-shrink-0" />
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

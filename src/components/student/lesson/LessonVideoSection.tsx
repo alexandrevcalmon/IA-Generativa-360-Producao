@@ -15,15 +15,15 @@ export const LessonVideoSection = ({ currentLesson, course, onTimeUpdate }: Less
 
   if (!hasVideo) {
     return (
-      <Card className="w-full lesson-dark-card">
+      <Card className="w-full">
         <CardContent className="p-4 sm:p-6 md:p-8 text-center">
-          <div className="lesson-text-muted mb-3">
+          <div className="text-gray-400 mb-3">
             <BookOpen className="mx-auto h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16" />
           </div>
-          <h3 className="text-sm sm:text-base md:text-lg font-medium lesson-text-primary mb-2">
+          <h3 className="text-sm sm:text-base md:text-lg font-medium text-gray-900 mb-2">
             Esta lição não possui vídeo
           </h3>
-          <p className="text-xs sm:text-sm md:text-base lesson-text-secondary">
+          <p className="text-xs sm:text-sm md:text-base text-gray-600">
             O conteúdo desta lição está disponível no texto abaixo.
           </p>
         </CardContent>
@@ -32,7 +32,7 @@ export const LessonVideoSection = ({ currentLesson, course, onTimeUpdate }: Less
   }
 
   return (
-    <Card className="w-full lesson-dark-card border-0 shadow-2xl">
+    <Card className="w-full">
       <CardContent className="p-0">
         <VideoPlayer
           currentLesson={currentLesson}
