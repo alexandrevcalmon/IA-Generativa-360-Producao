@@ -15,7 +15,7 @@ export function PasswordChangeDialog() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const { changePassword, user, companyUserData } = useAuth();
+  const { changePassword } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,8 +42,8 @@ export function PasswordChangeDialog() {
     setLoading(true);
     
     try {
-      console.log('🔐 Attempting password change for user:', user?.id);
-      const { error } = await changePassword(newPassword, user?.id, companyUserData);
+      console.log('🔐 Attempting password change');
+      const { error } = await changePassword(newPassword);
       
       if (error) {
         toast({

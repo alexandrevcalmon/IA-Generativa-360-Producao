@@ -25,6 +25,7 @@ export function useAuthInitialization() {
     setSession,
     setUser,
     setUserRole,
+    setNeedsPasswordChange,
     setCompanyUserData,
     setLoading,
     setIsInitialized,
