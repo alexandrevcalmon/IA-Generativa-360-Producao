@@ -101,30 +101,46 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
       });
 
       // CRITICAL: Set password change flag FIRST to prevent race conditions
-      setNeedsPasswordChange(auxData.needsPasswordChange || false);
+      const passwordChangeNeeded = auxData.needsPasswordChange || false;
+      console.log('🔐 Setting password change flag:', passwordChangeNeeded);
+      setNeedsPasswordChange(passwordChangeNeeded);
 
       // Set role with fallback
       const finalRole = auxData.role || 'student';
+      console.log('👤 Setting user role:', finalRole);
       setUserRole(finalRole);
 
       // Set company user data based on role
       if (finalRole === 'company') {
+        console.log('🏢 Setting company data');
         setCompanyUserData(auxData.companyData);
       } else if (finalRole === 'collaborator') {
+        console.log('👥 Setting collaborator data');
         setCompanyUserData(auxData.collaboratorData);
       } else {
+        console.log('🎓 Clearing company data for student/producer role');
         setCompanyUserData(null);
       }
+
+      // Add small delay to ensure all state updates are processed
+      setTimeout(() => {
+        console.log('✅ Auth state initialization completed');
+        setLoading(false);
+        setIsInitialized(true);
+      }, 100);
 
     } catch (error) {
       console.error('❌ Error loading user auxiliary data:', error);
       // Set safe defaults on error
+      console.log('🛡️ Setting safe defaults due to error');
       setNeedsPasswordChange(false);
       setUserRole('student');
       setCompanyUserData(null);
-    } finally {
-      setLoading(false);
-      setIsInitialized(true);
+      
+      setTimeout(() => {
+        setLoading(false);
+        setIsInitialized(true);
+      }, 100);
     }
   };
 

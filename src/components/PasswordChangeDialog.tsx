@@ -78,7 +78,7 @@ export function PasswordChangeDialog() {
         console.error('❌ Password change failed:', error);
         toast({
           title: "Erro ao alterar senha",
-          description: error.message,
+          description: error.message || "Ocorreu um erro ao alterar a senha.",
           variant: "destructive",
         });
       } else {
@@ -89,22 +89,24 @@ export function PasswordChangeDialog() {
           description: "Redirecionando para o dashboard...",
         });
 
-        // Add delay to ensure database changes are committed
+        // Add delay to ensure database changes are committed and refresh user data
         setTimeout(async () => {
           try {
+            console.log('🔄 Refreshing user role after password change...');
             await refreshUserRole();
             console.log('✅ User role refreshed after password change');
           } catch (refreshError) {
             console.error('⚠️ Error refreshing user role:', refreshError);
             // Don't show error to user as password change was successful
+            // The system should still work with the updated password
           }
-        }, 1500);
+        }, 2000); // Increased delay to ensure proper state update
       }
     } catch (error: any) {
       console.error('❌ Unexpected error during password change:', error);
       toast({
         title: "Erro inesperado",
-        description: "Ocorreu um erro durante a alteração da senha.",
+        description: "Ocorreu um erro durante a alteração da senha. Tente novamente.",
         variant: "destructive",
       });
     } finally {

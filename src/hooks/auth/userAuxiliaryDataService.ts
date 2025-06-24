@@ -34,15 +34,23 @@ export const createUserAuxiliaryDataService = () => {
         };
       }
 
-      // Second priority: Check if user is a company owner
+      // Second priority: Check if user is a company owner - FIXED: using .maybeSingle()
+      console.log('[UserAuxiliaryDataService] Checking if user is a company owner...');
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('*, needs_password_change')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle(); // FIXED: Changed from .single() to .maybeSingle() to prevent 406 errors
 
-      if (!companyError && companyData) {
-        console.log('[UserAuxiliaryDataService] User is a company owner');
+      if (companyError) {
+        console.error('[UserAuxiliaryDataService] Error querying companies table:', companyError);
+        // Don't throw error, continue with role detection
+      } else if (companyData) {
+        console.log('[UserAuxiliaryDataService] User is a company owner with data:', {
+          companyId: companyData.id,
+          companyName: companyData.name,
+          needsPasswordChange: companyData.needs_password_change
+        });
         
         // Update profiles table to ensure consistency
         await roleManagementService.ensureProfileConsistency(user.id, 'company');
@@ -55,16 +63,21 @@ export const createUserAuxiliaryDataService = () => {
           producerData: null,
           needsPasswordChange: companyData.needs_password_change || false
         };
+      } else {
+        console.log('[UserAuxiliaryDataService] No company data found for user');
       }
 
       // Third priority: Check profiles table
+      console.log('[UserAuxiliaryDataService] Checking profiles table...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single();
+        .maybeSingle(); // FIXED: Using .maybeSingle() for consistency
 
-      if (!profileError && profileData?.role && profileData.role !== 'student') {
+      if (profileError) {
+        console.error('[UserAuxiliaryDataService] Error querying profiles table:', profileError);
+      } else if (profileData?.role && profileData.role !== 'student') {
         console.log(`[UserAuxiliaryDataService] Found role in profiles: ${profileData.role}`);
         return {
           role: profileData.role,
@@ -76,7 +89,8 @@ export const createUserAuxiliaryDataService = () => {
         };
       }
 
-      // Fourth priority: Check if user is a company collaborator
+      // Fourth priority: Check if user is a company collaborator - FIXED: using .maybeSingle()
+      console.log('[UserAuxiliaryDataService] Checking if user is a company collaborator...');
       const { data: collaboratorData, error: collaboratorError } = await supabase
         .from('company_users')
         .select(`
@@ -85,10 +99,18 @@ export const createUserAuxiliaryDataService = () => {
           companies!inner(name)
         `)
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle(); // FIXED: Changed from .single() to .maybeSingle()
 
-      if (!collaboratorError && collaboratorData) {
-        console.log('[UserAuxiliaryDataService] User is a company collaborator');
+      if (collaboratorError) {
+        console.error('[UserAuxiliaryDataService] Error querying company_users table:', collaboratorError);
+        // Don't throw error, continue with default role
+      } else if (collaboratorData) {
+        console.log('[UserAuxiliaryDataService] User is a company collaborator with data:', {
+          collaboratorId: collaboratorData.id,
+          companyName: collaboratorData.companies?.name,
+          needsPasswordChange: collaboratorData.needs_password_change
+        });
+        
         return {
           role: 'collaborator',
           profileData,
@@ -100,13 +122,17 @@ export const createUserAuxiliaryDataService = () => {
           producerData: null,
           needsPasswordChange: collaboratorData.needs_password_change || false
         };
+      } else {
+        console.log('[UserAuxiliaryDataService] No collaborator data found for user');
       }
 
-      // Default to student role
-      console.log('[UserAuxiliaryDataService] Defaulting to student role');
+      // Default to student role - ensure profile exists
+      console.log('[UserAuxiliaryDataService] Defaulting to student role and ensuring profile exists...');
+      await roleManagementService.ensureProfileConsistency(user.id, 'student');
+      
       return {
         role: 'student',
-        profileData,
+        profileData: { role: 'student' },
         companyData: null,
         collaboratorData: null,
         producerData: null,
@@ -114,10 +140,18 @@ export const createUserAuxiliaryDataService = () => {
       };
 
     } catch (error) {
-      console.error('[UserAuxiliaryDataService] Error fetching auxiliary data:', error);
+      console.error('[UserAuxiliaryDataService] Critical error fetching auxiliary data:', error);
+      
+      // Ensure we always return a safe default even on critical errors
+      try {
+        await roleManagementService.ensureProfileConsistency(user.id, 'student');
+      } catch (profileError) {
+        console.error('[UserAuxiliaryDataService] Failed to ensure profile consistency:', profileError);
+      }
+      
       return {
         role: 'student',
-        profileData: null,
+        profileData: { role: 'student' },
         companyData: null,
         collaboratorData: null,
         producerData: null,

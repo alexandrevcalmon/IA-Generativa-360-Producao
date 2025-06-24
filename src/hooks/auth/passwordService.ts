@@ -51,7 +51,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     }
   };
 
-  const changePassword = async (newPassword: string, userId?: string, companyUserData?: any) => {
+  const changePassword = async (newPassword: string) => {
     try {
       console.log('🔐 Starting password change process...');
       
@@ -96,14 +96,16 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     try {
       console.log('🔄 Updating password change flags for user:', userId);
       
-      // Check and update company record
+      // Check and update company record using maybeSingle()
       const { data: company, error: companyQueryError } = await supabase
         .from('companies')
         .select('id, needs_password_change')
         .eq('auth_user_id', userId)
-        .maybeSingle();
+        .maybeSingle(); // FIXED: Using maybeSingle() to prevent 406 errors
       
-      if (!companyQueryError && company?.needs_password_change) {
+      if (companyQueryError) {
+        console.error('⚠️ Error querying company record:', companyQueryError);
+      } else if (company?.needs_password_change) {
         console.log('📊 Updating company password change flag...');
         const { error: updateError } = await supabase
           .from('companies')
@@ -120,14 +122,16 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         }
       }
       
-      // Check and update collaborator record
+      // Check and update collaborator record using maybeSingle()
       const { data: collaborator, error: collaboratorQueryError } = await supabase
         .from('company_users')
         .select('id, needs_password_change')
         .eq('auth_user_id', userId)
-        .maybeSingle();
+        .maybeSingle(); // FIXED: Using maybeSingle() to prevent 406 errors
       
-      if (!collaboratorQueryError && collaborator?.needs_password_change) {
+      if (collaboratorQueryError) {
+        console.error('⚠️ Error querying collaborator record:', collaboratorQueryError);
+      } else if (collaborator?.needs_password_change) {
         console.log('📊 Updating collaborator password change flag...');
         const { error: updateError } = await supabase
           .from('company_users')
