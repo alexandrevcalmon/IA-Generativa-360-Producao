@@ -84,50 +84,48 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
     setSession(session);
     setUser(session.user);
     
-    // Fetch role data asynchronously with improved error handling
-    setTimeout(async () => {
-      try {
-        const user = session.user as User;
-        console.log('👤 Determining role and fetching auxiliary data for:', user.email);
-        
-        const auxData = await fetchUserRoleAuxiliaryData(user);
-        
-        console.log('🔍 Role determination result:', {
-          userEmail: user.email,
-          determinedRole: auxData.role,
-          needsPasswordChange: auxData.needsPasswordChange,
-          hasCompanyData: !!auxData.companyData,
-          hasCollaboratorData: !!auxData.collaboratorData,
-          hasProfileData: !!auxData.profileData
-        });
+    // Fetch role data asynchronously with improved error handling and proper ordering
+    try {
+      const user = session.user as User;
+      console.log('👤 Determining role and fetching auxiliary data for:', user.email);
+      
+      const auxData = await fetchUserRoleAuxiliaryData(user);
+      
+      console.log('🔍 Role determination result:', {
+        userEmail: user.email,
+        determinedRole: auxData.role,
+        needsPasswordChange: auxData.needsPasswordChange,
+        hasCompanyData: !!auxData.companyData,
+        hasCollaboratorData: !!auxData.collaboratorData,
+        hasProfileData: !!auxData.profileData
+      });
 
-        // Set role with fallback
-        const finalRole = auxData.role || 'student';
-        setUserRole(finalRole);
+      // CRITICAL: Set password change flag FIRST to prevent race conditions
+      setNeedsPasswordChange(auxData.needsPasswordChange || false);
 
-        // Set password change requirement
-        setNeedsPasswordChange(auxData.needsPasswordChange || false);
+      // Set role with fallback
+      const finalRole = auxData.role || 'student';
+      setUserRole(finalRole);
 
-        // Set company user data based on role
-        if (finalRole === 'company') {
-          setCompanyUserData(auxData.companyData);
-        } else if (finalRole === 'collaborator') {
-          setCompanyUserData(auxData.collaboratorData);
-        } else {
-          setCompanyUserData(null);
-        }
-
-      } catch (error) {
-        console.error('❌ Error loading user auxiliary data:', error);
-        // Set safe defaults on error
-        setUserRole('student');
-        setNeedsPasswordChange(false);
+      // Set company user data based on role
+      if (finalRole === 'company') {
+        setCompanyUserData(auxData.companyData);
+      } else if (finalRole === 'collaborator') {
+        setCompanyUserData(auxData.collaboratorData);
+      } else {
         setCompanyUserData(null);
-      } finally {
-        setLoading(false);
-        setIsInitialized(true);
       }
-    }, 0);
+
+    } catch (error) {
+      console.error('❌ Error loading user auxiliary data:', error);
+      // Set safe defaults on error
+      setNeedsPasswordChange(false);
+      setUserRole('student');
+      setCompanyUserData(null);
+    } finally {
+      setLoading(false);
+      setIsInitialized(true);
+    }
   };
 
   return { handleAuthStateChange };

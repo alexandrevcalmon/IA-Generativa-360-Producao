@@ -52,7 +52,7 @@ export default function Auth() {
     handleSubmit
   } = useAuthForm();
 
-  // Handle redirects for authenticated users
+  // Handle redirects for authenticated users (but not during password change)
   useAuthRedirects({ user, userRole, authLoading, needsPasswordChange });
 
   // Check for error messages in URL
@@ -83,11 +83,14 @@ export default function Auth() {
     return <AuthLoadingScreen />;
   }
 
-  // Priority 1: Show password change dialog if user needs to change password
+  // CRITICAL: Priority check for password change dialog - this must come before redirects
   if (!authLoading && user && needsPasswordChange) {
-    console.log('🔐 Showing password change dialog for user:', user.email);
+    console.log('🔐 Auth page: Showing password change dialog for user:', user.email);
     return <PasswordChangeDialog />;
   }
+
+  // If user is authenticated and doesn't need password change, the redirect hook will handle navigation
+  // This component should only render the login form for unauthenticated users
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">

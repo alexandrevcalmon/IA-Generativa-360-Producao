@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,9 +14,38 @@ export function PasswordChangeDialog() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   
-  const { changePassword, refreshUserRole } = useAuth();
+  const { changePassword, refreshUserRole, needsPasswordChange, user } = useAuth();
   const { toast } = useToast();
+
+  // Guard against premature unmounting and ensure dialog stays visible when needed
+  useEffect(() => {
+    console.log('🔐 PasswordChangeDialog effect:', {
+      needsPasswordChange,
+      user: user?.email,
+      isVisible
+    });
+
+    if (needsPasswordChange && user && !isVisible) {
+      console.log('🔐 Showing password change dialog');
+      setIsVisible(true);
+    } else if (!needsPasswordChange && isVisible) {
+      console.log('🔐 Password change no longer needed, will hide dialog');
+      // Add a small delay to prevent flashing
+      setTimeout(() => setIsVisible(false), 100);
+    }
+  }, [needsPasswordChange, user, isVisible]);
+
+  // Additional protection: don't render if conditions aren't met
+  if (!needsPasswordChange || !user || !isVisible) {
+    console.log('🔐 PasswordChangeDialog not rendering:', {
+      needsPasswordChange,
+      hasUser: !!user,
+      isVisible
+    });
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +71,7 @@ export function PasswordChangeDialog() {
     setLoading(true);
     
     try {
-      console.log('🔐 Attempting password change');
+      console.log('🔐 Attempting password change for user:', user.email);
       const { error } = await changePassword(newPassword);
       
       if (error) {
@@ -54,13 +83,22 @@ export function PasswordChangeDialog() {
         });
       } else {
         console.log('✅ Password changed successfully, refreshing user role...');
-        // Force refresh of user role and flags after password change
-        await refreshUserRole();
         
         toast({
           title: "Senha alterada com sucesso!",
           description: "Redirecionando para o dashboard...",
         });
+
+        // Add delay to ensure database changes are committed
+        setTimeout(async () => {
+          try {
+            await refreshUserRole();
+            console.log('✅ User role refreshed after password change');
+          } catch (refreshError) {
+            console.error('⚠️ Error refreshing user role:', refreshError);
+            // Don't show error to user as password change was successful
+          }
+        }, 1500);
       }
     } catch (error: any) {
       console.error('❌ Unexpected error during password change:', error);
@@ -73,6 +111,8 @@ export function PasswordChangeDialog() {
       setLoading(false);
     }
   };
+
+  console.log('🔐 Rendering PasswordChangeDialog for user:', user.email);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">

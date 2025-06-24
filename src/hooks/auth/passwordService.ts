@@ -53,14 +53,14 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
   const changePassword = async (newPassword: string, userId?: string, companyUserData?: any) => {
     try {
-      console.log('🔐 Changing password for user:', userId);
+      console.log('🔐 Starting password change process...');
       
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (!error) {
-        console.log('✅ Password changed successfully, updating flags...');
+        console.log('✅ Password changed successfully in auth, updating database flags...');
         
         // Get current user to ensure we have the right ID
         const { data: { user } } = await supabase.auth.getUser();
@@ -71,87 +71,13 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           return { error: null };
         }
         
-        // Check if it's a company user and update their password change flag
-        console.log('📊 Checking for company record...');
-        const { data: company, error: companyQueryError } = await supabase
-          .from('companies')
-          .select('id, needs_password_change')
-          .eq('auth_user_id', currentUserId)
-          .maybeSingle();
+        // Update password change flags with improved error handling
+        await updatePasswordChangeFlags(currentUserId);
         
-        if (!companyQueryError && company) {
-          console.log('📊 Found company record, updating password change flag...');
-          const { error: updateError } = await supabase
-            .from('companies')
-            .update({ 
-              needs_password_change: false,
-              updated_at: new Date().toISOString() 
-            })
-            .eq('auth_user_id', currentUserId);
-          
-          if (updateError) {
-            console.error('⚠️ Could not update company password change flag:', updateError);
-          } else {
-            console.log('✅ Company password change flag updated successfully');
-          }
-        } else {
-          console.log('📊 No company record found, checking for collaborator...');
-          
-          // Check if it's a collaborator
-          const { data: collaborator, error: collaboratorQueryError } = await supabase
-            .from('company_users')
-            .select('id, needs_password_change')
-            .eq('auth_user_id', currentUserId)
-            .maybeSingle();
-          
-          if (!collaboratorQueryError && collaborator) {
-            console.log('📊 Found collaborator record, updating password change flag...');
-            const { error: updateError } = await supabase
-              .from('company_users')
-              .update({ 
-                needs_password_change: false,
-                updated_at: new Date().toISOString() 
-              })
-              .eq('auth_user_id', currentUserId);
-            
-            if (updateError) {
-              console.error('⚠️ Could not update collaborator password change flag:', updateError);
-            } else {
-              console.log('✅ Collaborator password change flag updated successfully');
-            }
-          } else {
-            console.log('📊 No collaborator record found either');
-          }
-        }
-        
-        // Force a small delay to ensure database updates are committed
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        toast({
-          title: "Senha alterada com sucesso!",
-          description: "Sua nova senha foi definida.",
-        });
+        console.log('✅ Password change process completed successfully');
       } else {
         console.error('❌ Password change failed:', error);
-        if (error.message.includes('New password should be different')) {
-          toast({
-            title: "Senha inválida",
-            description: "A nova senha deve ser diferente da atual.",
-            variant: "destructive",
-          });
-        } else if (error.message.includes('Password should be at least')) {
-          toast({
-            title: "Senha muito fraca",
-            description: "A senha deve ter pelo menos 6 caracteres.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Erro ao alterar senha",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
+        handlePasswordChangeError(error, toast);
       }
 
       return { error };
@@ -163,6 +89,85 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         variant: "destructive",
       });
       return { error };
+    }
+  };
+
+  const updatePasswordChangeFlags = async (userId: string) => {
+    try {
+      console.log('🔄 Updating password change flags for user:', userId);
+      
+      // Check and update company record
+      const { data: company, error: companyQueryError } = await supabase
+        .from('companies')
+        .select('id, needs_password_change')
+        .eq('auth_user_id', userId)
+        .maybeSingle();
+      
+      if (!companyQueryError && company?.needs_password_change) {
+        console.log('📊 Updating company password change flag...');
+        const { error: updateError } = await supabase
+          .from('companies')
+          .update({ 
+            needs_password_change: false,
+            updated_at: new Date().toISOString() 
+          })
+          .eq('auth_user_id', userId);
+        
+        if (updateError) {
+          console.error('⚠️ Could not update company password change flag:', updateError);
+        } else {
+          console.log('✅ Company password change flag updated successfully');
+        }
+      }
+      
+      // Check and update collaborator record
+      const { data: collaborator, error: collaboratorQueryError } = await supabase
+        .from('company_users')
+        .select('id, needs_password_change')
+        .eq('auth_user_id', userId)
+        .maybeSingle();
+      
+      if (!collaboratorQueryError && collaborator?.needs_password_change) {
+        console.log('📊 Updating collaborator password change flag...');
+        const { error: updateError } = await supabase
+          .from('company_users')
+          .update({ 
+            needs_password_change: false,
+            updated_at: new Date().toISOString() 
+          })
+          .eq('auth_user_id', userId);
+        
+        if (updateError) {
+          console.error('⚠️ Could not update collaborator password change flag:', updateError);
+        } else {
+          console.log('✅ Collaborator password change flag updated successfully');
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ Error updating password change flags:', error);
+    }
+  };
+
+  const handlePasswordChangeError = (error: any, toast: any) => {
+    if (error.message.includes('New password should be different')) {
+      toast({
+        title: "Senha inválida",
+        description: "A nova senha deve ser diferente da atual.",
+        variant: "destructive",
+      });
+    } else if (error.message.includes('Password should be at least')) {
+      toast({
+        title: "Senha muito fraca",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Erro ao alterar senha",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 

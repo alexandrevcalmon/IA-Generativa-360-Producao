@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface UseAuthRedirectsProps {
@@ -12,6 +12,7 @@ interface UseAuthRedirectsProps {
 export function useAuthRedirects({ user, userRole, authLoading, needsPasswordChange }: UseAuthRedirectsProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
     console.log('🔄 Enhanced auth redirect evaluation:', {
@@ -21,22 +22,30 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
       needsPasswordChange,
       currentPath: location.pathname,
       search: location.search,
+      hasRedirected: hasRedirectedRef.current,
       timestamp: new Date().toISOString()
     });
 
-    // Don't redirect if loading, no user, or user needs password change
-    if (authLoading || !user || needsPasswordChange) {
+    // CRITICAL: Never redirect if user needs password change
+    if (needsPasswordChange) {
+      console.log('🔐 Password change required - blocking all redirects');
+      hasRedirectedRef.current = false; // Reset redirect flag
+      return;
+    }
+
+    // Don't redirect if loading, no user, or already redirected
+    if (authLoading || !user || hasRedirectedRef.current) {
       console.log('⏸️ Skipping redirect:', {
-        reason: authLoading ? 'loading' : !user ? 'no user' : 'needs password change'
+        reason: authLoading ? 'loading' : !user ? 'no user' : 'already redirected'
       });
       return;
     }
 
-    // Add a small delay to ensure the password change dialog has been processed
+    // Add a delay to ensure all auth state is properly settled
     const redirectTimer = setTimeout(() => {
       // Double-check that password change is still not needed
       if (needsPasswordChange) {
-        console.log('⏸️ Password change still needed, skipping redirect');
+        console.log('⏸️ Password change detected during redirect delay, aborting');
         return;
       }
 
@@ -53,6 +62,7 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
           attemptedRoute: location.pathname
         });
         
+        hasRedirectedRef.current = true;
         // Redirect to appropriate dashboard based on role
         switch (userRole) {
           case 'company':
@@ -76,6 +86,7 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
           attemptedRoute: location.pathname
         });
         
+        hasRedirectedRef.current = true;
         switch (userRole) {
           case 'producer':
             navigate('/producer/dashboard', { replace: true });
@@ -113,6 +124,7 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
         // If requesting producer access but user is not a producer
         if (requestedRole === 'producer' && userRole !== 'producer') {
           console.log('❌ Producer access denied - user is not a producer');
+          hasRedirectedRef.current = true;
           // Stay on auth page to show error or redirect to appropriate dashboard
           if (userRole) {
             switch (userRole) {
@@ -133,6 +145,7 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
         // If user has the requested role, redirect to appropriate dashboard
         if (requestedRole === userRole) {
           console.log('✅ Role matches request, redirecting to dashboard');
+          hasRedirectedRef.current = true;
           switch (userRole) {
             case 'producer':
               navigate('/producer/dashboard', { replace: true });
@@ -162,8 +175,9 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
       }
 
       // Perform role-based redirect
-      if (userRole) {
+      if (userRole && !hasRedirectedRef.current) {
         console.log('🚀 Performing role-based redirect. Role:', userRole);
+        hasRedirectedRef.current = true;
         
         switch (userRole) {
           case 'producer':
@@ -186,12 +200,20 @@ export function useAuthRedirects({ user, userRole, authLoading, needsPasswordCha
             console.warn('❓ Unknown role, redirecting to auth. Role:', userRole);
             navigate('/auth?error=unknown_role', { replace: true });
         }
-      } else {
+      } else if (!userRole) {
         console.warn('⚠️ User has no role assigned, redirecting to auth');
+        hasRedirectedRef.current = true;
         navigate('/auth?error=no_role', { replace: true });
       }
-    }, 100); // Small delay to ensure password change dialog is properly rendered
+    }, 150); // Slightly longer delay to ensure all state is settled
 
     return () => clearTimeout(redirectTimer);
   }, [user, userRole, authLoading, needsPasswordChange, navigate, location.pathname, location.search]);
+
+  // Reset redirect flag when auth state changes significantly
+  useEffect(() => {
+    if (!user || authLoading) {
+      hasRedirectedRef.current = false;
+    }
+  }, [user, authLoading]);
 }
