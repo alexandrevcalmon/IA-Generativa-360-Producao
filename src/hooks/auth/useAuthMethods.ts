@@ -165,7 +165,7 @@ export function useAuthMethods({
   };
 
   const changePassword = async (newPassword: string) => {
-    const result = await authService.changePassword(newPassword, user?.id, companyUserData);
+    const result = await authService.changePassword(newPassword);
     
     if (!result.error && companyUserData) {
       setNeedsPasswordChange(false);
