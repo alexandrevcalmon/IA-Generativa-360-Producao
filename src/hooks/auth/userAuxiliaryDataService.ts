@@ -29,14 +29,15 @@ export const createUserAuxiliaryDataService = () => {
           profileData: { role: 'producer' },
           companyData: null,
           collaboratorData: null,
-          producerData
+          producerData,
+          needsPasswordChange: false // Producers don't need password change
         };
       }
 
       // Second priority: Check if user is a company owner
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
-        .select('*')
+        .select('*, needs_password_change')
         .eq('auth_user_id', user.id)
         .single();
 
@@ -51,7 +52,8 @@ export const createUserAuxiliaryDataService = () => {
           profileData: { role: 'company' },
           companyData,
           collaboratorData: null,
-          producerData: null
+          producerData: null,
+          needsPasswordChange: companyData.needs_password_change || false
         };
       }
 
@@ -69,7 +71,8 @@ export const createUserAuxiliaryDataService = () => {
           profileData,
           companyData: null,
           collaboratorData: null,
-          producerData: null
+          producerData: null,
+          needsPasswordChange: false
         };
       }
 
@@ -78,6 +81,7 @@ export const createUserAuxiliaryDataService = () => {
         .from('company_users')
         .select(`
           *,
+          needs_password_change,
           companies!inner(name)
         `)
         .eq('auth_user_id', user.id)
@@ -93,7 +97,8 @@ export const createUserAuxiliaryDataService = () => {
             ...collaboratorData,
             company_name: collaboratorData.companies?.name || 'Unknown Company'
           },
-          producerData: null
+          producerData: null,
+          needsPasswordChange: collaboratorData.needs_password_change || false
         };
       }
 
@@ -104,7 +109,8 @@ export const createUserAuxiliaryDataService = () => {
         profileData,
         companyData: null,
         collaboratorData: null,
-        producerData: null
+        producerData: null,
+        needsPasswordChange: false
       };
 
     } catch (error) {
@@ -114,7 +120,8 @@ export const createUserAuxiliaryDataService = () => {
         profileData: null,
         companyData: null,
         collaboratorData: null,
-        producerData: null
+        producerData: null,
+        needsPasswordChange: false
       };
     }
   };

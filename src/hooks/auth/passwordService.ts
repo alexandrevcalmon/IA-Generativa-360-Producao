@@ -53,21 +53,25 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
   const changePassword = async (newPassword: string, userId?: string, companyUserData?: any) => {
     try {
+      console.log('🔐 Changing password for user:', userId);
+      
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (!error) {
+        console.log('✅ Password changed successfully, updating flags...');
+        
         // Check if it's a company user and update their password change flag
         if (userId) {
-          const { data: company } = await supabase
+          const { data: company, error: companyQueryError } = await supabase
             .from('companies')
             .select('id')
             .eq('auth_user_id', userId)
             .maybeSingle();
           
-          if (company) {
-            // Update the needs_password_change flag for companies
+          if (!companyQueryError && company) {
+            console.log('📊 Updating company password change flag...');
             const { error: updateError } = await supabase
               .from('companies')
               .update({ 
@@ -77,7 +81,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
               .eq('auth_user_id', userId);
             
             if (updateError) {
-              console.warn('Could not update company password change flag:', updateError);
+              console.warn('⚠️ Could not update company password change flag:', updateError);
             } else {
               console.log('✅ Company password change flag updated successfully');
             }
@@ -86,6 +90,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         
         // Handle company_users (collaborators)
         if (companyUserData && userId) {
+          console.log('📊 Updating collaborator password change flag...');
           const { error: updateError } = await supabase
             .from('company_users')
             .update({ 
@@ -95,9 +100,27 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             .eq('auth_user_id', userId);
           
           if (updateError) {
-            console.warn('Could not update company_users record:', updateError);
+            console.warn('⚠️ Could not update company_users record:', updateError);
           } else {
             console.log('✅ Company user password change flag updated successfully');
+          }
+        }
+        
+        // If no specific company data, try to update both tables to be safe
+        if (!companyUserData && userId) {
+          console.log('📊 Attempting to update password flags in both tables...');
+          
+          // Try updating company_users table
+          const { error: collaboratorUpdateError } = await supabase
+            .from('company_users')
+            .update({ 
+              needs_password_change: false,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('auth_user_id', userId);
+          
+          if (!collaboratorUpdateError) {
+            console.log('✅ Collaborator password change flag updated');
           }
         }
         

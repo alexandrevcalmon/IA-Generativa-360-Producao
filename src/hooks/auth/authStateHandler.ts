@@ -7,6 +7,7 @@ interface AuthStateHandlerProps {
   setSession: (session: Session | null) => void;
   setUser: (user: User | null) => void;
   setUserRole: (role: string | null) => void;
+  setNeedsPasswordChange: (needs: boolean) => void;
   setCompanyUserData: (data: any) => void;
   setLoading: (loading: boolean) => void;
   setIsInitialized: (initialized: boolean) => void;
@@ -18,6 +19,7 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
     setSession,
     setUser,
     setUserRole,
+    setNeedsPasswordChange,
     setCompanyUserData,
     setLoading,
     setIsInitialized,
@@ -93,6 +95,7 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
         console.log('🔍 Role determination result:', {
           userEmail: user.email,
           determinedRole: auxData.role,
+          needsPasswordChange: auxData.needsPasswordChange,
           hasCompanyData: !!auxData.companyData,
           hasCollaboratorData: !!auxData.collaboratorData,
           hasProfileData: !!auxData.profileData
@@ -101,6 +104,9 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
         // Set role with fallback
         const finalRole = auxData.role || 'student';
         setUserRole(finalRole);
+
+        // Set password change requirement
+        setNeedsPasswordChange(auxData.needsPasswordChange || false);
 
         // Set company user data based on role
         if (finalRole === 'company') {
@@ -115,6 +121,7 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
         console.error('❌ Error loading user auxiliary data:', error);
         // Set safe defaults on error
         setUserRole('student');
+        setNeedsPasswordChange(false);
         setCompanyUserData(null);
       } finally {
         setLoading(false);
