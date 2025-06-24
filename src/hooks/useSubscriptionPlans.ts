@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -43,18 +42,34 @@ export const useSubscriptionPlans = () => {
   return useQuery({
     queryKey: ['subscription-plans'],
     queryFn: async () => {
+      console.log('📋 Fetching subscription plans...');
+      
       const { data, error } = await supabase
         .from('subscription_plans')
         .select('*')
         .order('name', { ascending: true });
 
       if (error) {
-        console.error('Error fetching subscription plans:', error);
+        console.error('❌ Error fetching subscription plans:', error);
         throw error;
       }
 
+      console.log('✅ Subscription plans fetched:', {
+        count: data?.length || 0,
+        plans: data?.map(p => ({
+          id: p.id,
+          name: p.name,
+          is_active: p.is_active,
+          semester_price: p.semester_price,
+          annual_price: p.annual_price
+        }))
+      });
+
       return data as SubscriptionPlan[];
-    }
+    },
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 

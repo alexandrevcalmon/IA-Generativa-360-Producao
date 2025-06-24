@@ -29,10 +29,28 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
   const { data: plans, isLoading: plansLoading, error: plansError } = useSubscriptionPlans();
   const { toast } = useToast();
 
+  console.log('🏢 CreateCompanyDialog render:', {
+    isOpen,
+    formData: {
+      name: formData.name,
+      contact_email: formData.contact_email,
+      subscription_plan_id: formData.subscription_plan_id,
+      billing_period: formData.billing_period
+    },
+    plansLoading,
+    plansError,
+    plansCount: plans?.length || 0,
+    isCreating: createCompanyMutation.isPending
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 Form submission started');
+    console.log('📝 Form data:', formData);
 
-    if (!formData.name) {
+    // Validação do nome da empresa
+    if (!formData.name || formData.name.trim() === '') {
+      console.log('❌ Validation failed: Nome Fantasia is required');
       toast({
         title: "Erro de validação",
         description: "Nome Fantasia é obrigatório.",
@@ -41,7 +59,9 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
       return;
     }
 
-    if (!formData.contact_email) {
+    // Validação do email de contato
+    if (!formData.contact_email || formData.contact_email.trim() === '') {
+      console.log('❌ Validation failed: Contact email is required');
       toast({
         title: "Erro de validação",
         description: "Email do contato é obrigatório para criar o acesso à plataforma.",
@@ -50,9 +70,10 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
       return;
     }
 
-    // Basic email validation
+    // Validação do formato do email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.contact_email)) {
+      console.log('❌ Validation failed: Invalid email format');
       toast({
         title: "Erro de validação",
         description: "Por favor, insira um email válido.",
@@ -61,7 +82,12 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
       return;
     }
 
+    // Validação do plano de assinatura
     if (!formData.subscription_plan_id || !formData.billing_period) {
+      console.log('❌ Validation failed: Subscription plan is required', {
+        subscription_plan_id: formData.subscription_plan_id,
+        billing_period: formData.billing_period
+      });
       toast({
         title: "Erro de validação",
         description: "Por favor, selecione um plano de assinatura e período de cobrança.",
@@ -70,21 +96,37 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
       return;
     }
 
+    console.log('✅ All validations passed, submitting...');
+
     try {
       await createCompanyMutation.mutateAsync(formData);
+      console.log('✅ Company created successfully');
       onClose();
     } catch (error) {
-      console.error("Failed to create company from dialog:", error);
+      console.error('❌ Failed to create company from dialog:', error);
+      // O erro já é tratado no hook useCreateCompany
     }
   };
 
   const handlePlanChange = (planId: string, billingPeriod: 'semester' | 'annual') => {
+    console.log('📋 Plan selection changed:', { planId, billingPeriod });
     setFormData(prev => ({ 
       ...prev, 
       subscription_plan_id: planId,
       billing_period: billingPeriod
     }));
   };
+
+  // Verificar se o botão deve estar desabilitado
+  const isSubmitDisabled = createCompanyMutation.isPending || plansLoading || !!plansError;
+  console.log('🔘 Submit button state:', {
+    isDisabled: isSubmitDisabled,
+    reasons: {
+      isPending: createCompanyMutation.isPending,
+      plansLoading: plansLoading,
+      plansError: !!plansError
+    }
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -100,6 +142,14 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
           </DialogDescription>
         </DialogHeader>
 
+        {plansError && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+            <p className="text-red-800 text-sm">
+              Erro ao carregar planos de assinatura. Tente recarregar a página.
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 py-4">
           <CompanyBasicFields formData={formData} setFormData={setFormData} />
           <CompanyAddressFields formData={formData} setFormData={setFormData} />
@@ -114,13 +164,18 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
           />
 
           <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={createCompanyMutation.isPending}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose} 
+              disabled={createCompanyMutation.isPending}
+            >
               Cancelar
             </Button>
             <Button 
               type="submit"
               className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white min-w-[150px]"
-              disabled={createCompanyMutation.isPending || plansLoading || !!plansError}
+              disabled={isSubmitDisabled}
             >
               {createCompanyMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
