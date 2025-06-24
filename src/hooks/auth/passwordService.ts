@@ -62,73 +62,77 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
       if (!error) {
         console.log('✅ Password changed successfully, updating flags...');
         
+        // Get current user to ensure we have the right ID
+        const { data: { user } } = await supabase.auth.getUser();
+        const currentUserId = user?.id;
+        
+        if (!currentUserId) {
+          console.warn('⚠️ No current user found after password change');
+          return { error: null };
+        }
+        
         // Check if it's a company user and update their password change flag
-        if (userId) {
-          const { data: company, error: companyQueryError } = await supabase
+        console.log('📊 Checking for company record...');
+        const { data: company, error: companyQueryError } = await supabase
+          .from('companies')
+          .select('id, needs_password_change')
+          .eq('auth_user_id', currentUserId)
+          .maybeSingle();
+        
+        if (!companyQueryError && company) {
+          console.log('📊 Found company record, updating password change flag...');
+          const { error: updateError } = await supabase
             .from('companies')
-            .select('id')
-            .eq('auth_user_id', userId)
+            .update({ 
+              needs_password_change: false,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('auth_user_id', currentUserId);
+          
+          if (updateError) {
+            console.error('⚠️ Could not update company password change flag:', updateError);
+          } else {
+            console.log('✅ Company password change flag updated successfully');
+          }
+        } else {
+          console.log('📊 No company record found, checking for collaborator...');
+          
+          // Check if it's a collaborator
+          const { data: collaborator, error: collaboratorQueryError } = await supabase
+            .from('company_users')
+            .select('id, needs_password_change')
+            .eq('auth_user_id', currentUserId)
             .maybeSingle();
           
-          if (!companyQueryError && company) {
-            console.log('📊 Updating company password change flag...');
+          if (!collaboratorQueryError && collaborator) {
+            console.log('📊 Found collaborator record, updating password change flag...');
             const { error: updateError } = await supabase
-              .from('companies')
+              .from('company_users')
               .update({ 
                 needs_password_change: false,
                 updated_at: new Date().toISOString() 
               })
-              .eq('auth_user_id', userId);
+              .eq('auth_user_id', currentUserId);
             
             if (updateError) {
-              console.warn('⚠️ Could not update company password change flag:', updateError);
+              console.error('⚠️ Could not update collaborator password change flag:', updateError);
             } else {
-              console.log('✅ Company password change flag updated successfully');
+              console.log('✅ Collaborator password change flag updated successfully');
             }
-          }
-        }
-        
-        // Handle company_users (collaborators)
-        if (companyUserData && userId) {
-          console.log('📊 Updating collaborator password change flag...');
-          const { error: updateError } = await supabase
-            .from('company_users')
-            .update({ 
-              needs_password_change: false,
-              updated_at: new Date().toISOString() 
-            })
-            .eq('auth_user_id', userId);
-          
-          if (updateError) {
-            console.warn('⚠️ Could not update company_users record:', updateError);
           } else {
-            console.log('✅ Company user password change flag updated successfully');
+            console.log('📊 No collaborator record found either');
           }
         }
         
-        // If no specific company data, try to update both tables to be safe
-        if (!companyUserData && userId) {
-          console.log('📊 Attempting to update password flags in both tables...');
-          
-          // Try updating company_users table
-          const { error: collaboratorUpdateError } = await supabase
-            .from('company_users')
-            .update({ 
-              needs_password_change: false,
-              updated_at: new Date().toISOString() 
-            })
-            .eq('auth_user_id', userId);
-          
-          if (!collaboratorUpdateError) {
-            console.log('✅ Collaborator password change flag updated');
-          }
-        }
+        // Force a small delay to ensure database updates are committed
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         toast({
           title: "Senha alterada com sucesso!",
           description: "Sua nova senha foi definida.",
         });
       } else {
+        console.error('❌ Password change failed:', error);
         if (error.message.includes('New password should be different')) {
           toast({
             title: "Senha inválida",

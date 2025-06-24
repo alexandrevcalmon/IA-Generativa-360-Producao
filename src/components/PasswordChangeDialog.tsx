@@ -15,7 +15,7 @@ export function PasswordChangeDialog() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const { changePassword } = useAuth();
+  const { changePassword, refreshUserRole } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,12 +46,29 @@ export function PasswordChangeDialog() {
       const { error } = await changePassword(newPassword);
       
       if (error) {
+        console.error('❌ Password change failed:', error);
         toast({
           title: "Erro ao alterar senha",
           description: error.message,
           variant: "destructive",
         });
+      } else {
+        console.log('✅ Password changed successfully, refreshing user role...');
+        // Force refresh of user role and flags after password change
+        await refreshUserRole();
+        
+        toast({
+          title: "Senha alterada com sucesso!",
+          description: "Redirecionando para o dashboard...",
+        });
       }
+    } catch (error: any) {
+      console.error('❌ Unexpected error during password change:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro durante a alteração da senha.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

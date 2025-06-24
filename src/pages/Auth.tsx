@@ -78,15 +78,15 @@ export default function Auth() {
 
   const errorMessage = errorType ? getErrorMessage(errorType) : null;
 
-  // Priority 1: Show password change dialog if user needs to change password
-  if (!authLoading && user && needsPasswordChange) {
-    console.log('Showing password change dialog for user:', user.email);
-    return <PasswordChangeDialog />;
-  }
-
   // Show loading state while checking authentication
   if (authLoading) {
     return <AuthLoadingScreen />;
+  }
+
+  // Priority 1: Show password change dialog if user needs to change password
+  if (!authLoading && user && needsPasswordChange) {
+    console.log('🔐 Showing password change dialog for user:', user.email);
+    return <PasswordChangeDialog />;
   }
 
   return (
