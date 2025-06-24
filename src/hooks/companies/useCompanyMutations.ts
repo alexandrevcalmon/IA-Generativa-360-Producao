@@ -39,7 +39,19 @@ export const useCreateCompany = () => {
 
       if (companyError) {
         console.error('❌ Error creating company:', companyError);
-        throw new Error(`Failed to create company: ${companyError.message}`);
+        
+        // Provide more specific error messages based on the error
+        let errorMessage = 'Falha ao criar empresa';
+        
+        if (companyError.code === '42501') {
+          errorMessage = 'Permissão negada. Verifique se você tem permissões para criar empresas.';
+        } else if (companyError.code === '23505') {
+          errorMessage = 'Já existe uma empresa com essas informações.';
+        } else if (companyError.message) {
+          errorMessage = `Erro: ${companyError.message}`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       console.log('✅ Company created successfully:', company);
@@ -111,11 +123,7 @@ export const useCreateCompany = () => {
     },
     onError: (error) => {
       console.error('❌ Error in company creation process:', error);
-      toast({
-        title: "Erro ao criar empresa",
-        description: `Ocorreu um erro ao criar a empresa: ${error.message}`,
-        variant: "destructive",
-      });
+      // Error handling is now done in the component for better UX
     }
   });
 };

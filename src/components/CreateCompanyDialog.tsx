@@ -43,11 +43,7 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
     isCreating: createCompanyMutation.isPending
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('🚀 Form submission started');
-    console.log('📝 Form data:', formData);
-
+  const validateForm = () => {
     // Validação do nome da empresa
     if (!formData.name || formData.name.trim() === '') {
       console.log('❌ Validation failed: Nome Fantasia is required');
@@ -56,7 +52,7 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
         description: "Nome Fantasia é obrigatório.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     // Validação do email de contato
@@ -67,7 +63,7 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
         description: "Email do contato é obrigatório para criar o acesso à plataforma.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     // Validação do formato do email
@@ -79,7 +75,7 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
         description: "Por favor, insira um email válido.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     // Validação do plano de assinatura
@@ -93,6 +89,18 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
         description: "Por favor, selecione um plano de assinatura e período de cobrança.",
         variant: "destructive",
       });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('🚀 Form submission started');
+    console.log('📝 Form data:', formData);
+
+    if (!validateForm()) {
       return;
     }
 
@@ -101,10 +109,22 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
     try {
       await createCompanyMutation.mutateAsync(formData);
       console.log('✅ Company created successfully');
+      
+      // Clear form and close dialog
       onClose();
     } catch (error) {
       console.error('❌ Failed to create company from dialog:', error);
-      // O erro já é tratado no hook useCreateCompany
+      
+      // Show a user-friendly error message
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Ocorreu um erro inesperado ao criar a empresa.';
+        
+      toast({
+        title: "Erro ao criar empresa",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
@@ -119,6 +139,7 @@ export function CreateCompanyDialog({ isOpen, onClose }: CreateCompanyDialogProp
 
   // Verificar se o botão deve estar desabilitado
   const isSubmitDisabled = createCompanyMutation.isPending || plansLoading || !!plansError;
+  
   console.log('🔘 Submit button state:', {
     isDisabled: isSubmitDisabled,
     reasons: {
