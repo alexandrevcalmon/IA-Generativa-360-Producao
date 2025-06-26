@@ -1,9 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
+import { createSessionRecoveryService } from './sessionRecoveryService';
 import { withTimeout, TimeoutError } from '@/lib/utils';
 
-const DEFAULT_TIMEOUT = 7000; // 7 seconds
+const OPTIMIZED_TIMEOUT = 4000; // Reduced from 7000ms
 
 interface SessionValidationResult {
   isValid: boolean;
@@ -14,28 +15,24 @@ interface SessionValidationResult {
 }
 
 export const createSessionValidationService = () => {
+  const recoveryService = createSessionRecoveryService();
+
   const validateSession = async (currentSession?: Session | null): Promise<SessionValidationResult> => {
     try {
-      console.log('🔍 Validating session with enhanced error handling...', { 
+      console.log('🔍 Enhanced session validation starting...', { 
         hasCurrentSession: !!currentSession,
-        sessionId: currentSession?.access_token?.substring(0, 10) + '...' || 'none',
         timestamp: new Date().toISOString()
       });
       
-      // If we have a current session, validate it first before making API calls
+      // If we have a current session, validate it first
       if (currentSession) {
         const now = Math.floor(Date.now() / 1000);
         const expiresAt = currentSession.expires_at;
-        const bufferTime = 5 * 60; // 5 minutes buffer
+        const bufferTime = 3 * 60; // Reduced buffer to 3 minutes
         
         // Check if session is expired
         if (expiresAt && now >= expiresAt) {
-          console.log('⏰ Session expired', {
-            now: new Date(now * 1000).toISOString(),
-            expiresAt: new Date(expiresAt * 1000).toISOString(),
-            timeDiff: now - expiresAt
-          });
-          
+          console.log('⏰ Session expired');
           return {
             isValid: false,
             session: currentSession,
@@ -46,9 +43,7 @@ export const createSessionValidationService = () => {
         
         // Check if session is about to expire
         if (expiresAt && now >= (expiresAt - bufferTime)) {
-          console.log('⏰ Session expiring soon, needs refresh', {
-            timeLeft: `${Math.floor((expiresAt - now) / 60)} minutes`
-          });
+          console.log('⏰ Session expiring soon, needs refresh');
           return {
             isValid: false,
             session: currentSession,
@@ -68,12 +63,7 @@ export const createSessionValidationService = () => {
           };
         }
         
-        // Session appears valid
-        console.log('✅ Session validation successful (local check)', { 
-          userId: currentSession.user?.id,
-          timeLeft: `${Math.floor((expiresAt! - now) / 60)} minutes`
-        });
-        
+        console.log('✅ Session validation successful (local check)');
         return {
           isValid: true,
           session: currentSession,
@@ -82,42 +72,20 @@ export const createSessionValidationService = () => {
         };
       }
       
-      // No current session provided, get fresh session from Supabase
-      let freshSessionData: { session: Session | null } | null = null;
-      let getSessionError: any = null;
-
-      try {
+      // No current session, get fresh session with retry mechanism
+      const freshSessionData = await recoveryService.withRetry(async () => {
         const { data, error } = await withTimeout(
           supabase.auth.getSession(),
-          DEFAULT_TIMEOUT,
+          OPTIMIZED_TIMEOUT,
           "[SessionValidationService] Timeout fetching session"
         );
-        if (error) getSessionError = error;
-        freshSessionData = data;
-      } catch (timeoutOrOtherError) {
-        getSessionError = timeoutOrOtherError;
-      }
-      
-      if (getSessionError) {
-        console.error('❌ Session validation error (getSession):', {
-          message: getSessionError.message,
-          status: getSessionError.status,
-          code: getSessionError.code,
-          isTimeout: getSessionError instanceof TimeoutError,
-          timestamp: new Date().toISOString()
-        });
-        return {
-          isValid: false,
-          session: null,
-          user: null,
-          needsRefresh: false,
-          error: getSessionError.message
-        };
-      }
+        
+        if (error) throw error;
+        return data;
+      });
       
       const freshSession = freshSessionData?.session;
 
-      // No session exists
       if (!freshSession) {
         console.log('ℹ️ No session found during validation');
         return {
@@ -128,60 +96,47 @@ export const createSessionValidationService = () => {
         };
       }
       
-      // Validate the fresh session
+      // Validate the fresh session recursively
       return await validateSession(freshSession);
       
     } catch (error) {
-      console.error('💥 Session validation failed:', {
-        error: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-      });
+      console.error('💥 Session validation failed:', error);
+      
+      // Handle authentication failures
+      if (error?.status === 403 || error?.message?.includes('Authentication required')) {
+        return {
+          isValid: false,
+          session: null,
+          user: null,
+          needsRefresh: false,
+          error: 'Authentication required'
+        };
+      }
+      
       return {
         isValid: false,
         session: null,
         user: null,
         needsRefresh: false,
-        error: 'Session validation failed'
+        error: error?.message || 'Session validation failed'
       };
     }
   };
 
   const refreshSession = async (): Promise<SessionValidationResult> => {
     try {
-      console.log('🔄 Attempting session refresh with enhanced monitoring...');
+      console.log('🔄 Enhanced session refresh starting...');
       
-      let refreshedSessionData: { session: Session | null } | null = null;
-      let refreshSessionError: any = null;
-
-      try {
+      const refreshedSessionData = await recoveryService.withRetry(async () => {
         const { data, error } = await withTimeout(
           supabase.auth.refreshSession(),
-          DEFAULT_TIMEOUT,
+          OPTIMIZED_TIMEOUT,
           "[SessionValidationService] Timeout refreshing session"
         );
-        if (error) refreshSessionError = error;
-        refreshedSessionData = data;
-      } catch (timeoutOrOtherError) {
-        refreshSessionError = timeoutOrOtherError;
-      }
-      
-      if (refreshSessionError) {
-        console.error('❌ Session refresh failed:', {
-          message: refreshSessionError.message,
-          status: refreshSessionError.status,
-          code: refreshSessionError.code,
-          isTimeout: refreshSessionError instanceof TimeoutError,
-          timestamp: new Date().toISOString()
-        });
-        return {
-          isValid: false,
-          session: null,
-          user: null,
-          needsRefresh: false,
-          error: refreshSessionError.message
-        };
-      }
+        
+        if (error) throw error;
+        return data;
+      });
       
       const session = refreshedSessionData?.session;
 
@@ -195,12 +150,7 @@ export const createSessionValidationService = () => {
         };
       }
       
-      console.log('✅ Session refresh successful', {
-        userId: session.user?.id,
-        newExpiresAt: new Date(session.expires_at! * 1000).toISOString(),
-        timestamp: new Date().toISOString()
-      });
-      
+      console.log('✅ Session refresh successful');
       return {
         isValid: true,
         session,
@@ -209,17 +159,25 @@ export const createSessionValidationService = () => {
       };
       
     } catch (error) {
-      console.error('💥 Session refresh error:', {
-        error: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-      });
+      console.error('💥 Session refresh error:', error);
+      
+      // Handle authentication failures
+      if (error?.status === 403 || error?.message?.includes('Authentication required')) {
+        return {
+          isValid: false,
+          session: null,
+          user: null,
+          needsRefresh: false,
+          error: 'Authentication required'
+        };
+      }
+      
       return {
         isValid: false,
         session: null,
         user: null,
         needsRefresh: false,
-        error: 'Session refresh failed'
+        error: error?.message || 'Session refresh failed'
       };
     }
   };

@@ -803,6 +803,7 @@ export type Database = {
           needs_password_change: boolean
           phone: string | null
           position: string | null
+          updated_at: string | null
         }
         Insert: {
           auth_user_id: string
@@ -815,6 +816,7 @@ export type Database = {
           needs_password_change?: boolean
           phone?: string | null
           position?: string | null
+          updated_at?: string | null
         }
         Update: {
           auth_user_id?: string
@@ -827,6 +829,7 @@ export type Database = {
           needs_password_change?: boolean
           phone?: string | null
           position?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
