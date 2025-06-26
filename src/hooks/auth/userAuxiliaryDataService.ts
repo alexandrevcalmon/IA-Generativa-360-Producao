@@ -69,7 +69,7 @@ export const createUserAuxiliaryDataService = () => {
             OPTIMIZED_TIMEOUT,
             "[UserAuxiliaryDataService] Timeout fetching company data"
           );
-        }) as { data: any; error: any };
+        });
 
         if (companyResult?.data) {
           console.log('[UserAuxiliaryDataService] User is a company owner');
@@ -106,7 +106,7 @@ export const createUserAuxiliaryDataService = () => {
             OPTIMIZED_TIMEOUT,
             "[UserAuxiliaryDataService] Timeout fetching profile data"
           );
-        }) as { data: any; error: any };
+        });
 
         profileDataFromProfilesTable = profileResult?.data || null;
 
@@ -140,7 +140,7 @@ export const createUserAuxiliaryDataService = () => {
             OPTIMIZED_TIMEOUT,
             "[UserAuxiliaryDataService] Timeout fetching collaborator data"
           );
-        }) as { data: any; error: any };
+        });
 
         const collaboratorData = collaboratorResult?.data;
 
