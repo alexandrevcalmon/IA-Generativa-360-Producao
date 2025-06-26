@@ -1,6 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
+import { withTimeout, TimeoutError } from '@/lib/utils';
+
+const DEFAULT_TIMEOUT = 7000; // 7 seconds
 
 interface SessionValidationResult {
   isValid: boolean;
@@ -80,13 +83,27 @@ export const createSessionValidationService = () => {
       }
       
       // No current session provided, get fresh session from Supabase
-      const { data: { session: freshSession }, error } = await supabase.auth.getSession();
+      let freshSessionData: { session: Session | null } | null = null;
+      let getSessionError: any = null;
+
+      try {
+        const { data, error } = await withTimeout(
+          supabase.auth.getSession(),
+          DEFAULT_TIMEOUT,
+          "[SessionValidationService] Timeout fetching session"
+        );
+        if (error) getSessionError = error;
+        freshSessionData = data;
+      } catch (timeoutOrOtherError) {
+        getSessionError = timeoutOrOtherError;
+      }
       
-      if (error) {
-        console.error('❌ Session validation error:', {
-          message: error.message,
-          status: error.status,
-          code: error.code,
+      if (getSessionError) {
+        console.error('❌ Session validation error (getSession):', {
+          message: getSessionError.message,
+          status: getSessionError.status,
+          code: getSessionError.code,
+          isTimeout: getSessionError instanceof TimeoutError,
           timestamp: new Date().toISOString()
         });
         return {
@@ -94,10 +111,12 @@ export const createSessionValidationService = () => {
           session: null,
           user: null,
           needsRefresh: false,
-          error: error.message
+          error: getSessionError.message
         };
       }
       
+      const freshSession = freshSessionData?.session;
+
       // No session exists
       if (!freshSession) {
         console.log('ℹ️ No session found during validation');
@@ -132,13 +151,27 @@ export const createSessionValidationService = () => {
     try {
       console.log('🔄 Attempting session refresh with enhanced monitoring...');
       
-      const { data: { session }, error } = await supabase.auth.refreshSession();
+      let refreshedSessionData: { session: Session | null } | null = null;
+      let refreshSessionError: any = null;
+
+      try {
+        const { data, error } = await withTimeout(
+          supabase.auth.refreshSession(),
+          DEFAULT_TIMEOUT,
+          "[SessionValidationService] Timeout refreshing session"
+        );
+        if (error) refreshSessionError = error;
+        refreshedSessionData = data;
+      } catch (timeoutOrOtherError) {
+        refreshSessionError = timeoutOrOtherError;
+      }
       
-      if (error) {
+      if (refreshSessionError) {
         console.error('❌ Session refresh failed:', {
-          message: error.message,
-          status: error.status,
-          code: error.code,
+          message: refreshSessionError.message,
+          status: refreshSessionError.status,
+          code: refreshSessionError.code,
+          isTimeout: refreshSessionError instanceof TimeoutError,
           timestamp: new Date().toISOString()
         });
         return {
@@ -146,10 +179,12 @@ export const createSessionValidationService = () => {
           session: null,
           user: null,
           needsRefresh: false,
-          error: error.message
+          error: refreshSessionError.message
         };
       }
       
+      const session = refreshedSessionData?.session;
+
       if (!session) {
         console.log('ℹ️ No session returned after refresh attempt');
         return {
