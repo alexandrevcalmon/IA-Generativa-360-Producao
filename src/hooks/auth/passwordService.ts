@@ -78,42 +78,61 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
       if (!updateUserError) {
         console.log('✅ Password changed successfully in auth, updating database flags...');
-        let currentUserId: string | undefined;
-        try {
-          const { data: { user }, error: getUserError } = await withTimeout(
-            supabase.auth.getUser(),
-            DEFAULT_AUTH_TIMEOUT,
-            "[PasswordService] Timeout getting user after password update"
-          );
-
-          if (getUserError) {
-            console.error('⚠️ Error getting user after password update:', getUserError);
-            // Proceed, but flag update might target wrong/no user if this fails critically
-          }
-          currentUserId = user?.id;
-        } catch (timeoutOrOtherError) {
-           console.error('⚠️ Timeout or error getting user after password update:', timeoutOrOtherError);
-        }
-        
-        if (!currentUserId) {
-          console.warn('⚠️ No current user ID found after password change, cannot update flags.');
-          // Return success for password change itself, but flags are not updated.
-          // This situation should be rare.
-          return { error: null };
-        }
-        
-        // Update password change flags with improved error handling
-        // This function will also use withTimeout internally for its DB operations
-        await updatePasswordChangeFlags(currentUserId);
-        
-        console.log('✅ Password change process completed successfully');
+        // Proceed to update flags regardless of whether updateUserError was initially null,
+        // as we might now handle specific errors like "password already changed".
+      } else if (updateUserError && updateUserError.message === 'New password should be different from the old password.') {
+        console.warn('⚠️ Password in Auth is already set to the new password. Attempting to clear DB flags.');
+        // Treat as "success" for Auth, but we still need to clear DB flags.
+        // Clear the error so we can proceed to updatePasswordChangeFlags.
+        // The final return will still indicate original error if flag update fails.
       } else {
+        // For any other error (TimeoutError, other AuthApiErrors), handle and return.
         console.error('❌ Password change failed:', updateUserError);
-        // Pass the specific error (could be TimeoutError)
         handlePasswordChangeError(updateUserError, toast);
+        return { error: updateUserError };
       }
 
-      return { error: updateUserError };
+      // Common logic for successful auth update or "password already set" scenario:
+      // Attempt to get user and update DB flags.
+      let currentUserId: string | undefined;
+      try {
+        const { data: { user }, error: getUserError } = await withTimeout(
+          supabase.auth.getUser(),
+          DEFAULT_AUTH_TIMEOUT,
+          "[PasswordService] Timeout getting user after password update attempt"
+        );
+
+        if (getUserError) {
+          console.error('⚠️ Error getting user for flag update:', getUserError);
+          // If we can't get the user, we can't update flags.
+          // Return the original updateUserError if it exists and was the "already changed" type,
+          // otherwise null because auth part might have been considered "ok".
+          // This path is tricky, as password might be set in Auth but flags not.
+          return { error: (updateUserError?.message === 'New password should be different from the old password.') ? null : getUserError };
+        }
+        currentUserId = user?.id;
+      } catch (timeoutOrOtherError) {
+        console.error('⚠️ Timeout or other error getting user for flag update:', timeoutOrOtherError);
+        return { error: (updateUserError?.message === 'New password should be different from the old password.') ? null : timeoutOrOtherError as Error };
+      }
+
+      if (!currentUserId) {
+        console.warn('⚠️ No current user ID found, cannot update flags.');
+        return { error: (updateUserError?.message === 'New password should be different from the old password.') ? null : new Error("User ID not found for flag update") };
+      }
+
+      try {
+        await updatePasswordChangeFlags(currentUserId);
+        console.log('✅ Password change process (including flag update) completed successfully.');
+        // If updateUserError was the "already changed" error, and flags are now updated,
+        // then the overall operation can be considered a success.
+        return { error: (updateUserError?.message === 'New password should be different from the old password.') ? null : updateUserError };
+      } catch (flagUpdateError) {
+        console.error('❌ Failed to update password change flags:', flagUpdateError);
+        // If flag update fails, return this new error, or the original updateUserError if it's more critical.
+        return { error: flagUpdateError as Error || updateUserError };
+      }
+
     } catch (error) { // This outer catch is for unexpected errors in the try block's logic
       console.error('Change password error (outer try):', error);
       toast({
