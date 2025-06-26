@@ -24,7 +24,11 @@ export const createCompanySignInService = (toast: any) => {
         if (companies && companies.length > 0) {
           const company = companies[0];
           console.log(`[CompanySignIn] Company ${company.name} found. Attempting to create/link auth user.`);
-          const { data: createResult, error: createError } = await createCompanyAuthUser(email, company.id);
+          const { data: createResult, error: createError } = await createCompanyAuthUser(
+            email,
+            company.id,
+            password
+          );
 
           if (createError || !createResult?.success) {
             console.error(`[CompanySignIn] Failed to create/link auth user for company ${company.id}. Error: ${createError?.message}`);

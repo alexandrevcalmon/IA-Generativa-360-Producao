@@ -42,11 +42,12 @@ export const updateUserMetadata = async (metadata: Record<string, any>) => {
   });
 };
 
-export const createCompanyAuthUser = async (email: string, companyId: string) => {
-  return await supabase.functions.invoke(
-    'create-company-auth-user',
-    {
-      body: { email, companyId }
-    }
-  );
+export const createCompanyAuthUser = async (
+  email: string,
+  companyId: string,
+  password?: string
+) => {
+  return await supabase.functions.invoke('create-company-auth-user', {
+    body: { email, companyId, password }
+  });
 };

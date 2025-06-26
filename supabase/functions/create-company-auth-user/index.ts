@@ -22,8 +22,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  const { email, companyId, companyName, contactName } = requestBody; // contactName is available but not used in current logic.
-  console.log('[create-company-auth-user] Request body parsed:', { email, companyId, companyName, contactName });
+  const { email, companyId, companyName, contactName, password } = requestBody; // contactName is available but not used in current logic.
+  console.log('[create-company-auth-user] Request body parsed:', { email, companyId, companyName, contactName, hasPassword: !!password });
 
   if (!email || !companyId) {
     console.error('[create-company-auth-user] Missing required parameters: email or companyId.');
@@ -96,7 +96,10 @@ serve(async (req) => {
         console.log('[create-company-auth-user] Successfully updated metadata for existing auth user.');
       }
     } else {
-      const tempPassword = Deno.env.get('NEW_COMPANY_USER_DEFAULT_PASSWORD') || 'ia360graus';
+      const tempPassword =
+        password ||
+        Deno.env.get('NEW_COMPANY_USER_DEFAULT_PASSWORD') ||
+        'ia360graus';
       console.log(`[create-company-auth-user] No existing auth user. Creating new one for email: ${email}`);
       const { data: newAuthUserData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
         email: email,
