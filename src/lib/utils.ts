@@ -14,7 +14,7 @@ export class TimeoutError extends Error {
 }
 
 // Type to handle both Promises and Supabase PostgrestBuilders
-type PromiseOrPostgrestBuilder<T> = Promise<T> | { then: (onfulfilled?: ((value: T) => any) => any) => any };
+type PromiseOrPostgrestBuilder<T> = Promise<T> | { then: (onfulfilled?: (value: T) => any) => any };
 
 export function withTimeout<T>(
   promiseOrBuilder: PromiseOrPostgrestBuilder<T>,
