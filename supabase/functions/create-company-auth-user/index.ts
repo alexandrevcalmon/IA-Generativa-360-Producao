@@ -96,7 +96,14 @@ serve(async (req) => {
         console.log('[create-company-auth-user] Successfully updated metadata for existing auth user.');
       }
     } else {
-      const tempPassword = Deno.env.get('NEW_COMPANY_USER_DEFAULT_PASSWORD') || 'ia360graus';
+      const tempPassword = Deno.env.get('NEW_COMPANY_USER_DEFAULT_PASSWORD');
+      if (!tempPassword) {
+        console.error('[create-company-auth-user] Environment variable NEW_COMPANY_USER_DEFAULT_PASSWORD not set');
+        return new Response(
+          JSON.stringify({ error: 'Server misconfiguration: missing NEW_COMPANY_USER_DEFAULT_PASSWORD' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       console.log(`[create-company-auth-user] No existing auth user. Creating new one for email: ${email}`);
       const { data: newAuthUserData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
         email: email,

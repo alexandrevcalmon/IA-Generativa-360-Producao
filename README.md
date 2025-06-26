@@ -64,6 +64,15 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/ea0a5826-ab18-457b-b87e-64fa1d1c6779) and click on Share -> Publish.
 
+## Required environment variables
+
+Two Supabase Edge functions create authentication users for companies and collaborators. These functions require the following environment variables:
+
+- `NEW_COMPANY_USER_DEFAULT_PASSWORD`
+- `NEW_COLLABORATOR_DEFAULT_PASSWORD`
+
+Make sure these variables are defined in your deployment environment. If they are missing, the Edge functions will return an error when attempting to create new users.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!

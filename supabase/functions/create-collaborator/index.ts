@@ -140,7 +140,14 @@ serve(async (req) => {
       if (updateMetaError) console.error(`[create-collaborator] Error updating metadata for existing auth user ${authUserId}:`, updateMetaError.message); // Non-fatal for this flow.
       else console.log(`[create-collaborator] Metadata updated for existing auth user ${authUserId}.`);
     } else {
-      const tempPassword = Deno.env.get('NEW_COLLABORATOR_DEFAULT_PASSWORD') || 'ia360graus';
+      const tempPassword = Deno.env.get('NEW_COLLABORATOR_DEFAULT_PASSWORD');
+      if (!tempPassword) {
+        console.error('[create-collaborator] Environment variable NEW_COLLABORATOR_DEFAULT_PASSWORD not set');
+        return new Response(
+          JSON.stringify({ error: 'Server misconfiguration: missing NEW_COLLABORATOR_DEFAULT_PASSWORD' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       console.log(`[create-collaborator] No existing auth user. Creating new one for email: ${email}`);
       const { data: newAuthUserData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
         email: email, password: tempPassword, email_confirm: true,
