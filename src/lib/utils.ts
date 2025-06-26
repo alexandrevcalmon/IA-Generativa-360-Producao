@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -12,11 +13,19 @@ export class TimeoutError extends Error {
   }
 }
 
+// Type to handle both Promises and Supabase PostgrestBuilders
+type PromiseOrPostgrestBuilder<T> = Promise<T> | { then: (onfulfilled?: ((value: T) => any) => any) => any };
+
 export function withTimeout<T>(
-  promise: Promise<T>,
+  promiseOrBuilder: PromiseOrPostgrestBuilder<T>,
   ms: number,
   errorMessage = "Operation timed out"
 ): Promise<T> {
+  // Convert PostgrestBuilder to Promise if needed
+  const promise = typeof promiseOrBuilder.then === 'function' 
+    ? Promise.resolve(promiseOrBuilder)
+    : promiseOrBuilder as Promise<T>;
+
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       reject(new TimeoutError(errorMessage));
