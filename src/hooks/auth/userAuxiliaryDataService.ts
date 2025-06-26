@@ -60,7 +60,7 @@ export const createUserAuxiliaryDataService = () => {
       try {
         console.log('[UserAuxiliaryDataService] Checking if user is a company owner...');
         const companyData = await recoveryService.withRetry(async () => {
-          const { data, error } = await withTimeout(
+          return await withTimeout(
             supabase
               .from('companies')
               .select('*, needs_password_change')
@@ -69,12 +69,9 @@ export const createUserAuxiliaryDataService = () => {
             OPTIMIZED_TIMEOUT,
             "[UserAuxiliaryDataService] Timeout fetching company data"
           );
-
-          if (error) throw error;
-          return data;
         });
 
-        if (companyData) {
+        if (companyData?.data) {
           console.log('[UserAuxiliaryDataService] User is a company owner');
           
           // Ensure profile consistency without blocking
@@ -85,10 +82,10 @@ export const createUserAuxiliaryDataService = () => {
           return {
             role: 'company',
             profileData: { role: 'company' },
-            companyData,
+            companyData: companyData.data,
             collaboratorData: null,
             producerData: null,
-            needsPasswordChange: companyData.needs_password_change || false,
+            needsPasswordChange: companyData.data.needs_password_change || false,
           };
         }
       } catch (error) {
@@ -99,8 +96,8 @@ export const createUserAuxiliaryDataService = () => {
       let profileDataFromProfilesTable: { role: string } | null = null;
       try {
         console.log('[UserAuxiliaryDataService] Checking profiles table...');
-        profileDataFromProfilesTable = await recoveryService.withRetry(async () => {
-          const { data, error } = await withTimeout(
+        const profileResult = await recoveryService.withRetry(async () => {
+          return await withTimeout(
             supabase
               .from('profiles')
               .select('role')
@@ -109,10 +106,9 @@ export const createUserAuxiliaryDataService = () => {
             OPTIMIZED_TIMEOUT,
             "[UserAuxiliaryDataService] Timeout fetching profile data"
           );
-
-          if (error) throw error;
-          return data;
         });
+
+        profileDataFromProfilesTable = profileResult?.data || null;
 
         if (profileDataFromProfilesTable?.role && 
             profileDataFromProfilesTable.role !== 'student' && 
@@ -134,8 +130,8 @@ export const createUserAuxiliaryDataService = () => {
       // Enhanced collaborator check with retry
       try {
         console.log('[UserAuxiliaryDataService] Checking if user is a company collaborator...');
-        const collaboratorData = await recoveryService.withRetry(async () => {
-          const { data, error } = await withTimeout(
+        const collaboratorResult = await recoveryService.withRetry(async () => {
+          return await withTimeout(
             supabase
               .from('company_users')
               .select('*, needs_password_change, companies!inner(name)')
@@ -144,10 +140,9 @@ export const createUserAuxiliaryDataService = () => {
             OPTIMIZED_TIMEOUT,
             "[UserAuxiliaryDataService] Timeout fetching collaborator data"
           );
-
-          if (error) throw error;
-          return data;
         });
+
+        const collaboratorData = collaboratorResult?.data;
 
         if (collaboratorData) {
           console.log('[UserAuxiliaryDataService] User is a company collaborator');
