@@ -151,7 +151,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
       // Check and update company record
       try {
-        const { data: company, error: companyQueryError } = await withTimeout(
+        const companyResult = await withTimeout(
           supabase
             .from('companies')
             .select('id, needs_password_change')
@@ -161,11 +161,11 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           "[PasswordService] Timeout querying company for password flag"
         );
 
-        if (companyQueryError) {
-          console.error('⚠️ Error querying company record:', companyQueryError);
-        } else if (company?.needs_password_change) {
+        if (companyResult.error) {
+          console.error('⚠️ Error querying company record:', companyResult.error);
+        } else if (companyResult.data?.needs_password_change) {
           console.log('📊 Updating company password change flag...');
-          const { error: updateError } = await withTimeout(
+          const updateResult = await withTimeout(
             supabase
               .from('companies')
               .update({
@@ -177,8 +177,8 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             "[PasswordService] Timeout updating company password flag"
           );
 
-          if (updateError) {
-            console.error('⚠️ Could not update company password change flag:', updateError);
+          if (updateResult.error) {
+            console.error('⚠️ Could not update company password change flag:', updateResult.error);
           } else {
             console.log('✅ Company password change flag updated successfully');
           }
@@ -189,7 +189,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
       // Check and update collaborator record
       try {
-        const { data: collaborator, error: collaboratorQueryError } = await withTimeout(
+        const collaboratorResult = await withTimeout(
           supabase
             .from('company_users')
             .select('id, needs_password_change')
@@ -199,11 +199,11 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           "[PasswordService] Timeout querying collaborator for password flag"
         );
 
-        if (collaboratorQueryError) {
-          console.error('⚠️ Error querying collaborator record:', collaboratorQueryError);
-        } else if (collaborator?.needs_password_change) {
+        if (collaboratorResult.error) {
+          console.error('⚠️ Error querying collaborator record:', collaboratorResult.error);
+        } else if (collaboratorResult.data?.needs_password_change) {
           console.log('📊 Updating collaborator password change flag...');
-          const { error: updateError } = await withTimeout(
+          const updateResult = await withTimeout(
             supabase
               .from('company_users')
               .update({
@@ -215,8 +215,8 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             "[PasswordService] Timeout updating collaborator password flag"
           );
 
-          if (updateError) {
-            console.error('⚠️ Could not update collaborator password change flag:', updateError);
+          if (updateResult.error) {
+            console.error('⚠️ Could not update collaborator password change flag:', updateResult.error);
           } else {
             console.log('✅ Collaborator password change flag updated successfully');
           }

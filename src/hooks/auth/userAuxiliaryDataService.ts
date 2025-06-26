@@ -59,7 +59,7 @@ export const createUserAuxiliaryDataService = () => {
       // Enhanced company check with retry
       try {
         console.log('[UserAuxiliaryDataService] Checking if user is a company owner...');
-        const companyData = await recoveryService.withRetry(async () => {
+        const companyResult = await recoveryService.withRetry(async () => {
           return await withTimeout(
             supabase
               .from('companies')
@@ -71,7 +71,7 @@ export const createUserAuxiliaryDataService = () => {
           );
         });
 
-        if (companyData?.data) {
+        if (companyResult?.data) {
           console.log('[UserAuxiliaryDataService] User is a company owner');
           
           // Ensure profile consistency without blocking
@@ -82,10 +82,10 @@ export const createUserAuxiliaryDataService = () => {
           return {
             role: 'company',
             profileData: { role: 'company' },
-            companyData: companyData.data,
+            companyData: companyResult.data,
             collaboratorData: null,
             producerData: null,
-            needsPasswordChange: companyData.data.needs_password_change || false,
+            needsPasswordChange: companyResult.data.needs_password_change || false,
           };
         }
       } catch (error) {
