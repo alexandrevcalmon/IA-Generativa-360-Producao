@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getResetPasswordRedirectUrl } from './authUtils';
@@ -6,7 +5,6 @@ import { withTimeout, TimeoutError } from '@/lib/utils';
 
 const DEFAULT_AUTH_TIMEOUT = 7000; // Timeout para operações de autenticação (updateUser, getUser)
 const DEFAULT_DB_TIMEOUT = 10000; // Timeout mais longo para operações de banco de dados (select, update flags)
-
 
 export const createPasswordService = (toast: ReturnType<typeof useToast>['toast']) => {
   const resetPassword = async (email: string) => {
@@ -159,7 +157,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             .maybeSingle(),
           DEFAULT_DB_TIMEOUT,
           "[PasswordService] Timeout querying company for password flag"
-        );
+        ) as { data: any; error: any };
 
         if (companyResult.error) {
           console.error('⚠️ Error querying company record:', companyResult.error);
@@ -175,7 +173,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
               .eq('auth_user_id', userId),
             DEFAULT_DB_TIMEOUT,
             "[PasswordService] Timeout updating company password flag"
-          );
+          ) as { error: any };
 
           if (updateResult.error) {
             console.error('⚠️ Could not update company password change flag:', updateResult.error);
@@ -197,7 +195,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             .maybeSingle(),
           DEFAULT_DB_TIMEOUT,
           "[PasswordService] Timeout querying collaborator for password flag"
-        );
+        ) as { data: any; error: any };
 
         if (collaboratorResult.error) {
           console.error('⚠️ Error querying collaborator record:', collaboratorResult.error);
@@ -213,7 +211,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
               .eq('auth_user_id', userId),
             DEFAULT_DB_TIMEOUT,
             "[PasswordService] Timeout updating collaborator password flag"
-          );
+          ) as { error: any };
 
           if (updateResult.error) {
             console.error('⚠️ Could not update collaborator password change flag:', updateResult.error);
