@@ -6,7 +6,7 @@ import { createRoleManagementService } from './roleManagementService';
 import { createSessionRecoveryService } from './sessionRecoveryService';
 import { withTimeout, TimeoutError } from '@/lib/utils';
 
-const OPTIMIZED_TIMEOUT = 8000; // Increased from 4000 to 8000ms for better reliability
+const OPTIMIZED_TIMEOUT = 10000; // Increased from 8000 to 10000ms for better reliability
 
 export const createUserAuxiliaryDataService = () => {
   const producerRoleService = createProducerRoleService();
@@ -88,7 +88,7 @@ export const createUserAuxiliaryDataService = () => {
           const profileData = profileResult.value.data;
           
           // Check if user is a company owner
-          if (profileData.companies?.length > 0) {
+          if (Array.isArray(profileData.companies) && profileData.companies.length > 0) {
             const companyData = profileData.companies[0];
             console.log('[UserAuxiliaryDataService] User is a company owner');
             
@@ -102,11 +102,11 @@ export const createUserAuxiliaryDataService = () => {
               companyData,
               collaboratorData: null,
               producerData: null,
-              needsPasswordChange: companyData.needs_password_change || false,
+              needsPasswordChange: companyData?.needs_password_change || false,
             };
           }
           // Check if user is a collaborator
-          else if (profileData.company_users?.length > 0) {
+          else if (Array.isArray(profileData.company_users) && profileData.company_users.length > 0) {
             const collaboratorData = profileData.company_users[0];
             console.log('[UserAuxiliaryDataService] User is a company collaborator');
             
@@ -123,7 +123,7 @@ export const createUserAuxiliaryDataService = () => {
                 company_name: collaboratorData.companies?.name || 'Unknown Company',
               },
               producerData: null,
-              needsPasswordChange: collaboratorData.needs_password_change || false,
+              needsPasswordChange: collaboratorData?.needs_password_change || false,
             };
           }
           // Use explicit role from profiles
