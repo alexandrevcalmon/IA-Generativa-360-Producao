@@ -1,10 +1,11 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getResetPasswordRedirectUrl } from './authUtils';
 import { withTimeout, TimeoutError } from '@/lib/utils';
 
-const DEFAULT_AUTH_TIMEOUT = 7000; // Timeout para operações de autenticação (updateUser, getUser)
-const DEFAULT_DB_TIMEOUT = 10000; // Timeout mais longo para operações de banco de dados (select, update flags)
+const DEFAULT_AUTH_TIMEOUT = 10000; // Increased from 7000ms
+const DEFAULT_DB_TIMEOUT = 12000; // Increased from 10000ms
 
 export const createPasswordService = (toast: ReturnType<typeof useToast>['toast']) => {
   const resetPassword = async (email: string) => {
@@ -30,6 +31,12 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           toast({
             title: "Limite de tentativas atingido",
             description: "Por segurança, aguarde alguns minutos antes de solicitar outro email de redefinição.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Access denied')) {
+          toast({
+            title: "Acesso negado",
+            description: "Erro de permissão. Tente novamente ou contate o suporte.",
             variant: "destructive",
           });
         } else {
@@ -76,22 +83,15 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
       if (!updateUserError) {
         console.log('✅ Password changed successfully in auth, updating database flags...');
-        // Proceed to update flags regardless of whether updateUserError was initially null,
-        // as we might now handle specific errors like "password already changed".
       } else if (updateUserError && updateUserError.message === 'New password should be different from the old password.') {
         console.warn('⚠️ Password in Auth is already set to the new password. Attempting to clear DB flags.');
-        // Treat as "success" for Auth, but we still need to clear DB flags.
-        // Clear the error so we can proceed to updatePasswordChangeFlags.
-        // The final return will still indicate original error if flag update fails.
       } else {
-        // For any other error (TimeoutError, other AuthApiErrors), handle and return.
         console.error('❌ Password change failed:', updateUserError);
         handlePasswordChangeError(updateUserError, toast);
         return { error: updateUserError };
       }
 
-      // Common logic for successful auth update or "password already set" scenario:
-      // Attempt to get user and update DB flags.
+      // Get user and update DB flags with improved error handling
       let currentUserId: string | undefined;
       try {
         const { data: { user }, error: getUserError } = await withTimeout(
@@ -102,10 +102,6 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
         if (getUserError) {
           console.error('⚠️ Error getting user for flag update:', getUserError);
-          // If we can't get the user, we can't update flags.
-          // Return the original updateUserError if it exists and was the "already changed" type,
-          // otherwise null because auth part might have been considered "ok".
-          // This path is tricky, as password might be set in Auth but flags not.
           return { error: (updateUserError?.message === 'New password should be different from the old password.') ? null : getUserError };
         }
         currentUserId = user?.id;
@@ -122,23 +118,19 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
       try {
         await updatePasswordChangeFlags(currentUserId);
         console.log('✅ Password change process (including flag update) completed successfully.');
-        // If updateUserError was the "already changed" error, and flags are now updated,
-        // then the overall operation can be considered a success.
         return { error: (updateUserError?.message === 'New password should be different from the old password.') ? null : updateUserError };
       } catch (flagUpdateError) {
         console.error('❌ Failed to update password change flags:', flagUpdateError);
-        // If flag update fails, return this new error, or the original updateUserError if it's more critical.
         return { error: flagUpdateError as Error || updateUserError };
       }
 
-    } catch (error) { // This outer catch is for unexpected errors in the try block's logic
+    } catch (error) {
       console.error('Change password error (outer try):', error);
       toast({
         title: "Erro de conexão",
         description: "Não foi possível alterar a senha. Verifique sua conexão com a internet.",
         variant: "destructive",
       });
-      // Ensure a consistent return structure
       return { error: error instanceof Error ? error : new Error(String(error)) };
     }
   };
@@ -147,7 +139,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     try {
       console.log('🔄 Updating password change flags for user:', userId);
 
-      // Check and update company record
+      // Check and update company record with improved error handling
       try {
         const companyResult = await withTimeout(
           supabase
@@ -159,7 +151,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           "[PasswordService] Timeout querying company for password flag"
         );
 
-        if (companyResult.error) {
+        if (companyResult.error && !companyResult.error.message.includes('Access denied')) {
           console.error('⚠️ Error querying company record:', companyResult.error);
         } else if (companyResult.data?.needs_password_change) {
           console.log('📊 Updating company password change flag...');
@@ -185,7 +177,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         console.error('❌ Error or timeout during company flag update:', error instanceof TimeoutError ? error.message : error);
       }
 
-      // Check and update collaborator record
+      // Check and update collaborator record with improved error handling
       try {
         const collaboratorResult = await withTimeout(
           supabase
@@ -197,7 +189,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           "[PasswordService] Timeout querying collaborator for password flag"
         );
 
-        if (collaboratorResult.error) {
+        if (collaboratorResult.error && !collaboratorResult.error.message.includes('Access denied')) {
           console.error('⚠️ Error querying collaborator record:', collaboratorResult.error);
         } else if (collaboratorResult.data?.needs_password_change) {
           console.log('📊 Updating collaborator password change flag...');
@@ -223,7 +215,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         console.error('❌ Error or timeout during collaborator flag update:', error instanceof TimeoutError ? error.message : error);
       }
 
-    } catch (error) { // This outer catch is for unexpected errors in the overall logic of this function.
+    } catch (error) {
       console.error('❌ Critical error updating password change flags:', error);
     }
   };
@@ -239,6 +231,12 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
       toast({
         title: "Senha muito fraca",
         description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+    } else if (error.message.includes('Access denied')) {
+      toast({
+        title: "Acesso negado",
+        description: "Erro de permissão ao alterar senha. Tente fazer login novamente.",
         variant: "destructive",
       });
     } else {

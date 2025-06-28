@@ -38,7 +38,12 @@ export function withTimeout<T>(
       })
       .catch((error) => {
         clearTimeout(timer);
-        reject(error);
+        // Improve 403 error handling
+        if (error?.code === 'PGRST301' || error?.message?.includes('403')) {
+          reject(new Error(`Access denied: ${error.message || 'Insufficient permissions'}`));
+        } else {
+          reject(error);
+        }
       });
   });
 }
