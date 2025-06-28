@@ -4,8 +4,8 @@ import { useToast } from '@/hooks/use-toast';
 import { getResetPasswordRedirectUrl } from './authUtils';
 import { withTimeout, TimeoutError } from '@/lib/utils';
 
-const DEFAULT_AUTH_TIMEOUT = 10000; // Increased from 7000ms
-const DEFAULT_DB_TIMEOUT = 12000; // Increased from 10000ms
+const DEFAULT_AUTH_TIMEOUT = 3000; // Reduced from 10000ms to 3000ms
+const DEFAULT_DB_TIMEOUT = 4000; // Reduced from 12000ms to 4000ms
 
 export const createPasswordService = (toast: ReturnType<typeof useToast>['toast']) => {
   const resetPassword = async (email: string) => {
@@ -21,6 +21,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
       );
       
       if (error) {
+        // Enhanced error handling for 403 errors
         if (error.message.includes('User not found')) {
           toast({
             title: "Email não encontrado",
@@ -33,7 +34,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             description: "Por segurança, aguarde alguns minutos antes de solicitar outro email de redefinição.",
             variant: "destructive",
           });
-        } else if (error.message.includes('Access denied')) {
+        } else if (error.message.includes('Access denied') || error.message.includes('403')) {
           toast({
             title: "Acesso negado",
             description: "Erro de permissão. Tente novamente ou contate o suporte.",
@@ -56,11 +57,21 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
       return { error };
     } catch (error) {
       console.error('Reset password error:', error);
-      toast({
-        title: "Erro de conexão",
-        description: "Não foi possível enviar o email. Verifique sua conexão com a internet.",
-        variant: "destructive",
-      });
+      
+      // Enhanced error handling for timeouts and 403s
+      if (error instanceof TimeoutError) {
+        toast({
+          title: "Timeout",
+          description: "A operação demorou muito para responder. Tente novamente.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro de conexão",
+          description: "Não foi possível enviar o email. Verifique sua conexão com a internet.",
+          variant: "destructive",
+        });
+      }
       return { error };
     }
   };
@@ -126,11 +137,21 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
     } catch (error) {
       console.error('Change password error (outer try):', error);
-      toast({
-        title: "Erro de conexão",
-        description: "Não foi possível alterar a senha. Verifique sua conexão com a internet.",
-        variant: "destructive",
-      });
+      
+      // Enhanced error handling
+      if (error instanceof TimeoutError) {
+        toast({
+          title: "Timeout",
+          description: "A operação demorou muito para responder. Tente novamente.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro de conexão",
+          description: "Não foi possível alterar a senha. Verifique sua conexão com a internet.",
+          variant: "destructive",
+        });
+      }
       return { error: error instanceof Error ? error : new Error(String(error)) };
     }
   };
@@ -139,7 +160,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     try {
       console.log('🔄 Updating password change flags for user:', userId);
 
-      // Check and update company record with improved error handling
+      // Check and update company record with improved error handling and reduced timeout
       try {
         const companyResult = await withTimeout(
           supabase
@@ -151,7 +172,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           "[PasswordService] Timeout querying company for password flag"
         );
 
-        if (companyResult.error && !companyResult.error.message.includes('Access denied')) {
+        if (companyResult.error && !companyResult.error.message.includes('Access denied') && !companyResult.error.message.includes('403')) {
           console.error('⚠️ Error querying company record:', companyResult.error);
         } else if (companyResult.data?.needs_password_change) {
           console.log('📊 Updating company password change flag...');
@@ -177,7 +198,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         console.error('❌ Error or timeout during company flag update:', error instanceof TimeoutError ? error.message : error);
       }
 
-      // Check and update collaborator record with improved error handling
+      // Check and update collaborator record with improved error handling and reduced timeout
       try {
         const collaboratorResult = await withTimeout(
           supabase
@@ -189,7 +210,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           "[PasswordService] Timeout querying collaborator for password flag"
         );
 
-        if (collaboratorResult.error && !collaboratorResult.error.message.includes('Access denied')) {
+        if (collaboratorResult.error && !collaboratorResult.error.message.includes('Access denied') && !collaboratorResult.error.message.includes('403')) {
           console.error('⚠️ Error querying collaborator record:', collaboratorResult.error);
         } else if (collaboratorResult.data?.needs_password_change) {
           console.log('📊 Updating collaborator password change flag...');
@@ -233,7 +254,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         description: "A senha deve ter pelo menos 6 caracteres.",
         variant: "destructive",
       });
-    } else if (error.message.includes('Access denied')) {
+    } else if (error.message.includes('Access denied') || error.message.includes('403')) {
       toast({
         title: "Acesso negado",
         description: "Erro de permissão ao alterar senha. Tente fazer login novamente.",

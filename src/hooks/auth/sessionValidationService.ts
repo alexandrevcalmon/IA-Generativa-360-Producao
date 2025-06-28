@@ -4,8 +4,8 @@ import { Session, User } from '@supabase/supabase-js';
 import { createSessionRecoveryService } from './sessionRecoveryService';
 import { withTimeout, TimeoutError } from '@/lib/utils';
 
-const OPTIMIZED_TIMEOUT = 8000; // Increased from 4000ms
-const SESSION_CACHE_DURATION = 60000; // 1 minute cache
+const OPTIMIZED_TIMEOUT = 3000; // Reduced from 8000ms to 3000ms
+const SESSION_CACHE_DURATION = 5 * 60 * 1000; // Increased to 5 minutes for better performance
 
 interface SessionValidationResult {
   isValid: boolean;
@@ -15,7 +15,7 @@ interface SessionValidationResult {
   error?: string;
 }
 
-// Simple session cache to avoid repeated validation calls
+// Enhanced session cache with better management
 let sessionCache: { session: Session | null; timestamp: number; isValid: boolean } | null = null;
 
 export const createSessionValidationService = () => {
@@ -28,7 +28,7 @@ export const createSessionValidationService = () => {
         timestamp: new Date().toISOString()
       });
 
-      // Check cache first to avoid duplicate validation
+      // Check cache first with extended duration
       if (sessionCache && (Date.now() - sessionCache.timestamp) < SESSION_CACHE_DURATION) {
         console.log('✅ Using cached session validation result');
         return {
@@ -43,7 +43,7 @@ export const createSessionValidationService = () => {
       if (currentSession) {
         const now = Math.floor(Date.now() / 1000);
         const expiresAt = currentSession.expires_at;
-        const bufferTime = 5 * 60; // Increased buffer to 5 minutes
+        const bufferTime = 5 * 60; // 5 minutes buffer
         
         // Check if session is expired
         if (expiresAt && now >= expiresAt) {
@@ -91,7 +91,7 @@ export const createSessionValidationService = () => {
         };
       }
       
-      // No current session, get fresh session with reduced retry
+      // No current session, get fresh session with reduced retry and timeout
       const freshSessionData = await recoveryService.withRetry(async () => {
         const { data, error } = await withTimeout(
           supabase.auth.getSession(),
@@ -101,7 +101,7 @@ export const createSessionValidationService = () => {
         
         if (error) throw error;
         return data;
-      }, 1); // Reduced to single retry to avoid loops
+      }, 1); // Single retry only
       
       const freshSession = freshSessionData?.session;
 
@@ -127,8 +127,14 @@ export const createSessionValidationService = () => {
       // Clear cache on error
       sessionCache = null;
       
-      // Handle authentication failures
-      if (error?.status === 403 || error?.message?.includes('Authentication required') || error?.message?.includes('Access denied')) {
+      // Enhanced 403 error handling
+      const is403Error = error?.status === 403 || 
+                        error?.message?.includes('Authentication required') || 
+                        error?.message?.includes('Access denied') ||
+                        error?.message?.includes('403');
+      
+      if (is403Error) {
+        console.warn('🚨 403 error in session validation - possible RLS policy issue');
         return {
           isValid: false,
           session: null,
@@ -190,15 +196,14 @@ export const createSessionValidationService = () => {
     } catch (error) {
       console.error('💥 Session refresh error:', error);
       
-      // Handle authentication failures
-      if (error?.status === 403 || error?.message?.includes('Authentication required') || error?.message?.includes('Access denied')) {
-        return {
-          isValid: false,
-          session: null,
-          user: null,
-          needsRefresh: false,
-          error: 'Authentication required'
-        };
+      // Enhanced 403 error handling
+      const is403Error = error?.status === 403 || 
+                        error?.message?.includes('Authentication required') || 
+                        error?.message?.includes('Access denied') ||
+                        error?.message?.includes('403');
+      
+      if (is403Error) {
+        console.warn('🚨 403 error in session refresh - possible RLS policy issue');
       }
       
       return {
