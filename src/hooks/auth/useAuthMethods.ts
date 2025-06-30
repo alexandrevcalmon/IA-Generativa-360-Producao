@@ -41,6 +41,9 @@ export function useAuthMethods({
     
     console.log('🔄 Refreshing user role for:', user.email);
     try {
+      // Clear session cache for this user to ensure fresh data
+      sessionService.clearCache(user.id);
+      
       // Use the improved role determination service
       const auxData = await fetchUserRoleAuxiliaryData(user);
       
@@ -58,7 +61,8 @@ export function useAuthMethods({
       
       console.log('✅ User role refreshed:', finalRole, { 
         hasCompanyData: !!auxData.companyData, 
-        hasCollaboratorData: !!auxData.collaboratorData 
+        hasCollaboratorData: !!auxData.collaboratorData,
+        hasProducerData: !!auxData.producerData
       });
     } catch (error) {
       console.error('❌ Error refreshing user role:', error);
@@ -78,10 +82,13 @@ export function useAuthMethods({
       if (result.user && !result.error) {
         console.log('✅ Sign in successful, validating session...');
         
-        // Validate the session immediately after sign in
-        const validation = await sessionService.validateSession();
+        // Clear any existing cache to ensure fresh validation
+        sessionService.clearCache(result.user.id);
         
-        if (!validation.isValid) {
+        // Validate the session immediately after sign in
+        const validation = await sessionService.validateSession(result.session);
+        
+        if (!validation.isValid && !validation.needsRefresh) {
           console.error('❌ Session validation failed after sign in');
           setLoading(false);
           return { error: { message: 'Session validation failed' } };
@@ -127,6 +134,8 @@ export function useAuthMethods({
           try {
             const auxData = await fetchUserRoleAuxiliaryData(authUser);
             const finalRole = auxData.role || authUser.user_metadata?.role || 'student';
+            
+            console.log('👤 User role determined:', finalRole, 'for user:', authUser.email);
             
             setUserRole(finalRole);
             setNeedsPasswordChange(result.needsPasswordChange || false);
@@ -179,6 +188,11 @@ export function useAuthMethods({
     console.log('🚪 Enhanced AuthProvider signOut called');
     
     try {
+      // Clear session cache before sign out
+      if (user) {
+        sessionService.clearCache(user.id);
+      }
+      
       const result = await authService.signOut();
       
       if (!result.error) {
@@ -198,6 +212,7 @@ export function useAuthMethods({
       console.error('💥 SignOut error:', error);
       // Force local cleanup on any error
       cleanupService.clearLocalSession();
+      sessionService.clearCache();
       setUser(null);
       setSession(null);
       setUserRole(null);

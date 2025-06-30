@@ -6,11 +6,11 @@ import { createRoleManagementService } from './roleManagementService';
 import { createSessionRecoveryService } from './sessionRecoveryService';
 import { withTimeout, TimeoutError } from '@/lib/utils';
 
-const OPTIMIZED_TIMEOUT = 2000; // Further reduced to 2000ms to prevent long waits
-const CACHE_DURATION = 10 * 60 * 1000; // Increased to 10 minutes for better performance
-const MAX_RETRIES = 1; // Keep at 1 to prevent loops
+const OPTIMIZED_TIMEOUT = 3000; // Increased for better reliability
+const CACHE_DURATION = 3 * 60 * 1000; // Reduced to 3 minutes for fresher data
+const MAX_RETRIES = 1;
 
-// Enhanced cache with better management
+// Enhanced cache with user-specific keys
 const requestCache = new Map();
 const failureTracker = new Map();
 
@@ -19,10 +19,9 @@ export const createUserAuxiliaryDataService = () => {
   const roleManagementService = createRoleManagementService();
   const recoveryService = createSessionRecoveryService();
 
-  // Circuit breaker implementation
   const shouldSkipRequest = (cacheKey: string) => {
     const failures = failureTracker.get(cacheKey) || 0;
-    return failures >= 2; // Stop after 2 consecutive failures
+    return failures >= 2;
   };
 
   const recordFailure = (cacheKey: string) => {
@@ -49,7 +48,6 @@ export const createUserAuxiliaryDataService = () => {
     // Circuit breaker check
     if (shouldSkipRequest(cacheKey)) {
       console.log(`[UserAuxiliaryDataService] Circuit breaker active for user: ${user.email}`);
-      // Return cached data if available, otherwise safe defaults
       const cached = requestCache.get(cacheKey);
       if (cached) {
         return cached.data;
@@ -67,7 +65,52 @@ export const createUserAuxiliaryDataService = () => {
     console.log(`[UserAuxiliaryDataService] Fetching auxiliary data for user: ${user.email}`);
 
     try {
-      // Step 1: Get basic profile data with a simple, valid query
+      // Step 1: Check producer status FIRST with enhanced function
+      let isProducer = false;
+      let producerData = null;
+      try {
+        // Use the enhanced producer check that includes auto-migration
+        const producerCheckResult = await withTimeout(
+          supabase.rpc('is_current_user_producer_enhanced'),
+          OPTIMIZED_TIMEOUT,
+          "[UserAuxiliaryDataService] Timeout checking producer status"
+        );
+        
+        isProducer = !producerCheckResult.error && producerCheckResult.data === true;
+        
+        if (isProducer) {
+          console.log('[UserAuxiliaryDataService] User is confirmed as producer');
+          
+          // Get producer data
+          producerData = await withTimeout(
+            producerRoleService.getProducerData(user.id),
+            OPTIMIZED_TIMEOUT,
+            "[UserAuxiliaryDataService] Timeout fetching producer data"
+          );
+          
+          // Ensure profile consistency in background
+          roleManagementService.ensureProfileConsistency(user.id, 'producer').catch(error => {
+            console.warn('[UserAuxiliaryDataService] Profile consistency failed (non-blocking):', error);
+          });
+          
+          const result = {
+            role: 'producer',
+            profileData: { role: 'producer' },
+            companyData: null,
+            collaboratorData: null,
+            producerData,
+            needsPasswordChange: false,
+          };
+          
+          requestCache.set(cacheKey, { data: result, timestamp: Date.now() });
+          recordSuccess(cacheKey);
+          return result;
+        }
+      } catch (producerError) {
+        console.warn('[UserAuxiliaryDataService] Producer check failed:', producerError);
+      }
+
+      // Step 2: Get basic profile data
       let profileData = null;
       try {
         const profileResult = await withTimeout(
@@ -87,43 +130,7 @@ export const createUserAuxiliaryDataService = () => {
         console.warn('[UserAuxiliaryDataService] Profile fetch failed:', profileError);
       }
 
-      // Step 2: Check producer status with reduced timeout
-      let isProducer = false;
-      let producerData = null;
-      try {
-        isProducer = await withTimeout(
-          producerRoleService.isUserProducer(user.id),
-          OPTIMIZED_TIMEOUT,
-          "[UserAuxiliaryDataService] Timeout checking producer status"
-        );
-        
-        if (isProducer) {
-          console.log('[UserAuxiliaryDataService] User is a producer');
-          producerData = await withTimeout(
-            producerRoleService.getProducerData(user.id),
-            OPTIMIZED_TIMEOUT,
-            "[UserAuxiliaryDataService] Timeout fetching producer data"
-          );
-          
-          const result = {
-            role: 'producer',
-            profileData: { role: 'producer' },
-            companyData: null,
-            collaboratorData: null,
-            producerData,
-            needsPasswordChange: false,
-          };
-          
-          // Cache and return early for producers
-          requestCache.set(cacheKey, { data: result, timestamp: Date.now() });
-          recordSuccess(cacheKey);
-          return result;
-        }
-      } catch (producerError) {
-        console.warn('[UserAuxiliaryDataService] Producer check failed:', producerError);
-      }
-
-      // Step 3: Check company ownership with separate, valid query
+      // Step 3: Check company ownership
       let companyData = null;
       try {
         const companyResult = await withTimeout(
@@ -149,12 +156,10 @@ export const createUserAuxiliaryDataService = () => {
             needsPasswordChange: companyData?.needs_password_change || false,
           };
           
-          // Update profile consistency in background (non-blocking)
           roleManagementService.ensureProfileConsistency(user.id, 'company').catch(error => {
             console.warn('[UserAuxiliaryDataService] Profile consistency failed (non-blocking):', error);
           });
           
-          // Cache and return early for company owners
           requestCache.set(cacheKey, { data: result, timestamp: Date.now() });
           recordSuccess(cacheKey);
           return result;
@@ -163,7 +168,7 @@ export const createUserAuxiliaryDataService = () => {
         console.warn('[UserAuxiliaryDataService] Company check failed:', companyError);
       }
 
-      // Step 4: Check collaborator status with separate, valid query
+      // Step 4: Check collaborator status
       let collaboratorData = null;
       try {
         const collaboratorResult = await withTimeout(
@@ -179,7 +184,7 @@ export const createUserAuxiliaryDataService = () => {
         if (!collaboratorResult.error && collaboratorResult.data) {
           collaboratorData = collaboratorResult.data;
           
-          // Get company name with separate query
+          // Get company name
           let companyName = 'Unknown Company';
           try {
             const companyNameResult = await withTimeout(
@@ -213,12 +218,10 @@ export const createUserAuxiliaryDataService = () => {
             needsPasswordChange: collaboratorData?.needs_password_change || false,
           };
           
-          // Update profile consistency in background (non-blocking)
           roleManagementService.ensureProfileConsistency(user.id, 'collaborator').catch(error => {
             console.warn('[UserAuxiliaryDataService] Profile consistency failed (non-blocking):', error);
           });
           
-          // Cache and return early for collaborators
           requestCache.set(cacheKey, { data: result, timestamp: Date.now() });
           recordSuccess(cacheKey);
           return result;
@@ -227,7 +230,7 @@ export const createUserAuxiliaryDataService = () => {
         console.warn('[UserAuxiliaryDataService] Collaborator check failed:', collaboratorError);
       }
 
-      // Step 5: Use explicit role from profiles or default to student
+      // Step 5: Default to student with profile consistency
       const finalRole = profileData?.role && profileData.role !== 'student' ? profileData.role : 'student';
       console.log(`[UserAuxiliaryDataService] Using role: ${finalRole}`);
       
@@ -240,59 +243,41 @@ export const createUserAuxiliaryDataService = () => {
         needsPasswordChange: false,
       };
 
-      // Update profile consistency in background (non-blocking)
       roleManagementService.ensureProfileConsistency(user.id, finalRole).catch(error => {
         console.warn('[UserAuxiliaryDataService] Profile consistency failed (non-blocking):', error);
       });
       
-      // Cache successful result
       requestCache.set(cacheKey, { data: result, timestamp: Date.now() });
       recordSuccess(cacheKey);
-
-      // Clean up old cache entries periodically
-      setTimeout(() => {
-        for (const [key, value] of requestCache.entries()) {
-          if (Date.now() - value.timestamp > CACHE_DURATION) {
-            requestCache.delete(key);
-          }
-        }
-      }, CACHE_DURATION);
 
       return result;
 
     } catch (criticalError) {
       console.error('[UserAuxiliaryDataService] Critical error in auxiliary data fetch:', criticalError);
       
-      // Record failure for circuit breaker
       recordFailure(cacheKey);
       
-      // Distinguish between different types of errors
       const is403Error = criticalError?.status === 403 || 
                         criticalError?.message?.includes('403') ||
                         criticalError?.message?.includes('Access denied') ||
                         criticalError?.message?.includes('Authentication required');
       
       const isTimeoutError = criticalError instanceof TimeoutError;
-      const is400Error = criticalError?.status === 400 || 
-                        criticalError?.message?.includes('400') ||
-                        criticalError?.message?.includes('Bad Request');
       
       if (is403Error) {
         console.warn('[UserAuxiliaryDataService] 403 error detected, likely RLS policy issue');
       } else if (isTimeoutError) {
         console.warn('[UserAuxiliaryDataService] Timeout error detected, server may be overloaded');
-      } else if (is400Error) {
-        console.warn('[UserAuxiliaryDataService] 400 error detected, likely invalid SQL query - using fallback');
       }
       
-      // Check for cached data to return during errors
+      // Check for cached data
       const cached = requestCache.get(cacheKey);
       if (cached) {
         console.log('[UserAuxiliaryDataService] Returning cached data due to error');
         return cached.data;
       }
       
-      // Return safe defaults with longer cache for errors
+      // Return safe defaults
       const defaultResult = {
         role: 'student',
         profileData: { role: 'student' },
@@ -302,9 +287,7 @@ export const createUserAuxiliaryDataService = () => {
         needsPasswordChange: false,
       };
 
-      // Cache default result for longer during errors
       requestCache.set(cacheKey, { data: defaultResult, timestamp: Date.now() });
-
       return defaultResult;
     }
   };
