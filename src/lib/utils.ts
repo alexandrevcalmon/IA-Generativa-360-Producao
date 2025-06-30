@@ -28,7 +28,7 @@ export function withTimeout<T>(
 
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
-      reject(new TimeoutError(errorMessage));
+      reject(new TimeoutError(`${errorMessage} (timeout: ${ms}ms)`));
     }, ms);
 
     promise
@@ -38,10 +38,19 @@ export function withTimeout<T>(
       })
       .catch((error) => {
         clearTimeout(timer);
-        // Improve 403 error handling
+        // Improve error handling and prevent cascading issues
         if (error?.code === 'PGRST301' || error?.message?.includes('403')) {
+          console.warn(`403/PGRST301 error caught in withTimeout: ${error.message}`);
           reject(new Error(`Access denied: ${error.message || 'Insufficient permissions'}`));
+        } else if (error?.status === 400 || error?.message?.includes('400')) {
+          console.warn(`400 error caught in withTimeout: ${error.message}`);
+          reject(new Error(`Bad Request: ${error.message || 'Invalid query or parameters'}`));
+        } else if (error instanceof TimeoutError) {
+          // Re-throw timeout errors without modification
+          reject(error);
         } else {
+          // Log other errors for debugging
+          console.warn(`Error caught in withTimeout: ${error?.message || error}`);
           reject(error);
         }
       });

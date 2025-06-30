@@ -4,8 +4,8 @@ import { Session, User } from '@supabase/supabase-js';
 import { createSessionRecoveryService } from './sessionRecoveryService';
 import { withTimeout, TimeoutError } from '@/lib/utils';
 
-const OPTIMIZED_TIMEOUT = 3000; // Reduced from 8000ms to 3000ms
-const SESSION_CACHE_DURATION = 5 * 60 * 1000; // Increased to 5 minutes for better performance
+const OPTIMIZED_TIMEOUT = 2000; // Reduced from 3000ms to 2000ms
+const SESSION_CACHE_DURATION = 15 * 60 * 1000; // Increased to 15 minutes for better performance
 
 interface SessionValidationResult {
   isValid: boolean;
@@ -39,11 +39,11 @@ export const createSessionValidationService = () => {
         };
       }
       
-      // If we have a current session, validate it first
+      // If we have a current session, validate it first with local checks
       if (currentSession) {
         const now = Math.floor(Date.now() / 1000);
         const expiresAt = currentSession.expires_at;
-        const bufferTime = 5 * 60; // 5 minutes buffer
+        const bufferTime = 10 * 60; // 10 minutes buffer (increased for safety)
         
         // Check if session is expired
         if (expiresAt && now >= expiresAt) {
@@ -91,19 +91,39 @@ export const createSessionValidationService = () => {
         };
       }
       
-      // No current session, get fresh session with reduced retry and timeout
-      const freshSessionData = await recoveryService.withRetry(async () => {
-        const { data, error } = await withTimeout(
+      // No current session, try to get fresh session with aggressive timeout and limited retries
+      let freshSessionData;
+      try {
+        freshSessionData = await withTimeout(
           supabase.auth.getSession(),
           OPTIMIZED_TIMEOUT,
           "[SessionValidationService] Timeout fetching session"
         );
-        
-        if (error) throw error;
-        return data;
-      }, 1); // Single retry only
+      } catch (timeoutError) {
+        console.warn('⚠️ Session fetch timed out, assuming no session');
+        sessionCache = { session: null, timestamp: Date.now(), isValid: false };
+        return {
+          isValid: false,
+          session: null,
+          user: null,
+          needsRefresh: false,
+          error: 'Session fetch timeout'
+        };
+      }
       
-      const freshSession = freshSessionData?.session;
+      if (freshSessionData.error) {
+        console.warn('⚠️ Session fetch error:', freshSessionData.error);
+        sessionCache = { session: null, timestamp: Date.now(), isValid: false };
+        return {
+          isValid: false,
+          session: null,
+          user: null,
+          needsRefresh: false,
+          error: freshSessionData.error.message
+        };
+      }
+      
+      const freshSession = freshSessionData?.data?.session;
 
       if (!freshSession) {
         console.log('ℹ️ No session found during validation');
@@ -116,10 +136,22 @@ export const createSessionValidationService = () => {
         };
       }
       
-      // Validate the fresh session recursively (but only once to avoid loops)
-      const recursiveResult = await validateSession(freshSession);
-      sessionCache = { session: freshSession, timestamp: Date.now(), isValid: recursiveResult.isValid };
-      return recursiveResult;
+      // Validate the fresh session with local checks only (avoid recursion)
+      const now = Math.floor(Date.now() / 1000);
+      const expiresAt = freshSession.expires_at;
+      const isExpired = expiresAt && now >= expiresAt;
+      const needsRefresh = !freshSession.access_token || !freshSession.refresh_token || isExpired;
+      
+      const isValid = !needsRefresh;
+      
+      sessionCache = { session: freshSession, timestamp: Date.now(), isValid };
+      
+      return {
+        isValid,
+        session: freshSession,
+        user: freshSession.user,
+        needsRefresh
+      };
       
     } catch (error) {
       console.error('💥 Session validation failed:', error);
@@ -127,21 +159,18 @@ export const createSessionValidationService = () => {
       // Clear cache on error
       sessionCache = null;
       
-      // Enhanced 403 error handling
+      // Enhanced error handling
       const is403Error = error?.status === 403 || 
                         error?.message?.includes('Authentication required') || 
                         error?.message?.includes('Access denied') ||
                         error?.message?.includes('403');
       
+      const isTimeoutError = error instanceof TimeoutError;
+      
       if (is403Error) {
         console.warn('🚨 403 error in session validation - possible RLS policy issue');
-        return {
-          isValid: false,
-          session: null,
-          user: null,
-          needsRefresh: false,
-          error: 'Authentication required'
-        };
+      } else if (isTimeoutError) {
+        console.warn('🚨 Timeout error in session validation - server overloaded');
       }
       
       return {
@@ -161,18 +190,36 @@ export const createSessionValidationService = () => {
       // Clear cache before refresh
       sessionCache = null;
       
-      const refreshedSessionData = await recoveryService.withRetry(async () => {
-        const { data, error } = await withTimeout(
+      let refreshedSessionData;
+      try {
+        refreshedSessionData = await withTimeout(
           supabase.auth.refreshSession(),
           OPTIMIZED_TIMEOUT,
           "[SessionValidationService] Timeout refreshing session"
         );
-        
-        if (error) throw error;
-        return data;
-      }, 1); // Single retry for refresh
+      } catch (timeoutError) {
+        console.warn('⚠️ Session refresh timed out');
+        return {
+          isValid: false,
+          session: null,
+          user: null,
+          needsRefresh: false,
+          error: 'Session refresh timeout'
+        };
+      }
       
-      const session = refreshedSessionData?.session;
+      if (refreshedSessionData.error) {
+        console.warn('⚠️ Session refresh error:', refreshedSessionData.error);
+        return {
+          isValid: false,
+          session: null,
+          user: null,
+          needsRefresh: false,
+          error: refreshedSessionData.error.message
+        };
+      }
+      
+      const session = refreshedSessionData?.data?.session;
 
       if (!session) {
         console.log('ℹ️ No session returned after refresh attempt');
@@ -196,14 +243,18 @@ export const createSessionValidationService = () => {
     } catch (error) {
       console.error('💥 Session refresh error:', error);
       
-      // Enhanced 403 error handling
+      // Enhanced error handling
       const is403Error = error?.status === 403 || 
                         error?.message?.includes('Authentication required') || 
                         error?.message?.includes('Access denied') ||
                         error?.message?.includes('403');
       
+      const isTimeoutError = error instanceof TimeoutError;
+      
       if (is403Error) {
         console.warn('🚨 403 error in session refresh - possible RLS policy issue');
+      } else if (isTimeoutError) {
+        console.warn('🚨 Timeout error in session refresh - server overloaded');
       }
       
       return {
