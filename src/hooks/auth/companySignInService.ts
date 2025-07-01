@@ -72,7 +72,7 @@ export const createCompanySignInService = (toast: any) => {
         .from('companies')
         .select('id, name')
         .eq('auth_user_id', loginAttempt.user.id)
-        .single();
+        .maybeSingle();
 
       if (companyData) {
         console.log(`[CompanySignIn] User is associated with company: ${companyData.name}. Setting role to 'company'.`);

@@ -8,23 +8,28 @@ export const getResetPasswordRedirectUrl = () => `${window.location.origin}/auth
 export const checkCompanyUser = async (userId: string) => {
   const { data: collaborator, error: collaboratorError } = await supabase
     .from('company_users')
-    .select(`
-      id, 
-      needs_password_change, 
-      company_id, 
-      name,
-      companies!inner(name)
-    `)
+    .select('id, needs_password_change, company_id, name')
     .eq('auth_user_id', userId)
     .maybeSingle();
   
-  // Transform the data to include company_name at the root level
-  const transformedCollaborator = collaborator ? {
-    ...collaborator,
-    company_name: collaborator.companies?.name || 'Unknown Company'
-  } : null;
+  if (collaboratorError || !collaborator) {
+    return { collaborator: null, collaboratorError };
+  }
+
+  // Get company name separately to avoid join issues
+  const { data: companyInfo } = await supabase
+    .from('companies')
+    .select('name')
+    .eq('id', collaborator.company_id)
+    .maybeSingle();
   
-  return { collaborator: transformedCollaborator, collaboratorError };
+  // Transform the data to include company_name at the root level
+  const transformedCollaborator = {
+    ...collaborator,
+    company_name: companyInfo?.name || 'Unknown Company'
+  };
+  
+  return { collaborator: transformedCollaborator, collaboratorError: null };
 };
 
 export const checkCompanyByEmail = async (email: string) => {

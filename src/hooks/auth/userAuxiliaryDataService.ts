@@ -39,7 +39,7 @@ export const createUserAuxiliaryDataService = () => {
         .from('companies')
         .select('*, needs_password_change')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!companyError && companyData) {
         console.log('[UserAuxiliaryDataService] User is a company owner');
@@ -62,7 +62,7 @@ export const createUserAuxiliaryDataService = () => {
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!profileError && profileData?.role && profileData.role !== 'student') {
         console.log(`[UserAuxiliaryDataService] Found role in profiles: ${profileData.role}`);
@@ -79,15 +79,18 @@ export const createUserAuxiliaryDataService = () => {
       // Fourth priority: Check if user is a company collaborator
       const { data: collaboratorData, error: collaboratorError } = await supabase
         .from('company_users')
-        .select(`
-          *,
-          needs_password_change,
-          companies!inner(name)
-        `)
+        .select('*, needs_password_change, company_id')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!collaboratorError && collaboratorData) {
+        // Get company name separately to avoid join issues
+        const { data: companyInfo } = await supabase
+          .from('companies')
+          .select('name')
+          .eq('id', collaboratorData.company_id)
+          .maybeSingle();
+
         console.log('[UserAuxiliaryDataService] User is a company collaborator');
         return {
           role: 'collaborator',
@@ -95,7 +98,7 @@ export const createUserAuxiliaryDataService = () => {
           companyData: null,
           collaboratorData: {
             ...collaboratorData,
-            company_name: collaboratorData.companies?.name || 'Unknown Company'
+            company_name: companyInfo?.name || 'Unknown Company'
           },
           producerData: null,
           needsPasswordChange: collaboratorData.needs_password_change || false
