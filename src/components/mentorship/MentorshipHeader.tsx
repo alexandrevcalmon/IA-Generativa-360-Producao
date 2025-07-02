@@ -10,13 +10,13 @@ interface MentorshipHeaderProps {
 
 export const MentorshipHeader = ({ companyName, onRefresh, refreshing }: MentorshipHeaderProps) => {
   return (
-    <header className="border-b bg-calmon-gradient px-6 py-4 shadow-lg">
+    <header className="border-b bg-white px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <SidebarTrigger className="text-white hover:bg-white/20" />
+          <SidebarTrigger />
           <div>
-            <h1 className="text-2xl font-bold text-white">Mentorias</h1>
-            <p className="text-calmon-100">
+            <h1 className="text-2xl font-bold text-gray-900">Mentorias</h1>
+            <p className="text-gray-600">
               Sessões da {companyName || 'empresa'} e mentorias coletivas
             </p>
           </div>
@@ -26,7 +26,7 @@ export const MentorshipHeader = ({ companyName, onRefresh, refreshing }: Mentors
             variant="outline" 
             onClick={onRefresh} 
             disabled={refreshing}
-            className="border-white/30 text-white hover:bg-white/20 bg-white/10 backdrop-blur-sm"
+            className="border-gray-200 text-gray-700 hover:bg-gray-50"
           >
             {refreshing ? 'Atualizando...' : 'Atualizar'}
           </Button>

@@ -41,10 +41,10 @@ const CompanyMentorships = () => {
           onRefresh={handleRefresh}
           refreshing={refreshing}
         />
-        <div className="flex-1 p-6 bg-calmon-bg-gradient">
+        <div className="flex-1 p-6 bg-gray-50">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-white/80 rounded-lg shadow-sm"></div>
+              <div key={i} className="h-32 bg-white rounded-lg shadow-sm"></div>
             ))}
           </div>
         </div>
@@ -60,26 +60,26 @@ const CompanyMentorships = () => {
           onRefresh={handleRefresh}
           refreshing={refreshing}
         />
-        <div className="flex-1 p-6 bg-calmon-bg-gradient flex items-center justify-center">
-          <Card className="glass-card border-0 shadow-xl">
+        <div className="flex-1 p-6 bg-gray-50 flex items-center justify-center">
+          <Card className="border border-gray-200 bg-white shadow-lg">
             <CardContent className="p-8 text-center">
               <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-              <h3 className="text-lg font-medium mb-2 text-calmon-800">Erro ao carregar sessões de mentoria</h3>
-              <p className="text-calmon-600 mb-4">
+              <h3 className="text-lg font-medium mb-2 text-gray-900">Erro ao carregar sessões de mentoria</h3>
+              <p className="text-gray-600 mb-4">
                 Ocorreu um erro ao carregar as sessões de mentoria. Tente novamente.
               </p>
               <div className="space-x-2">
                 <Button 
                   onClick={handleRefresh} 
                   disabled={refreshing}
-                  className="bg-calmon-600 hover:bg-calmon-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   {refreshing ? 'Atualizando...' : 'Tentar Novamente'}
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => window.location.reload()}
-                  className="border-calmon-300 text-calmon-700 hover:bg-calmon-50"
+                  className="border-gray-200 text-gray-700 hover:bg-gray-50"
                 >
                   Recarregar Página
                 </Button>
@@ -107,11 +107,11 @@ const CompanyMentorships = () => {
         refreshing={refreshing}
       />
 
-      <div className="flex-1 overflow-auto p-6 bg-calmon-bg-gradient">
+      <div className="flex-1 overflow-auto p-6 bg-gray-50">
         <div className="space-y-6">
           {/* Stats Cards */}
           {mentorships && mentorships.length > 0 && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+            <div className="bg-white rounded-lg p-1 shadow-lg border border-gray-200">
               <MentorshipStatsGrid mentorships={mentorships} />
             </div>
           )}
@@ -120,7 +120,7 @@ const CompanyMentorships = () => {
           {upcomingMentorships.length > 0 && (
             <MentorshipSection 
               title="Próximas Mentorias"
-              icon={<Calendar className="h-5 w-5 mr-2 text-calmon-600" />}
+              icon={<Calendar className="h-5 w-5 mr-2 text-blue-600" />}
             >
               {upcomingMentorships.map(mentorship => (
                 <MentorshipCard
@@ -153,7 +153,7 @@ const CompanyMentorships = () => {
 
           {/* Empty State */}
           {(!mentorships || mentorships.length === 0) && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+            <div className="bg-white rounded-lg p-1 shadow-lg border border-gray-200">
               <MentorshipEmptyState />
             </div>
           )}
