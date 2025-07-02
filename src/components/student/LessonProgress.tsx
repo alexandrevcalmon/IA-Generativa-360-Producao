@@ -104,7 +104,7 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
             {formatTime(watchTime)} / {formatTime(duration)}
           </span>
         </div>
-        <Progress value={progressPercentage} className="h-3 sm:h-4 bg-gray-100 [&>div]:bg-gray-900" />
+        <Progress value={progressPercentage} className="h-3 sm:h-4 bg-gray-100 [&>div]:bg-blue-600" />
         <div className="flex justify-between items-center mt-2">
           <span className="text-xs sm:text-sm text-gray-600">
             {progressPercentage.toFixed(1)}% assistido
@@ -124,7 +124,7 @@ export const LessonProgress = ({ currentLesson, watchTime, duration }: LessonPro
           <Button 
             variant="outline" 
             asChild 
-            className="h-11 touch-manipulation border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700 font-medium"
+            className="h-11 touch-manipulation border-2 border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-700 font-medium"
           >
             <a href={currentLesson.material_url} download>
               <FileText className="h-4 w-4 mr-2" />

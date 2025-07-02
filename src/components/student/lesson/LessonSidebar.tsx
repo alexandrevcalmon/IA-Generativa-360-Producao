@@ -25,7 +25,7 @@ export const LessonSidebar = ({
     <div className="space-y-4 w-full">
       {/* Progress Card */}
       <Card className="w-full border-gray-200 bg-white shadow-lg">
-        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-gray-900 text-white rounded-t-lg">
+        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-white text-gray-900 rounded-t-lg border-b border-gray-200">
           <CardTitle className="text-base sm:text-lg font-semibold">Progresso</CardTitle>
         </CardHeader>
         <CardContent className="pt-4 px-4 sm:px-6 pb-4 sm:pb-6">

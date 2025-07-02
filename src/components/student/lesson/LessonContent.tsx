@@ -26,13 +26,13 @@ export const LessonContent = ({ currentLesson, currentModule }: LessonContentPro
     <div className="space-y-6">
       {/* Main Lesson Content */}
       <Card className="w-full border-gray-200 bg-white shadow-lg">
-        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-gray-900 text-white rounded-t-lg">
+        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-white text-gray-900 rounded-t-lg border-b border-gray-200">
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl font-semibold">
             <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
             Conteúdo da Lição
           </CardTitle>
           {currentModule && (
-            <div className="text-sm text-gray-300 mt-1">
+            <div className="text-sm text-gray-600 mt-1">
               Módulo: {currentModule.title}
             </div>
           )}
