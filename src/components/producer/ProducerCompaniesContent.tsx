@@ -30,7 +30,7 @@ export function ProducerCompaniesContent({
   deletingCompanyId,
 }: ProducerCompaniesContentProps) {
   return (
-    <div className="flex-1 overflow-auto p-6 bg-gray-50">
+    <div className="flex-1 overflow-auto p-6 bg-gray-50/30">
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">

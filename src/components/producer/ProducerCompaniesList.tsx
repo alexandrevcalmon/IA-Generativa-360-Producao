@@ -21,13 +21,13 @@ export function ProducerCompaniesList({
   transformCompany 
 }: ProducerCompaniesListProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Building2 className="h-5 w-5 mr-2 text-calmon-600" />
+    <Card className="bg-white shadow-sm border-gray-200">
+      <CardHeader className="bg-white">
+        <CardTitle className="flex items-center text-gray-900">
+          <Building2 className="h-5 w-5 mr-2 text-calmon-500" />
           Empresas Cadastradas
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-gray-600">
           Lista de todas as empresas clientes e seus status
         </CardDescription>
       </CardHeader>

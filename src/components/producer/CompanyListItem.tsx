@@ -35,7 +35,7 @@ export function CompanyListItem({
 
   return (
     <>
-      <div className="bg-white rounded-lg border p-4 hover:shadow-sm transition-shadow">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">

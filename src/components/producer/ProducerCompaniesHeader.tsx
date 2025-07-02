@@ -20,7 +20,7 @@ export function ProducerCompaniesHeader({ onCreateCompany }: ProducerCompaniesHe
         </div>
         <Button 
           onClick={onCreateCompany}
-          className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white"
+          className="bg-calmon-500 hover:bg-calmon-600 text-white shadow-sm"
         >
           <Plus className="h-4 w-4 mr-2" />
           Nova Empresa

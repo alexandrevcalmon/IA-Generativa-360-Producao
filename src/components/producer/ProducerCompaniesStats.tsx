@@ -15,23 +15,23 @@ export function ProducerCompaniesStats({
 }: ProducerCompaniesStatsProps) {
   return (
     <>
-      <Card className="hover-lift">
-        <CardContent className="p-4">
+      <Card className="hover-lift bg-white shadow-sm border-gray-200">
+        <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total de Empresas</p>
-              <p className="text-2xl font-bold">{totalCompanies}</p>
+              <p className="text-sm text-gray-600">Total de Empresas</p>
+              <p className="text-2xl font-bold text-gray-900">{totalCompanies}</p>
             </div>
-            <Building2 className="h-8 w-8 text-calmon-600" />
+            <Building2 className="h-8 w-8 text-calmon-500" />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="hover-lift">
-        <CardContent className="p-4">
+      <Card className="hover-lift bg-white shadow-sm border-gray-200">
+        <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Empresas Ativas</p>
+              <p className="text-sm text-gray-600">Empresas Ativas</p>
               <p className="text-2xl font-bold text-green-600">
                 {activeCompanies}
               </p>
@@ -41,11 +41,11 @@ export function ProducerCompaniesStats({
         </CardContent>
       </Card>
 
-      <Card className="hover-lift">
-        <CardContent className="p-4">
+      <Card className="hover-lift bg-white shadow-sm border-gray-200">
+        <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Colaboradores</p>
+              <p className="text-sm text-gray-600">Total Colaboradores</p>
               <p className="text-2xl font-bold text-blue-600">
                 {totalCollaborators}
               </p>
