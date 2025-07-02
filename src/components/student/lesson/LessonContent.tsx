@@ -25,14 +25,14 @@ export const LessonContent = ({ currentLesson, currentModule }: LessonContentPro
   return (
     <div className="space-y-6">
       {/* Main Lesson Content */}
-      <Card className="w-full border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 shadow-lg">
-        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-gradient-to-r from-amber-600 to-yellow-600 text-white rounded-t-lg">
+      <Card className="w-full border-gray-200 bg-white shadow-lg">
+        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-gray-900 text-white rounded-t-lg">
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl font-semibold">
             <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
             Conteúdo da Lição
           </CardTitle>
           {currentModule && (
-            <div className="text-sm text-amber-100 mt-1">
+            <div className="text-sm text-gray-300 mt-1">
               Módulo: {currentModule.title}
             </div>
           )}
@@ -48,12 +48,12 @@ export const LessonContent = ({ currentLesson, currentModule }: LessonContentPro
           
           {/* Legacy Material URL Support */}
           {currentLesson.material_url && (
-            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-yellow-200">
-              <h3 className="font-semibold mb-3 text-sm sm:text-base text-amber-800">Material de Apoio</h3>
+            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+              <h3 className="font-semibold mb-3 text-sm sm:text-base text-gray-800">Material de Apoio</h3>
               <Button 
                 asChild 
                 variant="outline" 
-                className="w-full sm:w-auto h-12 sm:h-14 touch-manipulation font-medium border-2 border-yellow-200 hover:bg-yellow-50 hover:border-yellow-300 text-yellow-700"
+                className="w-full sm:w-auto h-12 sm:h-14 touch-manipulation font-medium border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700"
                 onClick={handleDownloadClick}
               >
                 <a href={currentLesson.material_url} target="_blank" rel="noopener noreferrer">

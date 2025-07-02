@@ -28,15 +28,15 @@ export const LessonNavigation = ({ courseId, prevLesson, nextLesson }: LessonNav
   };
 
   return (
-    <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 shadow-lg">
-      <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-gradient-to-r from-yellow-600 to-amber-600 text-white rounded-t-lg">
+    <Card className="border-gray-200 bg-white shadow-lg">
+      <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-gray-900 text-white rounded-t-lg">
         <CardTitle className="text-base sm:text-lg font-semibold">Navegação</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 pt-4 px-4 sm:px-6 pb-4 sm:pb-6">
         {prevLesson && (
           <Button 
             variant="outline" 
-            className="w-full justify-start text-sm h-12 sm:h-14 touch-manipulation font-medium border-2 border-yellow-200 hover:bg-yellow-100 hover:border-yellow-300 text-yellow-700"
+            className="w-full justify-start text-sm h-12 sm:h-14 touch-manipulation font-medium border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700"
             onClick={handlePrevClick}
           >
             <ArrowLeft className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -46,7 +46,7 @@ export const LessonNavigation = ({ courseId, prevLesson, nextLesson }: LessonNav
         
         {nextLesson && (
           <Button 
-            className="w-full justify-start text-sm h-12 sm:h-14 touch-manipulation font-medium bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white shadow-lg"
+            className="w-full justify-start text-sm h-12 sm:h-14 touch-manipulation font-medium bg-gray-900 hover:bg-gray-800 text-white shadow-lg"
             onClick={handleNextClick}
           >
             <span className="truncate">Próxima Aula</span>
