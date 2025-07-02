@@ -24,7 +24,7 @@ export function UserMenu() {
       <Button 
         onClick={() => navigate('/auth')}
         variant="outline"
-        className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+        className="border-blue-200 text-blue-700 hover:bg-blue-50"
       >
         Entrar
       </Button>
@@ -129,7 +129,7 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-emerald-100 text-emerald-700">
+            <AvatarFallback className="bg-blue-100 text-blue-700">
               {getUserInitials()}
             </AvatarFallback>
           </Avatar>
