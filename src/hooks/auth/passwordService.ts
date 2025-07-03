@@ -8,38 +8,57 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     try {
       const redirectUrl = getResetPasswordRedirectUrl();
       
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
+      // Use our custom edge function instead of Supabase's built-in reset
+      const { data, error } = await supabase.functions.invoke('send-reset-password-email', {
+        body: { 
+          email: email,
+          redirectUrl: redirectUrl 
+        }
       });
       
       if (error) {
-        if (error.message.includes('User not found')) {
-          toast({
-            title: "Email não encontrado",
-            description: "Não encontramos uma conta com este email. Verifique o endereço ou crie uma nova conta.",
-            variant: "destructive",
-          });
-        } else if (error.message.includes('For security purposes')) {
-          toast({
-            title: "Limite de tentativas atingido",
-            description: "Por segurança, aguarde alguns minutos antes de solicitar outro email de redefinição.",
-            variant: "destructive",
-          });
+        console.error('Custom reset password error:', error);
+        
+        // Fallback to Supabase's built-in reset if our custom function fails
+        const { error: fallbackError } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: redirectUrl,
+        });
+        
+        if (fallbackError) {
+          if (fallbackError.message.includes('User not found')) {
+            toast({
+              title: "Email não encontrado",
+              description: "Não encontramos uma conta com este email. Verifique o endereço ou crie uma nova conta.",
+              variant: "destructive",
+            });
+          } else if (fallbackError.message.includes('For security purposes')) {
+            toast({
+              title: "Limite de tentativas atingido",
+              description: "Por segurança, aguarde alguns minutos antes de solicitar outro email de redefinição.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Erro ao enviar email",
+              description: fallbackError.message,
+              variant: "destructive",
+            });
+          }
         } else {
           toast({
-            title: "Erro ao enviar email",
-            description: error.message,
-            variant: "destructive",
+            title: "Email enviado com sucesso!",
+            description: "Verifique sua caixa de entrada e spam para as instruções de redefinição de senha.",
           });
         }
+        
+        return { error: fallbackError };
       } else {
         toast({
           title: "Email enviado com sucesso!",
-          description: "Verifique sua caixa de entrada e spam para as instruções de redefinição de senha.",
+          description: "Verifique sua caixa de entrada e spam. O email foi enviado de contato@grupocalmon.com",
         });
+        return { error: null };
       }
-      
-      return { error };
     } catch (error) {
       console.error('Reset password error:', error);
       toast({
