@@ -109,6 +109,19 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     try {
       console.log('🔐 Changing password for current user');
       
+      // First verify we have a valid session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('❌ No valid session for password change:', sessionError);
+        toast({
+          title: "Sessão inválida",
+          description: "Sua sessão expirou. Solicite um novo link de redefinição.",
+          variant: "destructive",
+        });
+        return { error: { message: "Invalid session" } };
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -199,6 +212,12 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             description: "A senha deve ter pelo menos 6 caracteres.",
             variant: "destructive",
           });
+        } else if (error.message.includes('expired') || error.message.includes('invalid')) {
+          toast({
+            title: "Sessão expirada",
+            description: "Sua sessão de redefinição expirou. Solicite um novo link.",
+            variant: "destructive",
+          });
         } else {
           toast({
             title: "Erro ao alterar senha",
@@ -210,7 +229,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
       return { error };
     } catch (error) {
-      console.error('Change password error:', error);
+      console.error('💥 Change password error:', error);
       toast({
         title: "Erro de conexão",
         description: "Não foi possível alterar a senha. Verifique sua conexão com a internet.",

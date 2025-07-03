@@ -46,6 +46,9 @@ export function ResetPasswordHandler() {
       try {
         setIsValidatingSession(true);
         
+        // Clear any existing session first
+        await supabase.auth.signOut();
+        
         // Set the session with the tokens from the URL
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken!,
@@ -54,7 +57,15 @@ export function ResetPasswordHandler() {
 
         if (error) {
           console.error('❌ Failed to set session with reset tokens:', error);
-          setError('Link de redefinição inválido ou expirado. Solicite um novo link.');
+          
+          // Handle specific error cases
+          if (error.message.includes('expired') || error.message.includes('invalid')) {
+            setError('Link de redefinição expirado ou inválido. Solicite um novo link.');
+          } else if (error.message.includes('Token')) {
+            setError('Token de redefinição inválido. Tente solicitar um novo link.');
+          } else {
+            setError('Erro ao validar link de redefinição. Solicite um novo link.');
+          }
           setHasValidSession(false);
         } else if (data.session && data.user) {
           console.log('✅ Session established successfully for user:', data.user.email);
@@ -244,19 +255,21 @@ export function ResetPasswordHandler() {
             <p className="text-gray-600 mb-4">
               {error}
             </p>
-            <Button 
-              onClick={() => navigate('/auth')}
-              variant="outline"
-              className="mr-2"
-            >
-              Voltar ao login
-            </Button>
-            <Button 
-              onClick={() => window.location.reload()}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              Tentar novamente
-            </Button>
+            <div className="space-y-2">
+              <Button 
+                onClick={() => navigate('/auth')}
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+              >
+                Voltar ao login
+              </Button>
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="outline"
+                className="w-full"
+              >
+                Tentar novamente
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -277,6 +290,7 @@ export function ResetPasswordHandler() {
           <Button 
             onClick={() => navigate('/auth')}
             variant="outline"
+            className="w-full"
           >
             Voltar ao login
           </Button>
