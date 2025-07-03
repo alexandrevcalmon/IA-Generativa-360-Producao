@@ -29,32 +29,59 @@ export function ResetPasswordHandler() {
   const type = searchParams.get('type');
   const resetFlag = searchParams.get('reset');
   
-  // Determine reset type on mount - prioritize valid tokens
+  // Enhanced parameter parsing and validation
   useEffect(() => {
-    console.log('🔐 ResetPasswordHandler: Analyzing URL parameters', {
-      accessToken: !!accessToken,
-      refreshToken: !!refreshToken,
+    console.log('🔐 ResetPasswordHandler: Detailed URL Analysis', {
+      fullURL: window.location.href,
+      searchParams: Object.fromEntries(searchParams),
+      accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : null,
+      refreshToken: refreshToken ? `${refreshToken.substring(0, 20)}...` : null,
       type,
       resetFlag,
-      fullURL: window.location.href
+      hasValidTokens: !!(type === 'recovery' && accessToken && refreshToken),
+      allParams: Array.from(searchParams.entries())
     });
     
-    // PRIORITY 1: Check for valid token-based reset (from email link)
+    // Enhanced validation for token-based reset
     if (type === 'recovery' && accessToken && refreshToken) {
-      console.log('🔐 Detected valid token-based reset (priority: tokens)');
-      setResetType('tokens');
+      // Validate token format (basic check)
+      const isValidTokenFormat = accessToken.length > 50 && refreshToken.length > 50;
+      
+      if (isValidTokenFormat) {
+        console.log('🔐 Valid token-based reset detected (from email link)');
+        setResetType('tokens');
+        setError(null); // Clear any previous errors
+      } else {
+        console.warn('⚠️ Invalid token format detected', {
+          accessTokenLength: accessToken.length,
+          refreshTokenLength: refreshToken.length
+        });
+        setResetType('none');
+        setError('Link de redefinição inválido. Tokens malformados.');
+      }
     } 
-    // PRIORITY 2: Check for flag-based reset (only if no tokens)
+    // Check for flag-based reset (only when no tokens)
     else if (resetFlag === 'true' && !accessToken && !refreshToken) {
-      console.log('🔐 Detected flag-based reset (check email message)');
+      console.log('🔐 Flag-based reset detected (show check email message)');
       setResetType('flag');
+      setError(null);
     } 
-    // PRIORITY 3: No reset detected
-    else {
-      console.log('🔐 No valid reset detected');
+    // Handle edge cases and invalid combinations
+    else if (type === 'recovery' && (!accessToken || !refreshToken)) {
+      console.warn('⚠️ Incomplete recovery tokens', {
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken
+      });
       setResetType('none');
+      setError('Link de redefinição incompleto. Solicite um novo link.');
     }
-  }, [accessToken, refreshToken, type, resetFlag]);
+    // No valid reset scenario
+    else {
+      console.log('🔐 No valid reset scenario detected');
+      setResetType('none');
+      setError(null);
+    }
+  }, [accessToken, refreshToken, type, resetFlag, searchParams]);
   
   // Validate session for token-based resets
   useEffect(() => {
@@ -159,8 +186,38 @@ export function ResetPasswordHandler() {
     }
   };
 
-  // Return null if not a reset request
+  // Handle 'none' reset type - show error if there is one, otherwise return null
   if (resetType === 'none') {
+    if (error) {
+      console.log('🔐 Showing error state for invalid reset parameters');
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
+          <Card className="w-full max-w-md">
+            <CardContent className="p-8 text-center">
+              <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
+              <h3 className="text-lg font-medium mb-2">Link de redefinição inválido</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <div className="space-y-2">
+                <Button 
+                  onClick={() => navigate('/auth')}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                >
+                  Voltar ao login
+                </Button>
+                <Button 
+                  onClick={() => navigate('/auth')}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Solicitar novo link
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+    
     console.log('🔐 No reset type detected, returning null');
     return null;
   }
