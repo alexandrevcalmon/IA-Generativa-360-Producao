@@ -47,8 +47,13 @@ export default function Auth() {
   // Check if this is a password reset flow
   const isPasswordReset = searchParams.get('type') === 'recovery' || searchParams.get('reset') === 'true';
 
-  // Handle redirects for authenticated users
-  useAuthRedirects({ user, userRole, authLoading, needsPasswordChange });
+  // Handle redirects for authenticated users (but not during password reset)
+  useAuthRedirects({ 
+    user: isPasswordReset ? null : user, 
+    userRole: isPasswordReset ? null : userRole, 
+    authLoading, 
+    needsPasswordChange 
+  });
 
   const handleLogin = async (email: string, password: string, selectedRole: string) => {
     return await signIn(email, password, selectedRole);
