@@ -49,7 +49,8 @@ export default function Auth() {
     role,
     setRole,
     loading,
-    handleSubmit
+    handleSubmit,
+    authError
   } = useAuthForm();
 
   // Handle redirects for authenticated users
@@ -100,10 +101,10 @@ export default function Auth() {
             Entre em sua conta
           </CardDescription>
           
-          {errorMessage && (
+          {(errorMessage || authError) && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
               <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-red-800">{errorMessage}</p>
+              <p className="text-sm text-red-800">{errorMessage || authError}</p>
             </div>
           )}
           

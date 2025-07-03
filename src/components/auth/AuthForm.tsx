@@ -30,6 +30,7 @@ export function AuthForm({
   const [showPassword, setShowPassword] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lastAttemptTime, setLastAttemptTime] = useState<number | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
