@@ -8,7 +8,9 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
   const resetPassword = async (email: string) => {
     try {
       console.log('🔐 Starting password reset for email:', email);
-      const redirectUrl = getResetPasswordRedirectUrl();
+      
+      // Create a more specific redirect URL for password reset
+      const redirectUrl = `${window.location.origin}/auth?type=recovery&reset=true`;
       console.log('🔗 Reset redirect URL:', redirectUrl);
       
       // Validate email format
@@ -105,7 +107,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
   const changePassword = async (newPassword: string, userId?: string, companyUserData?: any) => {
     try {
-      console.log('🔐 Changing password for user:', userId);
+      console.log('🔐 Changing password for current user');
       
       const { error } = await supabase.auth.updateUser({
         password: newPassword
