@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { AuthErrorHandler } from './AuthErrorHandler';
 import { ForgotPasswordDialog } from './ForgotPasswordDialog';
-import { TestUserDialog } from './TestUserDialog';
 
 interface SimpleAuthFormProps {
   onLogin: (email: string, password: string, role: string) => Promise<{ error?: any }>;
@@ -135,14 +134,8 @@ export function SimpleAuthForm({ onLogin, defaultRole = 'student' }: SimpleAuthF
         </Button>
       </form>
 
-      <div className="space-y-3 border-t pt-4">
-        <div className="text-center">
-          <TestUserDialog onUseCredentials={useTestCredentials} />
-        </div>
-        
-        <div className="text-center">
-          <ForgotPasswordDialog />
-        </div>
+      <div className="text-center border-t pt-4">
+        <ForgotPasswordDialog />
       </div>
     </div>
   );
