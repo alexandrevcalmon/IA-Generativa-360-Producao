@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { ForgotPasswordDialog } from './ForgotPasswordDialog';
+import { AuthErrorHandler } from './AuthErrorHandler';
 
 interface AuthFormProps {
   isLogin: boolean;
@@ -106,19 +106,14 @@ export function AuthForm({
         </div>
       </div>
 
-      {authError && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {authError}
-          </AlertDescription>
-        </Alert>
-      )}
+      <AuthErrorHandler 
+        error={authError}
+        attempts={loginAttempts}
+      />
 
       {showRecoveryHint && !authError && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <p className="text-sm text-yellow-800">
             Várias tentativas de login. Verifique suas credenciais ou{' '}
             <ForgotPasswordDialog 
               trigger={
@@ -127,8 +122,8 @@ export function AuthForm({
                 </span>
               }
             />
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
       )}
 
       <div className="space-y-3">

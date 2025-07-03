@@ -11,16 +11,23 @@ export const createSignInService = (toast: any) => {
 
   const signIn = async (email: string, password: string, role?: string) => {
     try {
-      console.log(`[SignInService] Attempting sign-in. Email: ${email}, Role: ${role}`);
+      console.log(`🔐 [SignInService] Sign-in attempt - Email: ${email}, Role: ${role}`);
+
+      // Validate inputs
+      if (!email?.trim() || !password?.trim()) {
+        console.error('❌ [SignInService] Missing email or password');
+        return { error: { message: 'Email e senha são obrigatórios' } };
+      }
 
       // Producer login path
       if (role === 'producer') {
+        console.log(`🏭 [SignInService] Processing producer login for ${email}`);
         return await producerService.signInProducer(email, password);
       }
 
       // Company login path (explicit role=company)
       if (role === 'company') {
-        console.log(`[SignInService] Processing explicit company login for ${email}`);
+        console.log(`🏢 [SignInService] Processing company login for ${email}`);
         const result = await companyService.signInCompany(email, password);
         
         if (result.error) {
@@ -28,18 +35,16 @@ export const createSignInService = (toast: any) => {
         }
         
         if (result.user) {
-          // If company login was successful and we have company flag, ensure role is set
           if (result.isCompany) {
-            console.log(`[SignInService] Company login confirmed for ${email}`);
+            console.log(`✅ [SignInService] Company login confirmed for ${email}`);
             return { 
               error: null, 
               user: result.user, 
               session: result.session, 
-              needsPasswordChange: false
+              needsPasswordChange: result.needsPasswordChange || false
             };
           }
           
-          // Process through default service but with company role intent
           const defaultResult = await defaultService.processDefaultSignIn(result.user, 'company');
           return { 
             error: null, 
@@ -50,41 +55,35 @@ export const createSignInService = (toast: any) => {
         }
       }
 
-      // Default login path - try to determine role automatically
-      console.log(`[SignInService] Attempting default login path for ${email}`);
-      const { data: loginAttempt, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      // Default login path - simplified
+      console.log(`🔑 [SignInService] Default login for ${email}`);
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ 
+        email: email.trim(), 
+        password: password.trim() 
+      });
 
       if (loginError) {
-        console.error(`[SignInService] Default login failed for ${email}. Error: ${loginError.message}`);
-        
-        if (loginError.message.includes('Invalid login credentials')) {
-          toast({ title: "Credenciais inválidas", description: "Email ou senha incorretos.", variant: "destructive" });
-        } else if (loginError.message.includes('Email not confirmed')) {
-          toast({ title: "Email não confirmado", description: "Verifique seu email para confirmação.", variant: "destructive" });
-        } else {
-          toast({ title: "Erro no login", description: loginError.message, variant: "destructive" });
-        }
+        console.error(`❌ [SignInService] Login failed: ${loginError.message}`);
         return { error: loginError };
       }
 
-      if (loginAttempt.user) {
-        const defaultResult = await defaultService.processDefaultSignIn(loginAttempt.user, role);
-        console.log(`[SignInService] Default login successful for ${loginAttempt.user.email}. Needs Password Change: ${defaultResult.needsPasswordChange}`);
+      if (loginData.user && loginData.session) {
+        console.log(`✅ [SignInService] Login successful for ${loginData.user.email}`);
+        const defaultResult = await defaultService.processDefaultSignIn(loginData.user, role);
         return { 
           error: null, 
-          user: loginAttempt.user, 
-          session: loginAttempt.session, 
-          needsPasswordChange: defaultResult.needsPasswordChange 
+          user: loginData.user, 
+          session: loginData.session, 
+          needsPasswordChange: defaultResult.needsPasswordChange || false
         };
       }
 
-      console.error(`[SignInService] Login attempt for ${email} resulted in no error but also no user object.`);
-      return { error: new Error("No user data after login attempt.") };
+      console.error(`❌ [SignInService] No user data received for ${email}`);
+      return { error: { message: "Falha na autenticação" } };
 
     } catch (e: any) {
-      console.error(`[SignInService] Critical unhandled error during signIn for ${email}:`, e.message, e.stack);
-      toast({ title: "Erro Crítico no Login", description: "Um problema inesperado ocorreu.", variant: "destructive" });
-      return { error: { message: e.message, name: "CriticalErrorSignInService" } };
+      console.error(`💥 [SignInService] Critical error for ${email}:`, e);
+      return { error: { message: "Erro de conexão - tente novamente" } };
     }
   };
 
