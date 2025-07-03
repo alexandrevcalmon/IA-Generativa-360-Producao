@@ -281,7 +281,7 @@ export function ResetPasswordHandler() {
             Voltar ao login
           </Button>
         </CardContent>
-      </div>
-    );
-  }
+      </Card>
+    </div>
+  );
 }
