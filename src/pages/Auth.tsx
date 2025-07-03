@@ -14,6 +14,8 @@ import { useEffect, useState } from 'react';
 
 export default function Auth() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [role, setRole] = useState(searchParams.get('role') || 'student');
   
   // Safely use auth hook with error boundary
   let authData;
@@ -41,8 +43,6 @@ export default function Auth() {
   }
 
   const { user, userRole, needsPasswordChange, loading: authLoading, signIn } = authData;
-  const [searchParams] = useSearchParams();
-  const [role, setRole] = useState(searchParams.get('role') || 'student');
 
   // Check if this is a password reset flow
   const isPasswordReset = searchParams.get('type') === 'recovery' || searchParams.get('reset') === 'true';
