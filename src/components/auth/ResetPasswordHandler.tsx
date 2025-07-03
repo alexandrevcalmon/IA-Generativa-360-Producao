@@ -20,79 +20,90 @@ export function ResetPasswordHandler() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isValidatingSession, setIsValidatingSession] = useState(true);
-  const [hasValidSession, setHasValidSession] = useState(false);
+  const [isValidatingSession, setIsValidatingSession] = useState(false);
+  const [validResetSession, setValidResetSession] = useState(false);
+  const [resetType, setResetType] = useState<'tokens' | 'flag' | 'none'>('none');
   
   const accessToken = searchParams.get('access_token');
   const refreshToken = searchParams.get('refresh_token');
   const type = searchParams.get('type');
-  const isReset = searchParams.get('reset') === 'true';
+  const resetFlag = searchParams.get('reset');
   
-  // Check if this is a password reset URL
-  const isPasswordReset = type === 'recovery' && accessToken && refreshToken;
-  
+  // Determine reset type on mount
   useEffect(() => {
-    const validateResetSession = async () => {
-      if (!isPasswordReset) {
-        console.log('🔐 Not a password reset URL, skipping session validation');
-        setIsValidatingSession(false);
-        return;
-      }
-
-      console.log('🔐 Processing password reset tokens...');
-      console.log('Access token present:', !!accessToken);
-      console.log('Refresh token present:', !!refreshToken);
+    console.log('🔐 ResetPasswordHandler: Analyzing URL parameters', {
+      accessToken: !!accessToken,
+      refreshToken: !!refreshToken,
+      type,
+      resetFlag,
+      fullURL: window.location.href
+    });
+    
+    if (type === 'recovery' && accessToken && refreshToken) {
+      console.log('🔐 Detected token-based reset');
+      setResetType('tokens');
+    } else if (resetFlag === 'true') {
+      console.log('🔐 Detected flag-based reset (check email)');
+      setResetType('flag');
+    } else {
+      console.log('🔐 No reset detected');
+      setResetType('none');
+    }
+  }, [accessToken, refreshToken, type, resetFlag]);
+  
+  // Validate session for token-based resets
+  useEffect(() => {
+    if (resetType !== 'tokens') return;
+    
+    const validateTokens = async () => {
+      console.log('🔐 Starting token validation...');
+      setIsValidatingSession(true);
+      setError(null);
       
       try {
-        setIsValidatingSession(true);
-        
         // Clear any existing session first
         await supabase.auth.signOut();
+        console.log('🔐 Cleared existing session');
         
-        // Set the session with the tokens from the URL
+        // Set session with reset tokens
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken!,
           refresh_token: refreshToken!
         });
 
         if (error) {
-          console.error('❌ Failed to set session with reset tokens:', error);
-          
-          // Handle specific error cases
+          console.error('❌ Token validation failed:', error);
           if (error.message.includes('expired') || error.message.includes('invalid')) {
             setError('Link de redefinição expirado ou inválido. Solicite um novo link.');
-          } else if (error.message.includes('Token')) {
-            setError('Token de redefinição inválido. Tente solicitar um novo link.');
           } else {
-            setError('Erro ao validar link de redefinição. Solicite um novo link.');
+            setError('Erro ao validar link de redefinição. Tente novamente.');
           }
-          setHasValidSession(false);
+          setValidResetSession(false);
         } else if (data.session && data.user) {
-          console.log('✅ Session established successfully for user:', data.user.email);
-          setHasValidSession(true);
-          setError(null);
+          console.log('✅ Token validation successful for user:', data.user.email);
+          setValidResetSession(true);
         } else {
-          console.error('❌ No session or user data received');
-          setError('Falha ao estabelecer sessão de redefinição. Tente novamente.');
-          setHasValidSession(false);
+          console.error('❌ No session data received');
+          setError('Falha ao estabelecer sessão de redefinição.');
+          setValidResetSession(false);
         }
       } catch (err: any) {
-        console.error('💥 Critical error validating reset session:', err);
+        console.error('💥 Token validation error:', err);
         setError('Erro inesperado ao processar link de redefinição.');
-        setHasValidSession(false);
+        setValidResetSession(false);
       } finally {
         setIsValidatingSession(false);
       }
     };
 
-    validateResetSession();
-  }, [isPasswordReset, accessToken, refreshToken]);
+    validateTokens();
+  }, [resetType, accessToken, refreshToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     
-    if (!hasValidSession) {
+    if (!validResetSession) {
       setError('Sessão de redefinição inválida. Solicite um novo link.');
       return;
     }
@@ -108,7 +119,7 @@ export function ResetPasswordHandler() {
     }
     
     setLoading(true);
-    console.log('🔐 Attempting to change password...');
+    console.log('🔐 Attempting password change...');
     
     try {
       const { error } = await changePassword(newPassword);
@@ -123,20 +134,20 @@ export function ResetPasswordHandler() {
         setError(error.message || 'Erro ao alterar senha');
       }
     } catch (err: any) {
-      console.error('💥 Critical error changing password:', err);
+      console.error('💥 Password change error:', err);
       setError('Erro inesperado ao alterar senha');
     } finally {
       setLoading(false);
     }
   };
 
-  // Only show if it's a password reset request
-  if (!isPasswordReset && !isReset) {
+  // Return null if not a reset request
+  if (resetType === 'none') {
     return null;
   }
 
-  // Show loading while validating session
-  if (isValidatingSession) {
+  // Show loading during token validation
+  if (resetType === 'tokens' && isValidatingSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
         <Card className="w-full max-w-md">
@@ -175,8 +186,8 @@ export function ResetPasswordHandler() {
     );
   }
 
-  // Show password reset form if we have valid tokens and session
-  if (isPasswordReset && hasValidSession) {
+  // Show password reset form for valid token-based resets
+  if (resetType === 'tokens' && validResetSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
         <Card className="w-full max-w-md">
@@ -244,17 +255,15 @@ export function ResetPasswordHandler() {
     );
   }
 
-  // Show error state if session validation failed
-  if (isPasswordReset && !hasValidSession && error) {
+  // Show error state for invalid token-based resets
+  if (resetType === 'tokens' && !validResetSession && error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
             <h3 className="text-lg font-medium mb-2">Link inválido ou expirado</h3>
-            <p className="text-gray-600 mb-4">
-              {error}
-            </p>
+            <p className="text-gray-600 mb-4">{error}</p>
             <div className="space-y-2">
               <Button 
                 onClick={() => navigate('/auth')}
@@ -276,26 +285,31 @@ export function ResetPasswordHandler() {
     );
   }
 
-  // Show info message if just the reset flag is present
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardContent className="p-8 text-center">
-          <AlertCircle className="h-12 w-12 mx-auto text-blue-600 mb-4" />
-          <h3 className="text-lg font-medium mb-2">Verifique seu email</h3>
-          <p className="text-gray-600 mb-4">
-            Enviamos as instruções de redefinição de senha para seu email. 
-            Clique no link recebido para continuar.
-          </p>
-          <Button 
-            onClick={() => navigate('/auth')}
-            variant="outline"
-            className="w-full"
-          >
-            Voltar ao login
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  // Show check email message for flag-based resets
+  if (resetType === 'flag') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto text-blue-600 mb-4" />
+            <h3 className="text-lg font-medium mb-2">Verifique seu email</h3>
+            <p className="text-gray-600 mb-4">
+              Enviamos as instruções de redefinição de senha para seu email. 
+              Clique no link recebido para continuar.
+            </p>
+            <Button 
+              onClick={() => navigate('/auth')}
+              variant="outline"
+              className="w-full"
+            >
+              Voltar ao login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Fallback
+  return null;
 }
