@@ -97,7 +97,7 @@ export function ResetPasswordHandler() {
         console.log('🔐 Clearing existing session...');
         await supabase.auth.signOut();
         
-        // Set session with reset tokens
+        // Set session with reset tokens - this consumes the one-time tokens
         console.log('🔐 Setting session with recovery tokens...');
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken!,

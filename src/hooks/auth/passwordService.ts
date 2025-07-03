@@ -8,7 +8,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     try {
       console.log('🔐 Starting password reset for email:', email);
       
-      // Create a clean redirect URL for password reset without conflicting flags
+      // Create the correct redirect URL for password reset that will handle tokens
       const redirectUrl = `${window.location.origin}/auth`;
       console.log('🔗 Reset redirect URL:', redirectUrl);
       
