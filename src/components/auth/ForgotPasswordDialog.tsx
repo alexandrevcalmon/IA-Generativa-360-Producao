@@ -27,16 +27,22 @@ export function ForgotPasswordDialog({ trigger }: ForgotPasswordDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email.trim()) return;
     
+    console.log('🔐 Forgot password dialog - attempting reset for:', email);
     setLoading(true);
+    
     try {
-      const { error } = await resetPassword(email);
+      const { error } = await resetPassword(email.trim());
       if (!error) {
+        console.log('✅ Reset password request successful');
         setSent(true);
+      } else {
+        console.error('❌ Reset password request failed:', error);
+        // Error handling is done in the resetPassword function
       }
     } catch (error) {
-      console.error('Password reset error:', error);
+      console.error('💥 Unexpected error in forgot password dialog:', error);
     } finally {
       setLoading(false);
     }

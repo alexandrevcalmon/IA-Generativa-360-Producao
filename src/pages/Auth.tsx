@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { SimpleAuthForm } from '@/components/auth/SimpleAuthForm';
 import { RoleIndicator } from '@/components/auth/RoleIndicator';
 import { AuthLoadingScreen } from '@/components/auth/AuthLoadingScreen';
+import { ResetPasswordHandler } from '@/components/auth/ResetPasswordHandler';
 import { useAuthRedirects } from '@/hooks/auth/useAuthRedirects';
 import { AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -43,6 +44,9 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const [role, setRole] = useState(searchParams.get('role') || 'student');
 
+  // Check if this is a password reset flow
+  const isPasswordReset = searchParams.get('type') === 'recovery' || searchParams.get('reset') === 'true';
+
   // Handle redirects for authenticated users
   useAuthRedirects({ user, userRole, authLoading, needsPasswordChange });
 
@@ -53,6 +57,11 @@ export default function Auth() {
   // Show loading state while checking authentication
   if (authLoading) {
     return <AuthLoadingScreen />;
+  }
+
+  // Priority 0: Handle password reset flow
+  if (isPasswordReset) {
+    return <ResetPasswordHandler />;
   }
 
   // Priority 1: Show password change dialog if user needs to change password
