@@ -1,62 +1,63 @@
 
 export const createSessionCleanupService = () => {
   const clearLocalSession = () => {
-    console.log('🧹 Starting enhanced local session cleanup...');
+    console.log('🧹 Starting comprehensive session cleanup...');
     
     try {
-      // Clear specific auth-related localStorage items with enhanced logging
-      const authKeys = Object.keys(localStorage).filter(key => 
-        key.startsWith('supabase.auth.token') || 
-        key.includes('supabase-auth-token') ||
-        key.includes('auth-token') ||
-        key.startsWith('supabase_auth_') ||
-        key.includes('sb-') // Additional Supabase keys
-      );
+      // Clear ALL localStorage first
+      const allLocalKeys = [...Object.keys(localStorage)];
+      console.log(`🔍 Clearing ${allLocalKeys.length} localStorage keys`);
       
-      console.log(`🔍 Found ${authKeys.length} auth-related localStorage keys to clear:`, authKeys);
-      
-      authKeys.forEach(key => {
-        localStorage.removeItem(key);
-        console.log(`🗑️ Removed localStorage: ${key}`);
-      });
-      
-      // Clear session storage with enhanced logging
-      const sessionKeys = Object.keys(sessionStorage).filter(key =>
-        key.includes('supabase') || key.includes('auth') || key.includes('sb-')
-      );
-      
-      console.log(`🔍 Found ${sessionKeys.length} auth-related sessionStorage keys to clear:`, sessionKeys);
-      
-      sessionKeys.forEach(key => {
-        sessionStorage.removeItem(key);
-        console.log(`🗑️ Removed sessionStorage: ${key}`);
-      });
-      
-      // Force clear any remaining Supabase-related data
-      try {
-        // Clear all keys that might contain auth data
-        const allLocalKeys = Object.keys(localStorage);
-        const suspiciousKeys = allLocalKeys.filter(key => 
-          key.toLowerCase().includes('token') || 
-          key.toLowerCase().includes('session') ||
-          key.toLowerCase().includes('user') ||
-          key.startsWith('supabase')
-        );
-        
-        if (suspiciousKeys.length > 0) {
-          console.log(`🔍 Additional cleanup - found ${suspiciousKeys.length} suspicious keys:`, suspiciousKeys);
-          suspiciousKeys.forEach(key => {
-            localStorage.removeItem(key);
-            console.log(`🗑️ Deep cleanup removed: ${key}`);
-          });
+      allLocalKeys.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+          console.log(`🗑️ Cleared localStorage: ${key}`);
+        } catch (keyError) {
+          console.warn(`⚠️ Failed to clear localStorage key ${key}:`, keyError.message);
         }
-      } catch (deepCleanError) {
-        console.log('ℹ️ Deep cleanup skipped:', deepCleanError.message);
+      });
+
+      // Clear ALL sessionStorage
+      const allSessionKeys = [...Object.keys(sessionStorage)];
+      console.log(`🔍 Clearing ${allSessionKeys.length} sessionStorage keys`);
+      
+      allSessionKeys.forEach(key => {
+        try {
+          sessionStorage.removeItem(key);
+          console.log(`🗑️ Cleared sessionStorage: ${key}`);
+        } catch (keyError) {
+          console.warn(`⚠️ Failed to clear sessionStorage key ${key}:`, keyError.message);
+        }
+      });
+
+      // Force clear browser IndexedDB if accessible
+      try {
+        if (typeof indexedDB !== 'undefined') {
+          // Clear Supabase's internal IndexedDB storage
+          indexedDB.deleteDatabase('supabase-gotrue');
+          console.log('🗑️ Cleared Supabase IndexedDB');
+        }
+      } catch (idbError) {
+        console.log('ℹ️ IndexedDB cleanup skipped:', idbError.message);
+      }
+
+      // Clear any cookies related to auth
+      try {
+        document.cookie.split(";").forEach(cookie => {
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (name.toLowerCase().includes('supabase') || name.toLowerCase().includes('auth')) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+            console.log(`🗑️ Cleared cookie: ${name}`);
+          }
+        });
+      } catch (cookieError) {
+        console.log('ℹ️ Cookie cleanup skipped:', cookieError.message);
       }
       
-      console.log('✅ Enhanced local session data cleared successfully');
+      console.log('✅ Comprehensive session cleanup completed');
     } catch (error) {
-      console.error('❌ Error during enhanced local session cleanup:', {
+      console.error('❌ Error during session cleanup:', {
         error: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString()
@@ -64,7 +65,29 @@ export const createSessionCleanupService = () => {
     }
   };
 
+  const emergencyCleanup = () => {
+    console.log('🚨 Emergency cleanup initiated...');
+    
+    try {
+      // Nuclear option - clear everything
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Force reload to clear any memory state
+      setTimeout(() => {
+        window.location.href = '/auth?cleared=true';
+      }, 100);
+      
+      console.log('✅ Emergency cleanup completed - redirecting');
+    } catch (error) {
+      console.error('❌ Emergency cleanup failed:', error);
+      // Last resort - force page reload
+      window.location.reload();
+    }
+  };
+
   return {
-    clearLocalSession
+    clearLocalSession,
+    emergencyCleanup
   };
 };

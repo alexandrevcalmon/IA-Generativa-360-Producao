@@ -34,6 +34,14 @@ export function AuthForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Clear any existing session corruption before attempting login
+    try {
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.clear();
+    } catch (cleanupError) {
+      console.log('Pre-login cleanup completed');
+    }
+    
     // Track login attempts for better UX
     const now = Date.now();
     if (lastAttemptTime && now - lastAttemptTime < 2000) {
