@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getResetPasswordRedirectUrl } from './authUtils';
@@ -9,8 +8,8 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     try {
       console.log('🔐 Starting password reset for email:', email);
       
-      // Create a more specific redirect URL for password reset
-      const redirectUrl = `${window.location.origin}/auth?type=recovery&reset=true`;
+      // Create a clean redirect URL for password reset without conflicting flags
+      const redirectUrl = `${window.location.origin}/auth`;
       console.log('🔗 Reset redirect URL:', redirectUrl);
       
       // Validate email format
@@ -24,7 +23,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         return { error: { message: "Invalid email format" } };
       }
       
-      // Use Supabase's built-in reset password system with enhanced configuration
+      // Use Supabase's built-in reset password system with clean configuration
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
         captchaToken: undefined, // Allow bypassing captcha for testing

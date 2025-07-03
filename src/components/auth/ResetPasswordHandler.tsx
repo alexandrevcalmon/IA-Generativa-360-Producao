@@ -29,7 +29,7 @@ export function ResetPasswordHandler() {
   const type = searchParams.get('type');
   const resetFlag = searchParams.get('reset');
   
-  // Determine reset type on mount
+  // Determine reset type on mount - prioritize valid tokens
   useEffect(() => {
     console.log('🔐 ResetPasswordHandler: Analyzing URL parameters', {
       accessToken: !!accessToken,
@@ -39,14 +39,19 @@ export function ResetPasswordHandler() {
       fullURL: window.location.href
     });
     
+    // PRIORITY 1: Check for valid token-based reset (from email link)
     if (type === 'recovery' && accessToken && refreshToken) {
-      console.log('🔐 Detected token-based reset');
+      console.log('🔐 Detected valid token-based reset (priority: tokens)');
       setResetType('tokens');
-    } else if (resetFlag === 'true') {
-      console.log('🔐 Detected flag-based reset (check email)');
+    } 
+    // PRIORITY 2: Check for flag-based reset (only if no tokens)
+    else if (resetFlag === 'true' && !accessToken && !refreshToken) {
+      console.log('🔐 Detected flag-based reset (check email message)');
       setResetType('flag');
-    } else {
-      console.log('🔐 No reset detected');
+    } 
+    // PRIORITY 3: No reset detected
+    else {
+      console.log('🔐 No valid reset detected');
       setResetType('none');
     }
   }, [accessToken, refreshToken, type, resetFlag]);
@@ -56,23 +61,29 @@ export function ResetPasswordHandler() {
     if (resetType !== 'tokens') return;
     
     const validateTokens = async () => {
-      console.log('🔐 Starting token validation...');
+      console.log('🔐 Starting token validation process...');
       setIsValidatingSession(true);
       setError(null);
       
       try {
         // Clear any existing session first
+        console.log('🔐 Clearing existing session...');
         await supabase.auth.signOut();
-        console.log('🔐 Cleared existing session');
         
         // Set session with reset tokens
+        console.log('🔐 Setting session with recovery tokens...');
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken!,
           refresh_token: refreshToken!
         });
 
         if (error) {
-          console.error('❌ Token validation failed:', error);
+          console.error('❌ Token validation failed:', {
+            error: error.message,
+            code: error.status,
+            name: error.name
+          });
+          
           if (error.message.includes('expired') || error.message.includes('invalid')) {
             setError('Link de redefinição expirado ou inválido. Solicite um novo link.');
           } else {
@@ -80,15 +91,22 @@ export function ResetPasswordHandler() {
           }
           setValidResetSession(false);
         } else if (data.session && data.user) {
-          console.log('✅ Token validation successful for user:', data.user.email);
+          console.log('✅ Token validation successful!', {
+            userId: data.user.id,
+            userEmail: data.user.email,
+            sessionValid: !!data.session
+          });
           setValidResetSession(true);
         } else {
-          console.error('❌ No session data received');
+          console.error('❌ No session data received after token validation');
           setError('Falha ao estabelecer sessão de redefinição.');
           setValidResetSession(false);
         }
       } catch (err: any) {
-        console.error('💥 Token validation error:', err);
+        console.error('💥 Token validation error:', {
+          message: err.message,
+          stack: err.stack
+        });
         setError('Erro inesperado ao processar link de redefinição.');
         setValidResetSession(false);
       } finally {
@@ -143,6 +161,7 @@ export function ResetPasswordHandler() {
 
   // Return null if not a reset request
   if (resetType === 'none') {
+    console.log('🔐 No reset type detected, returning null');
     return null;
   }
 
@@ -285,7 +304,7 @@ export function ResetPasswordHandler() {
     );
   }
 
-  // Show check email message for flag-based resets
+  // Show check email message for flag-based resets (only when no tokens present)
   if (resetType === 'flag') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
@@ -311,5 +330,6 @@ export function ResetPasswordHandler() {
   }
 
   // Fallback
+  console.log('🔐 Falling back to null (should not happen)');
   return null;
 }
