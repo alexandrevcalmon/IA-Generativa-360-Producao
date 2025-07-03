@@ -23,14 +23,59 @@ export function ResetPasswordHandler() {
   const [isValidatingSession, setIsValidatingSession] = useState(false);
   const [validResetSession, setValidResetSession] = useState(false);
   const [resetType, setResetType] = useState<'tokens' | 'flag' | 'none'>('none');
+  const [sessionPersisted, setSessionPersisted] = useState(false);
   
   const accessToken = searchParams.get('access_token');
   const refreshToken = searchParams.get('refresh_token');
   const type = searchParams.get('type');
   const resetFlag = searchParams.get('reset');
+
+  // Session persistence keys
+  const SESSION_KEY = 'password_reset_session';
+  const VALIDATION_KEY = 'password_reset_validated';
   
+  // Check for existing valid session first (session persistence)
+  useEffect(() => {
+    const checkPersistedSession = async () => {
+      try {
+        // Check if we already have a persisted valid session
+        const persistedValidation = sessionStorage.getItem(VALIDATION_KEY);
+        const persistedSessionData = sessionStorage.getItem(SESSION_KEY);
+        
+        if (persistedValidation === 'true' && persistedSessionData) {
+          console.log('🔐 Found persisted valid reset session');
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session) {
+            console.log('✅ Using persisted reset session');
+            setValidResetSession(true);
+            setSessionPersisted(true);
+            setResetType('tokens');
+            return;
+          } else {
+            console.log('⚠️ Persisted session expired, clearing storage');
+            sessionStorage.removeItem(VALIDATION_KEY);
+            sessionStorage.removeItem(SESSION_KEY);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error checking persisted session:', error);
+        sessionStorage.removeItem(VALIDATION_KEY);
+        sessionStorage.removeItem(SESSION_KEY);
+      }
+    };
+
+    checkPersistedSession();
+  }, []);
+
   // Enhanced parameter parsing and validation
   useEffect(() => {
+    // Skip if we already have a persisted valid session
+    if (sessionPersisted) {
+      console.log('🔐 Using persisted session, skipping URL validation');
+      return;
+    }
+
     console.log('🔐 ResetPasswordHandler: Detailed URL Analysis', {
       fullURL: window.location.href,
       searchParams: Object.fromEntries(searchParams),
@@ -81,11 +126,11 @@ export function ResetPasswordHandler() {
       setResetType('none');
       setError(null);
     }
-  }, [accessToken, refreshToken, type, resetFlag, searchParams]);
+  }, [accessToken, refreshToken, type, resetFlag, searchParams, sessionPersisted]);
   
   // Validate session for token-based resets
   useEffect(() => {
-    if (resetType !== 'tokens') return;
+    if (resetType !== 'tokens' || sessionPersisted || validResetSession) return;
     
     const validateTokens = async () => {
       console.log('🔐 Starting token validation process...');
@@ -123,6 +168,20 @@ export function ResetPasswordHandler() {
             userEmail: data.user.email,
             sessionValid: !!data.session
           });
+          
+          // Persist the valid session to sessionStorage
+          try {
+            sessionStorage.setItem(VALIDATION_KEY, 'true');
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+              userId: data.user.id,
+              email: data.user.email,
+              timestamp: Date.now()
+            }));
+            console.log('✅ Session persisted to sessionStorage');
+          } catch (persistError) {
+            console.warn('⚠️ Failed to persist session:', persistError);
+          }
+          
           setValidResetSession(true);
         } else {
           console.error('❌ No session data received after token validation');
@@ -170,6 +229,16 @@ export function ResetPasswordHandler() {
       const { error } = await changePassword(newPassword);
       if (!error) {
         console.log('✅ Password changed successfully');
+        
+        // Clear session storage after successful password change
+        try {
+          sessionStorage.removeItem(VALIDATION_KEY);
+          sessionStorage.removeItem(SESSION_KEY);
+          console.log('✅ Session storage cleared after password change');
+        } catch (clearError) {
+          console.warn('⚠️ Failed to clear session storage:', clearError);
+        }
+        
         setSuccess(true);
         setTimeout(() => {
           navigate('/auth');
