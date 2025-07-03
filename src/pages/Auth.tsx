@@ -120,6 +120,7 @@ export default function Auth() {
             setRole={setRole}
             loading={loading}
             onSubmit={handleSubmit}
+            authError={authError}
           />
 
           <div className="mt-6 text-center">

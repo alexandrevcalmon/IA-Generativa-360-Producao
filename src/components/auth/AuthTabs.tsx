@@ -14,6 +14,7 @@ interface AuthTabsProps {
   setRole: (role: string) => void;
   loading: boolean;
   onSubmit: (e: React.FormEvent) => Promise<void>;
+  authError?: string | null;
 }
 
 export function AuthTabs({
@@ -24,7 +25,8 @@ export function AuthTabs({
   role,
   setRole,
   loading,
-  onSubmit
+  onSubmit,
+  authError
 }: AuthTabsProps) {
   const [showRecovery, setShowRecovery] = useState(false);
 
@@ -49,6 +51,7 @@ export function AuthTabs({
         setRole={setRole}
         loading={loading}
         onSubmit={onSubmit}
+        authError={authError}
       />
       
       <div className="space-y-3">

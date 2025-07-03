@@ -17,6 +17,7 @@ interface AuthFormProps {
   setRole: (role: string) => void;
   loading: boolean;
   onSubmit: (e: React.FormEvent) => Promise<void>;
+  authError?: string | null;
 }
 
 export function AuthForm({
@@ -25,15 +26,20 @@ export function AuthForm({
   password,
   setPassword,
   loading,
-  onSubmit
+  onSubmit,
+  authError
 }: AuthFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lastAttemptTime, setLastAttemptTime] = useState<number | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('📝 AuthForm submit - Values before sending:', { 
+      email: email?.trim(), 
+      password: password?.length > 0 ? '[PRESENT]' : '[EMPTY]' 
+    });
     
     // Clear any existing session corruption before attempting login
     try {
@@ -47,6 +53,7 @@ export function AuthForm({
     const now = Date.now();
     if (lastAttemptTime && now - lastAttemptTime < 2000) {
       // Prevent rapid successive attempts
+      console.log('⏰ Preventing rapid login attempts');
       return;
     }
     
@@ -99,7 +106,16 @@ export function AuthForm({
         </div>
       </div>
 
-      {showRecoveryHint && (
+      {authError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {authError}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {showRecoveryHint && !authError && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
