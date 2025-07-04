@@ -1,6 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { getResetPasswordRedirectUrl } from './authUtils';
 import { logEmailAttempt } from '@/utils/emailDebugger';
 
 export const createPasswordService = (toast: ReturnType<typeof useToast>['toast']) => {
@@ -8,7 +8,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     try {
       console.log('🔐 Starting password reset for email:', email);
       
-      // Create the correct redirect URL for password reset that will handle tokens
+      // Create the correct redirect URL that will be handled by ResetPasswordHandler
       const redirectUrl = `${window.location.origin}/auth`;
       console.log('🔗 Reset redirect URL:', redirectUrl);
       
@@ -23,10 +23,9 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         return { error: { message: "Invalid email format" } };
       }
       
-      // Use Supabase's built-in reset password system with clean configuration
+      // Use Supabase's built-in reset password system
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
-        captchaToken: undefined, // Allow bypassing captcha for testing
+        redirectTo: redirectUrl
       });
       
       if (error) {
@@ -36,7 +35,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           name: error.name
         });
         
-        // Enhanced error handling with more specific cases
+        // Enhanced error handling
         if (error.message.includes('User not found') || error.message.includes('not found')) {
           toast({
             title: "Email não encontrado",
@@ -70,7 +69,6 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
           });
         }
         
-        // Log debugging information
         logEmailAttempt(email, false, error);
         return { error };
       } else {
@@ -85,7 +83,6 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     } catch (error: any) {
       console.error('💥 Critical password reset error:', error);
       
-      // Check if it's a network error
       if (error.message?.includes('Failed to fetch') || error.message?.includes('Network')) {
         toast({
           title: "Erro de conexão",
@@ -104,7 +101,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     }
   };
 
-  const changePassword = async (newPassword: string, userId?: string, companyUserData?: any) => {
+  const changePassword = async (newPassword: string) => {
     try {
       console.log('🔐 Changing password for current user');
       
