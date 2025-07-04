@@ -8,7 +8,8 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     try {
       console.log('🔐 Starting password reset for email:', email);
       
-      // Create the correct redirect URL that will be handled by ResetPasswordHandler
+      // Create the redirect URL that points to the auth page
+      // The ResetPasswordHandler will detect and handle the tokens
       const redirectUrl = `${window.location.origin}/auth`;
       console.log('🔗 Reset redirect URL:', redirectUrl);
       
@@ -112,7 +113,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         console.error('❌ No valid session for password change:', sessionError);
         toast({
           title: "Sessão inválida",
-          description: "Sua sessão expirou. Solicite um novo link de redefinição.",
+          description: "Sua sessão expirou. Faça login novamente para alterar sua senha.",
           variant: "destructive",
         });
         return { error: { message: "Invalid session" } };
@@ -211,7 +212,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
         } else if (error.message.includes('expired') || error.message.includes('invalid')) {
           toast({
             title: "Sessão expirada",
-            description: "Sua sessão de redefinição expirou. Solicite um novo link.",
+            description: "Sua sessão de redefinição expirou. Solicite um novo link de redefinição.",
             variant: "destructive",
           });
         } else {

@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 
 export function ResetPasswordHandler() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   
   const [newPassword, setNewPassword] = useState('');
@@ -22,56 +22,61 @@ export function ResetPasswordHandler() {
   const [validTokens, setValidTokens] = useState<{ accessToken: string; refreshToken: string } | null>(null);
   const [resetType, setResetType] = useState<'tokens' | 'flag' | 'none'>('none');
   
-  const accessToken = searchParams.get('access_token');
-  const refreshToken = searchParams.get('refresh_token');
-  const type = searchParams.get('type');
-  const resetFlag = searchParams.get('reset');
+  // Capture and clear tokens immediately to prevent AuthProvider from processing them
+  const [capturedTokens, setCapturedTokens] = useState<{ accessToken: string; refreshToken: string } | null>(null);
 
-  console.log('🔐 ResetPasswordHandler: URL Analysis', {
-    fullURL: window.location.href,
-    accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : null,
-    refreshToken: refreshToken ? `${refreshToken.substring(0, 20)}...` : null,
-    type,
-    resetFlag
-  });
-
-  // Determine reset type based on URL parameters
+  // Immediately capture and clear tokens from URL
   useEffect(() => {
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token');
+    const type = searchParams.get('type');
+    
+    console.log('🔐 ResetPasswordHandler: Capturing tokens from URL', {
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      type,
+      fullURL: window.location.href
+    });
+
     if (type === 'recovery' && accessToken && refreshToken) {
-      console.log('🔐 Token-based reset detected');
+      console.log('🔐 Capturing and clearing recovery tokens from URL');
+      
+      // Capture tokens
+      setCapturedTokens({ accessToken, refreshToken });
+      
+      // Clear tokens from URL immediately to prevent AuthProvider processing
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('access_token');
+      newSearchParams.delete('refresh_token');
+      newSearchParams.delete('type');
+      
+      // Update URL without tokens
+      const newUrl = `${window.location.pathname}${newSearchParams.toString() ? '?' + newSearchParams.toString() : ''}`;
+      window.history.replaceState({}, '', newUrl);
+      setSearchParams(newSearchParams);
+      
       setResetType('tokens');
-      setError(null);
-    } else if (resetFlag === 'true' && !accessToken && !refreshToken) {
-      console.log('🔐 Flag-based reset detected (check email message)');
+    } else if (searchParams.get('reset') === 'true') {
       setResetType('flag');
-      setError(null);
-    } else if (type === 'recovery' && (!accessToken || !refreshToken)) {
-      console.warn('⚠️ Incomplete recovery tokens');
-      setResetType('none');
-      setError('Link de redefinição incompleto. Solicite um novo link.');
     } else {
-      console.log('🔐 No valid reset scenario detected');
       setResetType('none');
-      if (!resetFlag && !type) {
-        setError(null); // Don't show error if user just navigated here
-      }
     }
-  }, [accessToken, refreshToken, type, resetFlag]);
-  
-  // Validate tokens WITHOUT logging in
+  }, []);
+
+  // Validate captured tokens
   useEffect(() => {
-    if (resetType !== 'tokens' || !accessToken || !refreshToken || validTokens) return;
+    if (resetType !== 'tokens' || !capturedTokens || validTokens) return;
     
     const validateTokens = async () => {
-      console.log('🔐 Validating recovery tokens without login...');
+      console.log('🔐 Validating captured recovery tokens...');
       setIsValidatingTokens(true);
       setError(null);
       
       try {
-        // Use verifyOtp to validate tokens without creating a session
-        const { data, error } = await supabase.auth.verifyOtp({
-          token_hash: accessToken,
-          type: 'recovery'
+        // Create a temporary session to test token validity without persisting it
+        const { data, error } = await supabase.auth.setSession({
+          access_token: capturedTokens.accessToken,
+          refresh_token: capturedTokens.refreshToken
         });
 
         if (error) {
@@ -82,16 +87,16 @@ export function ResetPasswordHandler() {
           } else {
             setError('Erro ao validar link de redefinição. Tente novamente.');
           }
-        } else if (data.user) {
-          console.log('✅ Tokens validated successfully without login');
+        } else if (data.session) {
+          console.log('✅ Tokens validated successfully');
           
-          // Store the validated tokens for password change
-          setValidTokens({
-            accessToken,
-            refreshToken
-          });
+          // Immediately sign out to clear the temporary session
+          await supabase.auth.signOut();
+          
+          // Store validated tokens for password change
+          setValidTokens(capturedTokens);
         } else {
-          console.error('❌ No user data received after token validation');
+          console.error('❌ No session data received after token validation');
           setError('Falha ao validar tokens de redefinição.');
         }
       } catch (err: any) {
@@ -103,7 +108,7 @@ export function ResetPasswordHandler() {
     };
 
     validateTokens();
-  }, [resetType, accessToken, refreshToken, validTokens]);
+  }, [resetType, capturedTokens, validTokens]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,7 +133,7 @@ export function ResetPasswordHandler() {
     console.log('🔐 Attempting password change with validated tokens...');
     
     try {
-      // Create a temporary session just for password update
+      // Create a temporary session for password update
       const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
         access_token: validTokens.accessToken,
         refresh_token: validTokens.refreshToken

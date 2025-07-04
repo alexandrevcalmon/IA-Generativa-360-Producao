@@ -17,7 +17,22 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const [role, setRole] = useState(searchParams.get('role') || 'student');
   
-  // Safely use auth hook with error boundary
+  // Check if this is a password reset flow - highest priority
+  const isPasswordReset = () => {
+    const hasResetTokens = searchParams.get('access_token') && 
+                          searchParams.get('refresh_token') && 
+                          searchParams.get('type') === 'recovery';
+    const hasResetFlag = searchParams.get('reset') === 'true';
+    return hasResetTokens || hasResetFlag;
+  };
+
+  // Priority 0: Handle password reset flow immediately - no auth context needed
+  if (isPasswordReset()) {
+    console.log('🔐 Password reset flow detected, showing ResetPasswordHandler');
+    return <ResetPasswordHandler />;
+  }
+  
+  // Safely use auth hook with error boundary - only after checking for password reset
   let authData;
   try {
     authData = useAuth();
@@ -44,13 +59,10 @@ export default function Auth() {
 
   const { user, userRole, needsPasswordChange, loading: authLoading, signIn } = authData;
 
-  // Check if this is a password reset flow
-  const isPasswordReset = searchParams.get('type') === 'recovery' || searchParams.get('reset') === 'true';
-
   // Handle redirects for authenticated users (but not during password reset)
   useAuthRedirects({ 
-    user: isPasswordReset ? null : user, 
-    userRole: isPasswordReset ? null : userRole, 
+    user, 
+    userRole, 
     authLoading, 
     needsPasswordChange 
   });
@@ -62,11 +74,6 @@ export default function Auth() {
   // Show loading state while checking authentication
   if (authLoading) {
     return <AuthLoadingScreen />;
-  }
-
-  // Priority 0: Handle password reset flow
-  if (isPasswordReset) {
-    return <ResetPasswordHandler />;
   }
 
   // Priority 1: Show password change dialog if user needs to change password
