@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,7 +37,7 @@ export function CompanyCollaboratorsList({
     await toggleStatusMutation.mutateAsync({
       collaboratorId: collaborator.id,
       companyId: companyId,
-      isActive: !collaborator.is_active
+      currentStatus: collaborator.is_active
     });
   };
 
