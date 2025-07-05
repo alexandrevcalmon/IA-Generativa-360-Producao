@@ -113,7 +113,7 @@ serve(async (req) => {
           // Send invitation email for reactivated user
           console.log(`[create-collaborator] Sending invitation email to reactivated collaborator ${email}.`);
           try {
-            const redirectUrl = `${Deno.env.get('SUPABASE_URL')?.replace('//', '//').replace('supabase.co', 'supabase.co')}/auth`;
+            const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
             console.log(`[create-collaborator] Reset redirect URL: ${redirectUrl}`);
             
             const { error: resetError } = await supabaseAdmin.auth.admin.resetPasswordForEmail(email, {
@@ -205,7 +205,7 @@ serve(async (req) => {
     // Send invitation email
     console.log(`[create-collaborator] Sending invitation email to ${email}.`);
     try {
-      const redirectUrl = `${Deno.env.get('SUPABASE_URL')?.replace('//', '//').replace('supabase.co', 'supabase.co')}/auth`;
+      const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
       console.log(`[create-collaborator] Reset redirect URL: ${redirectUrl}`);
       
       const { error: resetError } = await supabaseAdmin.auth.admin.resetPasswordForEmail(email, {

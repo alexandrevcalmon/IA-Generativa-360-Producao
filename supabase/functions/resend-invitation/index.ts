@@ -93,7 +93,6 @@ serve(async (req) => {
     console.log(`[resend-invitation] Sending invitation email to ${collaborator.email}.`);
     try {
       // Build the redirect URL to point to our auth page
-      const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('https://', '').replace('.supabase.co', '') || '';
       const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
       console.log(`[resend-invitation] Reset redirect URL: ${redirectUrl}`);
       
