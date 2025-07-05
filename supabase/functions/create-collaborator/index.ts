@@ -116,9 +116,9 @@ serve(async (req) => {
             const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
             console.log(`[create-collaborator] Reset redirect URL: ${redirectUrl}`);
             
-            const { error: resetError } = await supabaseAdmin.auth.admin.resetPasswordForEmail(email, {
-              redirectTo: redirectUrl
-            });
+          const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+            redirectTo: redirectUrl
+          });
 
             if (resetError) {
               console.error(`[create-collaborator] Error sending invitation email to ${email}:`, resetError.message);
@@ -208,7 +208,7 @@ serve(async (req) => {
       const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
       console.log(`[create-collaborator] Reset redirect URL: ${redirectUrl}`);
       
-      const { error: resetError } = await supabaseAdmin.auth.admin.resetPasswordForEmail(email, {
+      const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
 

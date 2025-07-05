@@ -96,7 +96,7 @@ serve(async (req) => {
       const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
       console.log(`[resend-invitation] Reset redirect URL: ${redirectUrl}`);
       
-      const { error: resetError } = await supabaseAdmin.auth.admin.resetPasswordForEmail(collaborator.email, {
+      const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(collaborator.email, {
         redirectTo: redirectUrl
       });
 
