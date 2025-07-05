@@ -89,10 +89,12 @@ serve(async (req) => {
 
     console.log(`[resend-invitation] Collaborator found: ${collaborator.email}, needs_password_change: ${collaborator.needs_password_change}`);
 
-    // Send invitation email
+    // Send invitation email using resetPasswordForEmail
     console.log(`[resend-invitation] Sending invitation email to ${collaborator.email}.`);
     try {
-      const redirectUrl = `${Deno.env.get('SUPABASE_URL')?.replace('//', '//').replace('supabase.co', 'supabase.co')}/auth`;
+      // Build the redirect URL to point to our auth page
+      const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('https://', '').replace('.supabase.co', '') || '';
+      const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
       console.log(`[resend-invitation] Reset redirect URL: ${redirectUrl}`);
       
       const { error: resetError } = await supabaseAdmin.auth.admin.resetPasswordForEmail(collaborator.email, {

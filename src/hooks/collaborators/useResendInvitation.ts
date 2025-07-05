@@ -41,7 +41,7 @@ export const useResendInvitation = () => {
       
       toast({
         title: "Convite reenviado!",
-        description: response.message || "O convite foi reenviado com sucesso.",
+        description: "Um novo convite de ativação foi enviado por email. O colaborador deve verificar o email e clicar no link para definir sua senha.",
       });
     },
     onError: (error: Error) => {

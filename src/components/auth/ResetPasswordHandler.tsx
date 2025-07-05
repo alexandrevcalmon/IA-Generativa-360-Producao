@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, Mail } from 'lucide-react';
 
 export function ResetPasswordHandler() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -83,9 +83,9 @@ export function ResetPasswordHandler() {
           console.error('❌ Token validation failed:', error);
           
           if (error.message.includes('expired') || error.message.includes('invalid')) {
-            setError('Link de redefinição expirado ou inválido. Solicite um novo link.');
+            setError('Link de convite expirado ou inválido. Solicite um novo convite.');
           } else {
-            setError('Erro ao validar link de redefinição. Tente novamente.');
+            setError('Erro ao validar link de convite. Tente novamente.');
           }
         } else if (data.session) {
           console.log('✅ Tokens validated successfully');
@@ -97,11 +97,11 @@ export function ResetPasswordHandler() {
           setValidTokens(capturedTokens);
         } else {
           console.error('❌ No session data received after token validation');
-          setError('Falha ao validar tokens de redefinição.');
+          setError('Falha ao validar tokens de convite.');
         }
-      } catch (err: any) {
+      } catch (err: any) {  
         console.error('💥 Token validation error:', err);
-        setError('Erro inesperado ao processar link de redefinição.');
+        setError('Erro inesperado ao processar link de convite.');
       } finally {
         setIsValidatingTokens(false);
       }
@@ -115,7 +115,7 @@ export function ResetPasswordHandler() {
     setError(null);
     
     if (!validTokens) {
-      setError('Tokens de redefinição inválidos. Solicite um novo link.');
+      setError('Tokens de convite inválidos. Solicite um novo convite.');
       return;
     }
     
@@ -174,35 +174,27 @@ export function ResetPasswordHandler() {
 
   // Handle invalid reset scenarios
   if (resetType === 'none') {
-    if (error) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
-          <Card className="w-full max-w-md">
-            <CardContent className="p-8 text-center">
-              <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
-              <h3 className="text-lg font-medium mb-2">Link de redefinição inválido</h3>
-              <p className="text-gray-600 mb-4">{error}</p>
-              <div className="space-y-2">
-                <Button 
-                  onClick={() => navigate('/auth')}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                >
-                  Voltar ao login
-                </Button>
-                <Button 
-                  onClick={() => navigate('/auth')}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Solicitar novo link
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
+            <h3 className="text-lg font-medium mb-2">Link de convite inválido</h3>
+            <p className="text-gray-600 mb-4">
+              O link que você utilizou não é válido ou pode ter expirado.
+            </p>
+            <div className="space-y-2">
+              <Button 
+                onClick={() => navigate('/auth')}
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+              >
+                Voltar ao login
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   // Show loading during token validation
@@ -212,9 +204,9 @@ export function ResetPasswordHandler() {
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <Loader2 className="h-12 w-12 mx-auto animate-spin text-emerald-600 mb-4" />
-            <h3 className="text-lg font-medium mb-2">Validando link de redefinição...</h3>
+            <h3 className="text-lg font-medium mb-2">Validando convite...</h3>
             <p className="text-gray-600">
-              Aguarde enquanto processamos seu link de redefinição de senha.
+              Aguarde enquanto processamos seu convite de ativação.
             </p>
           </CardContent>
         </Card>
@@ -229,9 +221,9 @@ export function ResetPasswordHandler() {
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <CheckCircle className="h-16 w-16 mx-auto text-emerald-600 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Senha alterada com sucesso!</h3>
+            <h3 className="text-xl font-semibold mb-2">Senha definida com sucesso!</h3>
             <p className="text-gray-600 mb-4">
-              Sua senha foi redefinida. Você será redirecionado para a página de login.
+              Sua conta foi ativada e sua senha foi definida. Você será redirecionado para a página de login.
             </p>
             <Button 
               onClick={() => navigate('/auth')}
@@ -252,10 +244,10 @@ export function ResetPasswordHandler() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-gray-900">
-              Redefinir Senha
+              Ativar Conta
             </CardTitle>
             <CardDescription>
-              Digite sua nova senha abaixo
+              Defina sua senha para ativar sua conta
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -301,10 +293,10 @@ export function ResetPasswordHandler() {
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Alterando senha...
+                    Ativando conta...
                   </>
                 ) : (
-                  'Alterar senha'
+                  'Ativar conta'
                 )}
               </Button>
             </form>
@@ -321,7 +313,7 @@ export function ResetPasswordHandler() {
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
-            <h3 className="text-lg font-medium mb-2">Link inválido ou expirado</h3>
+            <h3 className="text-lg font-medium mb-2">Convite inválido ou expirado</h3>
             <p className="text-gray-600 mb-4">{error}</p>
             <div className="space-y-2">
               <Button 
@@ -350,11 +342,11 @@ export function ResetPasswordHandler() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
-            <AlertCircle className="h-12 w-12 mx-auto text-blue-600 mb-4" />
+            <Mail className="h-12 w-12 mx-auto text-blue-600 mb-4" />
             <h3 className="text-lg font-medium mb-2">Verifique seu email</h3>
             <p className="text-gray-600 mb-4">
-              Enviamos as instruções de redefinição de senha para seu email. 
-              Clique no link recebido para continuar.
+              Enviamos as instruções de ativação de conta para seu email. 
+              Clique no link recebido para definir sua senha e ativar sua conta.
             </p>
             <Button 
               onClick={() => navigate('/auth')}
