@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -55,7 +56,7 @@ serve(async (req) => {
     console.log(`[create-collaborator] Calling user: ${callingUser.id}, email: ${callingUser.email}`);
 
     console.log(`[create-collaborator] Verifying if calling user ${callingUser.id} is a producer.`);
-    const { data: profile, error: profileError } = await supabaseAdmin // Use admin client for profile check for security
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role')
       .eq('id', callingUser.id)
@@ -77,8 +78,6 @@ serve(async (req) => {
 
     if (existingCompanyUserError) {
       console.error(`[create-collaborator] Error checking existing company_users for ${email}:`, existingCompanyUserError.message);
-      // This could be a transient DB error. Depending on policy, might be okay to proceed to auth user check.
-      // For now, let's return an error to be safe.
       return new Response(JSON.stringify({ error: `DB error checking existing collaborator: ${existingCompanyUserError.message}` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -89,11 +88,11 @@ serve(async (req) => {
           console.warn(`[create-collaborator] User ${email} is already an active collaborator in company ${company_id}.`);
           return new Response(JSON.stringify({ error: `O usuário ${email} já é um colaborador ativo desta empresa.` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } else {
-          // Reactivate existing user
+          // Reactivate existing user and send invitation email
           console.log(`[create-collaborator] Reactivating inactive collaborator ${email} (AuthID: ${existingCompanyUser.auth_user_id}) for company ${company_id}.`);
           const { data: reactivatedData, error: reactivateError } = await supabaseAdmin
             .from('company_users')
-            .update({ name: name, phone: phone, position: position, is_active: true, needs_password_change: false, updated_at: new Date().toISOString() })
+            .update({ name: name, phone: phone, position: position, is_active: true, needs_password_change: true, updated_at: new Date().toISOString() })
             .eq('auth_user_id', existingCompanyUser.auth_user_id)
             .eq('company_id', company_id)
             .select()
@@ -110,6 +109,27 @@ serve(async (req) => {
           const { error: profileUpsertError } = await supabaseAdmin.from('profiles').upsert({ id: existingCompanyUser.auth_user_id, email: email, name: name, role: 'collaborator', updated_at: new Date().toISOString() }, { onConflict: 'id' });
           if (profileUpsertError) console.error(`[create-collaborator] Error upserting profile on reactivation for ${existingCompanyUser.auth_user_id}:`, profileUpsertError.message);
           else console.log(`[create-collaborator] Profile upserted for reactivated collaborator ${existingCompanyUser.auth_user_id}.`);
+
+          // Send invitation email for reactivated user
+          console.log(`[create-collaborator] Sending invitation email to reactivated collaborator ${email}.`);
+          try {
+            const redirectUrl = `${Deno.env.get('SUPABASE_URL')?.replace('//', '//').replace('supabase.co', 'supabase.co')}/auth`;
+            console.log(`[create-collaborator] Reset redirect URL: ${redirectUrl}`);
+            
+            const { error: resetError } = await supabaseAdmin.auth.admin.resetPasswordForEmail(email, {
+              redirectTo: redirectUrl
+            });
+
+            if (resetError) {
+              console.error(`[create-collaborator] Error sending invitation email to ${email}:`, resetError.message);
+              // Don't fail the entire operation, just log the error
+            } else {
+              console.log(`[create-collaborator] Invitation email sent successfully to ${email}.`);
+            }
+          } catch (emailError: any) {
+            console.error(`[create-collaborator] Error sending invitation email:`, emailError.message);
+            // Don't fail the entire operation
+          }
 
           return new Response(JSON.stringify({ data: reactivatedData, isReactivation: true }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
@@ -137,13 +157,14 @@ serve(async (req) => {
       const { error: updateMetaError } = await supabaseAdmin.auth.admin.updateUserById(authUserId, {
         user_metadata: { ...existingAuthUser.user_metadata, role: 'collaborator', company_id: company_id, name: name }
       });
-      if (updateMetaError) console.error(`[create-collaborator] Error updating metadata for existing auth user ${authUserId}:`, updateMetaError.message); // Non-fatal for this flow.
+      if (updateMetaError) console.error(`[create-collaborator] Error updating metadata for existing auth user ${authUserId}:`, updateMetaError.message);
       else console.log(`[create-collaborator] Metadata updated for existing auth user ${authUserId}.`);
     } else {
-      const tempPassword = Deno.env.get('NEW_COLLABORATOR_DEFAULT_PASSWORD') || 'ia360graus';
+      // Create new auth user without a password - user will set password via email invite
       console.log(`[create-collaborator] No existing auth user. Creating new one for email: ${email}`);
       const { data: newAuthUserData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
-        email: email, password: tempPassword, email_confirm: true,
+        email: email, 
+        email_confirm: true,
         user_metadata: { role: 'collaborator', company_id: company_id, name: name }
       });
       if (createAuthError || !newAuthUserData?.user) {
@@ -180,6 +201,27 @@ serve(async (req) => {
     const { error: upsertProfileError } = await supabaseAdmin.from('profiles').upsert(profileToUpsert, { onConflict: 'id' });
     if (upsertProfileError) console.error(`[create-collaborator] Error upserting profile for ${authUserId}:`, upsertProfileError.message);
     else console.log(`[create-collaborator] Profile record for ${authUserId} upserted successfully.`);
+
+    // Send invitation email
+    console.log(`[create-collaborator] Sending invitation email to ${email}.`);
+    try {
+      const redirectUrl = `${Deno.env.get('SUPABASE_URL')?.replace('//', '//').replace('supabase.co', 'supabase.co')}/auth`;
+      console.log(`[create-collaborator] Reset redirect URL: ${redirectUrl}`);
+      
+      const { error: resetError } = await supabaseAdmin.auth.admin.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl
+      });
+
+      if (resetError) {
+        console.error(`[create-collaborator] Error sending invitation email to ${email}:`, resetError.message);
+        // Don't fail the entire operation, just log the error
+      } else {
+        console.log(`[create-collaborator] Invitation email sent successfully to ${email}.`);
+      }
+    } catch (emailError: any) {
+      console.error(`[create-collaborator] Error sending invitation email:`, emailError.message);
+      // Don't fail the entire operation
+    }
 
     console.log(`[create-collaborator] Process for ${email} completed successfully. New Auth User: ${isNewAuthUser}`);
     return new Response(JSON.stringify({ data: companyUserData, isReactivation: false, isNewAuthUser: isNewAuthUser }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
