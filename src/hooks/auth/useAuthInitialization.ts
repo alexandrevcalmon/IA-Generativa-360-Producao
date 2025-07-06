@@ -15,15 +15,9 @@ export function useAuthInitialization() {
 
   // Check if we're in a password reset flow
   const isPasswordResetFlow = () => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.slice(1));
-
-    const accessToken = searchParams.get('access_token') || hashParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token') || hashParams.get('refresh_token');
-    const type = searchParams.get('type') || hashParams.get('type');
-
-    const hasResetTokens = !!accessToken && !!refreshToken && type === 'recovery';
-    const hasResetFlag = searchParams.get('reset') === 'true' || hashParams.get('reset') === 'true';
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasResetTokens = urlParams.get('access_token') && urlParams.get('refresh_token') && urlParams.get('type') === 'recovery';
+    const hasResetFlag = urlParams.get('reset') === 'true';
     return hasResetTokens || hasResetFlag;
   };
 
