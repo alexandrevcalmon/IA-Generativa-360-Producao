@@ -48,7 +48,18 @@ npm run dev
 - Click on the "Code" button (green button) near the top right.
 - Select the "Codespaces" tab.
 - Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+ - Edit files directly within the Codespace and commit and push your changes once you're done.
+
+## Environment variables
+
+This project uses Supabase. Copy `.env.example` to `.env` and fill in your project credentials:
+
+```sh
+cp .env.example .env
+# then edit .env and set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+```
+
+Both development (`npm run dev`) and production builds (`npm run build`) read these values via `import.meta.env`.
 
 ## What technologies are used for this project?
 
