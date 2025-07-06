@@ -19,10 +19,16 @@ export default function Auth() {
   
   // Check if this is a password reset flow - highest priority
   const isPasswordReset = () => {
-    const hasResetTokens = searchParams.get('access_token') && 
-                          searchParams.get('refresh_token') && 
-                          searchParams.get('type') === 'recovery';
-    const hasResetFlag = searchParams.get('reset') === 'true';
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken =
+      searchParams.get('access_token') || hashParams.get('access_token');
+    const refreshToken =
+      searchParams.get('refresh_token') || hashParams.get('refresh_token');
+    const type = searchParams.get('type') || hashParams.get('type');
+    const hasResetTokens =
+      !!accessToken && !!refreshToken && type === 'recovery';
+    const hasResetFlag =
+      searchParams.get('reset') === 'true' || hashParams.get('reset') === 'true';
     return hasResetTokens || hasResetFlag;
   };
 
