@@ -89,22 +89,26 @@ serve(async (req) => {
 
     console.log(`[resend-invitation] Collaborator found: ${collaborator.email}, needs_password_change: ${collaborator.needs_password_change}`);
 
-    // Send invitation email using resetPasswordForEmail
+    // Send invitation email using admin generateLink
     console.log(`[resend-invitation] Sending invitation email to ${collaborator.email}.`);
     try {
       // Build the redirect URL to point to our auth page
       const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
       console.log(`[resend-invitation] Reset redirect URL: ${redirectUrl}`);
       
-      const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(collaborator.email, {
-        redirectTo: redirectUrl
+      const { data: linkData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'recovery',
+        email: collaborator.email,
+        options: {
+          redirectTo: redirectUrl
+        }
       });
 
       if (resetError) {
-        console.error(`[resend-invitation] Error sending invitation email to ${collaborator.email}:`, resetError.message);
+        console.error(`[resend-invitation] Error generating invitation link for ${collaborator.email}:`, resetError.message);
         return new Response(JSON.stringify({ error: `Erro ao enviar convite: ${resetError.message}` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } else {
-        console.log(`[resend-invitation] Invitation email sent successfully to ${collaborator.email}.`);
+        console.log(`[resend-invitation] Invitation link generated successfully for ${collaborator.email}:`, linkData);
         
         // Update the needs_password_change flag to true to indicate invitation was sent
         const { error: updateError } = await supabaseAdmin
