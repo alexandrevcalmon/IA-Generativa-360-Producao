@@ -27,12 +27,9 @@ export function ResetPasswordHandler() {
 
   // Immediately capture and clear tokens from URL
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.slice(1));
-    const accessToken =
-      searchParams.get('access_token') || hashParams.get('access_token');
-    const refreshToken =
-      searchParams.get('refresh_token') || hashParams.get('refresh_token');
-    const type = searchParams.get('type') || hashParams.get('type');
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token');
+    const type = searchParams.get('type');
     
     console.log('🔐 ResetPasswordHandler: Capturing tokens from URL', {
       hasAccessToken: !!accessToken,
@@ -57,13 +54,9 @@ export function ResetPasswordHandler() {
       const newUrl = `${window.location.pathname}${newSearchParams.toString() ? '?' + newSearchParams.toString() : ''}`;
       window.history.replaceState({}, '', newUrl);
       setSearchParams(newSearchParams);
-      window.location.hash = '';
       
       setResetType('tokens');
-    } else if (
-      searchParams.get('reset') === 'true' ||
-      hashParams.get('reset') === 'true'
-    ) {
+    } else if (searchParams.get('reset') === 'true') {
       setResetType('flag');
     } else {
       setResetType('none');

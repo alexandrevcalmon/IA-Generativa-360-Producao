@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
 import { 
   UserCog, 
   UserX, 
@@ -33,7 +32,6 @@ export function CompanyCollaboratorsList({
 }: CompanyCollaboratorsListProps) {
   const toggleStatusMutation = useToggleCollaboratorStatus();
   const resendInvitationMutation = useResendInvitation();
-  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const handleToggleStatus = async (collaborator: Collaborator) => {
     await toggleStatusMutation.mutateAsync({
@@ -44,15 +42,10 @@ export function CompanyCollaboratorsList({
   };
 
   const handleResendInvitation = async (collaborator: Collaborator) => {
-    setSendingId(collaborator.id);
-    try {
-      await resendInvitationMutation.mutateAsync({
-        collaborator_id: collaborator.id,
-        company_id: companyId
-      });
-    } finally {
-      setSendingId(null);
-    }
+    await resendInvitationMutation.mutateAsync({
+      collaborator_id: collaborator.id,
+      company_id: companyId
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -132,14 +125,10 @@ export function CompanyCollaboratorsList({
                     variant="outline"
                     size="sm"
                     onClick={() => handleResendInvitation(collaborator)}
-                    disabled={
-                      resendInvitationMutation.isPending &&
-                      sendingId === collaborator.id
-                    }
+                    disabled={resendInvitationMutation.isPending}
                     className="flex items-center gap-2"
                   >
-                    {resendInvitationMutation.isPending &&
-                    sendingId === collaborator.id ? (
+                    {resendInvitationMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <MailOpen className="h-4 w-4" />
