@@ -3,8 +3,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://generativa-360-platform.lovable.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Credentials': 'true',
 };
 
 serve(async (req) => {
@@ -110,24 +112,30 @@ serve(async (req) => {
           if (profileUpsertError) console.error(`[create-collaborator] Error upserting profile on reactivation for ${existingCompanyUser.auth_user_id}:`, profileUpsertError.message);
           else console.log(`[create-collaborator] Profile upserted for reactivated collaborator ${existingCompanyUser.auth_user_id}.`);
 
-          // Send invitation email for reactivated user
-          console.log(`[create-collaborator] Sending invitation email to reactivated collaborator ${email}.`);
+          // Send secure invitation link for reactivated user
+          console.log(`[create-collaborator] Generating secure invitation link for reactivated collaborator ${email}.`);
           try {
-            const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
-            console.log(`[create-collaborator] Reset redirect URL: ${redirectUrl}`);
-            
-          const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
-            redirectTo: redirectUrl
-          });
+            const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
+              type: 'recovery',
+              email: email,
+              options: {
+                redirectTo: 'https://generativa-360-platform.lovable.app/auth',
+                data: {
+                  role: 'collaborator',
+                  company_id: company_id,
+                  name: name
+                }
+              }
+            });
 
-            if (resetError) {
-              console.error(`[create-collaborator] Error sending invitation email to ${email}:`, resetError.message);
+            if (inviteError) {
+              console.error(`[create-collaborator] Error generating invitation link for ${email}:`, inviteError.message);
               // Don't fail the entire operation, just log the error
             } else {
-              console.log(`[create-collaborator] Invitation email sent successfully to ${email}.`);
+              console.log(`[create-collaborator] Secure invitation link generated successfully for ${email}.`);
             }
-          } catch (emailError: any) {
-            console.error(`[create-collaborator] Error sending invitation email:`, emailError.message);
+          } catch (linkError: any) {
+            console.error(`[create-collaborator] Error generating invitation link:`, linkError.message);
             // Don't fail the entire operation
           }
 
@@ -202,24 +210,30 @@ serve(async (req) => {
     if (upsertProfileError) console.error(`[create-collaborator] Error upserting profile for ${authUserId}:`, upsertProfileError.message);
     else console.log(`[create-collaborator] Profile record for ${authUserId} upserted successfully.`);
 
-    // Send invitation email
-    console.log(`[create-collaborator] Sending invitation email to ${email}.`);
+    // Send secure invitation link
+    console.log(`[create-collaborator] Generating secure invitation link for ${email}.`);
     try {
-      const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
-      console.log(`[create-collaborator] Reset redirect URL: ${redirectUrl}`);
-      
-      const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl
+      const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
+        type: isNewAuthUser ? 'signup' : 'recovery',
+        email: email,
+        options: {
+          redirectTo: 'https://generativa-360-platform.lovable.app/auth',
+          data: {
+            role: 'collaborator',
+            company_id: company_id,
+            name: name
+          }
+        }
       });
 
-      if (resetError) {
-        console.error(`[create-collaborator] Error sending invitation email to ${email}:`, resetError.message);
+      if (inviteError) {
+        console.error(`[create-collaborator] Error generating invitation link for ${email}:`, inviteError.message);
         // Don't fail the entire operation, just log the error
       } else {
-        console.log(`[create-collaborator] Invitation email sent successfully to ${email}.`);
+        console.log(`[create-collaborator] Secure invitation link generated successfully for ${email}.`);
       }
-    } catch (emailError: any) {
-      console.error(`[create-collaborator] Error sending invitation email:`, emailError.message);
+    } catch (linkError: any) {
+      console.error(`[create-collaborator] Error generating invitation link:`, linkError.message);
       // Don't fail the entire operation
     }
 

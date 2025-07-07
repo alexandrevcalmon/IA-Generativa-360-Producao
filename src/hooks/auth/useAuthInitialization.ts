@@ -1,17 +1,24 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchUserRoleAuxiliaryData } from './userRoleService';
+import { createAuthStateManager, AuthState } from './authStateManager';
 
 export function useAuthInitialization() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
-  const [companyUserData, setCompanyUserData] = useState<any>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    session: null,
+    userRole: null,
+    needsPasswordChange: false,
+    companyUserData: null,
+    loading: true,
+    isInitialized: false,
+  });
+
+  const updateAuthState = useCallback((updates: Partial<AuthState>) => {
+    setAuthState(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  const authStateManager = createAuthStateManager(authState, updateAuthState);
 
   // Check if we're in a password reset flow
   const isPasswordResetFlow = () => {
@@ -27,8 +34,7 @@ export function useAuthInitialization() {
     // Skip auth initialization if we're in a password reset flow
     if (isPasswordResetFlow()) {
       console.log('🔐 Password reset flow detected, skipping auth initialization');
-      setLoading(false);
-      setIsInitialized(true);
+      updateAuthState({ loading: false, isInitialized: true });
       return;
     }
 
@@ -51,44 +57,21 @@ export function useAuthInitialization() {
               return;
             }
 
-            setSession(session);
-            setUser(session?.user ?? null);
+            updateAuthState({ session, user: session?.user ?? null });
 
             if (session?.user && event !== 'SIGNED_OUT') {
-              // Fetch user role data asynchronously
+              // Refresh user data asynchronously
               setTimeout(async () => {
                 if (!mounted) return;
-                
                 try {
-                  const auxData = await fetchUserRoleAuxiliaryData(session.user);
-                  const finalRole = auxData.role || 'student';
-                  
-                  if (!mounted) return;
-                  
-                  setUserRole(finalRole);
-                  setNeedsPasswordChange(auxData.needsPasswordChange || false);
-
-                  // Set company data based on role
-                  if (finalRole === 'company') {
-                    setCompanyUserData(auxData.companyData);
-                  } else if (finalRole === 'collaborator') {
-                    setCompanyUserData(auxData.collaboratorData);
-                  } else {
-                    setCompanyUserData(null);
-                  }
+                  await authStateManager.refreshUserData(session.user);
                 } catch (error) {
-                  console.error('⚠️ Error loading user auxiliary data:', error);
-                  if (!mounted) return;
-                  setUserRole(session.user.user_metadata?.role || 'student');
-                  setNeedsPasswordChange(false);
-                  setCompanyUserData(null);
+                  console.error('⚠️ Error refreshing user data:', error);
                 }
               }, 0);
             } else {
               // Clear state on sign out
-              setUserRole(null);
-              setNeedsPasswordChange(false);
-              setCompanyUserData(null);
+              authStateManager.clearState();
             }
           }
         );
@@ -103,33 +86,22 @@ export function useAuthInitialization() {
 
         if (mounted && initialSession?.user) {
           console.log('✅ Initial session found:', initialSession.user.email);
-          setSession(initialSession);
-          setUser(initialSession.user);
+          updateAuthState({ 
+            session: initialSession, 
+            user: initialSession.user 
+          });
 
           // Load user auxiliary data
           try {
-            const auxData = await fetchUserRoleAuxiliaryData(initialSession.user);
-            const finalRole = auxData.role || 'student';
-            
-            if (mounted) {
-              setUserRole(finalRole);
-              setNeedsPasswordChange(auxData.needsPasswordChange || false);
-
-              // Set company data based on role
-              if (finalRole === 'company') {
-                setCompanyUserData(auxData.companyData);
-              } else if (finalRole === 'collaborator') {
-                setCompanyUserData(auxData.collaboratorData);
-              } else {
-                setCompanyUserData(null);
-              }
-            }
+            await authStateManager.refreshUserData(initialSession.user);
           } catch (error) {
             console.error('⚠️ Error loading initial user auxiliary data:', error);
             if (mounted) {
-              setUserRole(initialSession.user.user_metadata?.role || 'student');
-              setNeedsPasswordChange(false);
-              setCompanyUserData(null);
+              updateAuthState({
+                userRole: initialSession.user.user_metadata?.role || 'student',
+                needsPasswordChange: false,
+                companyUserData: null,
+              });
             }
           }
         } else {
@@ -137,8 +109,7 @@ export function useAuthInitialization() {
         }
 
         if (mounted) {
-          setLoading(false);
-          setIsInitialized(true);
+          updateAuthState({ loading: false, isInitialized: true });
         }
 
         // Cleanup function
@@ -149,8 +120,7 @@ export function useAuthInitialization() {
       } catch (error) {
         console.error('💥 Auth initialization error:', error);
         if (mounted) {
-          setLoading(false);
-          setIsInitialized(true);
+          updateAuthState({ loading: false, isInitialized: true });
         }
       }
     };
@@ -161,21 +131,23 @@ export function useAuthInitialization() {
       mounted = false;
       cleanup?.then(cleanupFn => cleanupFn?.());
     };
-  }, []);
+  }, [authStateManager, updateAuthState]);
+
+  const refreshUserRole = useCallback(async () => {
+    if (authState.user) {
+      await authStateManager.refreshUserData(authState.user);
+    }
+  }, [authState.user, authStateManager]);
 
   return {
-    user,
-    session,
-    loading,
-    userRole,
-    needsPasswordChange,
-    companyUserData,
-    isInitialized,
-    setUser,
-    setSession,
-    setUserRole,
-    setNeedsPasswordChange,
-    setCompanyUserData,
-    setLoading,
+    ...authState,
+    refreshUserRole,
+    // Legacy setters for compatibility
+    setUser: (user: User | null) => updateAuthState({ user }),
+    setSession: (session: Session | null) => updateAuthState({ session }),
+    setUserRole: (userRole: string | null) => updateAuthState({ userRole }),
+    setNeedsPasswordChange: (needsPasswordChange: boolean) => updateAuthState({ needsPasswordChange }),
+    setCompanyUserData: (companyUserData: any) => updateAuthState({ companyUserData }),
+    setLoading: (loading: boolean) => updateAuthState({ loading }),
   };
 }

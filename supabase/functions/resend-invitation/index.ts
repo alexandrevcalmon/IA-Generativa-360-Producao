@@ -3,8 +3,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://generativa-360-platform.lovable.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Credentials': 'true',
 };
 
 serve(async (req) => {
@@ -89,22 +91,27 @@ serve(async (req) => {
 
     console.log(`[resend-invitation] Collaborator found: ${collaborator.email}, needs_password_change: ${collaborator.needs_password_change}`);
 
-    // Send invitation email using resetPasswordForEmail
-    console.log(`[resend-invitation] Sending invitation email to ${collaborator.email}.`);
+    // Generate secure invitation link
+    console.log(`[resend-invitation] Generating secure invitation link for ${collaborator.email}.`);
     try {
-      // Build the redirect URL to point to our auth page
-      const redirectUrl = `https://generativa-360-platform.lovable.app/auth`;
-      console.log(`[resend-invitation] Reset redirect URL: ${redirectUrl}`);
-      
-      const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(collaborator.email, {
-        redirectTo: redirectUrl
+      const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'recovery',
+        email: collaborator.email,
+        options: {
+          redirectTo: 'https://generativa-360-platform.lovable.app/auth',
+          data: {
+            role: 'collaborator',
+            company_id: company_id,
+            name: collaborator.name
+          }
+        }
       });
 
-      if (resetError) {
-        console.error(`[resend-invitation] Error sending invitation email to ${collaborator.email}:`, resetError.message);
-        return new Response(JSON.stringify({ error: `Erro ao enviar convite: ${resetError.message}` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (inviteError) {
+        console.error(`[resend-invitation] Error generating invitation link for ${collaborator.email}:`, inviteError.message);
+        return new Response(JSON.stringify({ error: `Erro ao gerar convite: ${inviteError.message}` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } else {
-        console.log(`[resend-invitation] Invitation email sent successfully to ${collaborator.email}.`);
+        console.log(`[resend-invitation] Secure invitation link generated successfully for ${collaborator.email}.`);
         
         // Update the needs_password_change flag to true to indicate invitation was sent
         const { error: updateError } = await supabaseAdmin
@@ -123,9 +130,9 @@ serve(async (req) => {
           message: `Convite reenviado com sucesso para ${collaborator.email}` 
         }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-    } catch (emailError: any) {
-      console.error(`[resend-invitation] Error sending invitation email:`, emailError.message);
-      return new Response(JSON.stringify({ error: `Erro inesperado ao enviar convite: ${emailError.message}` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    } catch (linkError: any) {
+      console.error(`[resend-invitation] Error generating invitation link:`, linkError.message);
+      return new Response(JSON.stringify({ error: `Erro inesperado ao gerar convite: ${linkError.message}` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
   } catch (e: any) {

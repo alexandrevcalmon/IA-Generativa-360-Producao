@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { SimpleAuthForm } from '@/components/auth/SimpleAuthForm';
 import { RoleIndicator } from '@/components/auth/RoleIndicator';
 import { AuthLoadingScreen } from '@/components/auth/AuthLoadingScreen';
-import { ResetPasswordHandler } from '@/components/auth/ResetPasswordHandler';
+import { SecureInvitationHandler } from '@/components/auth/SecureInvitationHandler';
 import { useAuthRedirects } from '@/hooks/auth/useAuthRedirects';
 import { AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -17,19 +17,18 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const [role, setRole] = useState(searchParams.get('role') || 'student');
   
-  // Check if this is a password reset flow - highest priority
-  const isPasswordReset = () => {
-    const hasResetTokens = searchParams.get('access_token') && 
-                          searchParams.get('refresh_token') && 
-                          searchParams.get('type') === 'recovery';
+  // Check if this is an invitation/password reset flow - highest priority
+  const isInvitationFlow = () => {
+    const hasTokens = searchParams.get('access_token') && searchParams.get('refresh_token');
+    const type = searchParams.get('type');
     const hasResetFlag = searchParams.get('reset') === 'true';
-    return hasResetTokens || hasResetFlag;
+    return (hasTokens && (type === 'recovery' || type === 'signup')) || hasResetFlag;
   };
 
-  // Priority 0: Handle password reset flow immediately - no auth context needed
-  if (isPasswordReset()) {
-    console.log('🔐 Password reset flow detected, showing ResetPasswordHandler');
-    return <ResetPasswordHandler />;
+  // Priority 0: Handle invitation flow immediately - no auth context needed
+  if (isInvitationFlow()) {
+    console.log('🔐 Invitation flow detected, showing SecureInvitationHandler');
+    return <SecureInvitationHandler />;
   }
   
   // Safely use auth hook with error boundary - only after checking for password reset
