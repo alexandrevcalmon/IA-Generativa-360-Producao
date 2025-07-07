@@ -1,20 +1,16 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
-import { createSessionCleanupService } from './sessionCleanupService';
 
 interface SessionValidationResult {
   isValid: boolean;
   session: Session | null;
   user: User | null;
   needsRefresh: boolean;
-  requiresCleanup?: boolean;
   error?: string;
 }
 
 export const createSessionValidationService = () => {
-  const cleanupService = createSessionCleanupService();
-
   const validateSession = async (currentSession?: Session | null): Promise<SessionValidationResult> => {
     try {
       console.log('🔍 Validating session with enhanced error handling...', { 
@@ -60,14 +56,12 @@ export const createSessionValidationService = () => {
         
         // Verify token integrity
         if (!currentSession.access_token || !currentSession.refresh_token) {
-          console.warn('⚠️ Session missing critical tokens, cleanup required');
-          cleanupService.clearLocalSession();
+          console.warn('⚠️ Session missing critical tokens');
           return {
             isValid: false,
-            session: null,
-            user: null,
-            needsRefresh: false,
-            requiresCleanup: true
+            session: currentSession,
+            user: currentSession.user,
+            needsRefresh: true
           };
         }
         
@@ -95,23 +89,6 @@ export const createSessionValidationService = () => {
           code: error.code,
           timestamp: new Date().toISOString()
         });
-
-        // Handle specific error types that require cleanup
-        if (error.message?.includes('refresh_token_not_found') || 
-            error.message?.includes('Invalid Refresh Token') ||
-            error.message?.includes('refresh_token_revoked')) {
-          console.log('🧹 Token error detected, cleaning up session...');
-          cleanupService.clearLocalSession();
-          return {
-            isValid: false,
-            session: null,
-            user: null,
-            needsRefresh: false,
-            requiresCleanup: true,
-            error: error.message
-          };
-        }
-        
         return {
           isValid: false,
           session: null,
@@ -141,23 +118,6 @@ export const createSessionValidationService = () => {
         stack: error.stack,
         timestamp: new Date().toISOString()
       });
-
-      // For critical errors, clean up potentially corrupted state
-      if (error.message?.includes('localStorage') || 
-          error.message?.includes('JSON') ||
-          error.message?.includes('storage')) {
-        console.log('🧹 Storage error detected, cleaning up...');
-        cleanupService.clearLocalSession();
-        return {
-          isValid: false,
-          session: null,
-          user: null,
-          needsRefresh: false,
-          requiresCleanup: true,
-          error: 'Session validation failed'
-        };
-      }
-
       return {
         isValid: false,
         session: null,
@@ -168,11 +128,9 @@ export const createSessionValidationService = () => {
     }
   };
 
-  const refreshSession = async (retryCount = 0): Promise<SessionValidationResult> => {
-    const maxRetries = 2;
-    
+  const refreshSession = async (): Promise<SessionValidationResult> => {
     try {
-      console.log(`🔄 Attempting session refresh (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+      console.log('🔄 Attempting session refresh with enhanced monitoring...');
       
       const { data: { session }, error } = await supabase.auth.refreshSession();
       
@@ -183,36 +141,6 @@ export const createSessionValidationService = () => {
           code: error.code,
           timestamp: new Date().toISOString()
         });
-
-        // Handle specific refresh errors that require cleanup
-        if (error.message?.includes('refresh_token_not_found') || 
-            error.message?.includes('Invalid Refresh Token') ||
-            error.message?.includes('refresh_token_revoked')) {
-          console.log('🧹 Invalid refresh token, cleaning up session...');
-          cleanupService.clearLocalSession();
-          return {
-            isValid: false,
-            session: null,
-            user: null,
-            needsRefresh: false,
-            requiresCleanup: true,
-            error: error.message
-          };
-        }
-
-        // Retry on network errors
-        if (retryCount < maxRetries && (
-          error.message?.includes('fetch') || 
-          error.message?.includes('network') ||
-          error.message?.includes('timeout') ||
-          error.status === 0
-        )) {
-          const delayMs = (retryCount + 1) * 1000;
-          console.log(`🔁 Network error, retrying refresh in ${delayMs}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delayMs));
-          return refreshSession(retryCount + 1);
-        }
-        
         return {
           isValid: false,
           session: null,
@@ -223,20 +151,12 @@ export const createSessionValidationService = () => {
       }
       
       if (!session) {
-        console.log('⚠️ No session returned after refresh attempt');
-        if (retryCount === 0) {
-          // Try once more
-          return refreshSession(1);
-        }
-        
-        console.log('🧹 Multiple refresh attempts failed, cleaning up...');
-        cleanupService.clearLocalSession();
+        console.log('ℹ️ No session returned after refresh attempt');
         return {
           isValid: false,
           session: null,
           user: null,
-          needsRefresh: false,
-          requiresCleanup: true
+          needsRefresh: false
         };
       }
       
@@ -259,81 +179,18 @@ export const createSessionValidationService = () => {
         stack: error.stack,
         timestamp: new Date().toISOString()
       });
-
-      // Retry on critical errors
-      if (retryCount < maxRetries) {
-        const delayMs = (retryCount + 1) * 2000;
-        console.log(`🔁 Critical error, retrying refresh in ${delayMs}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        return refreshSession(retryCount + 1);
-      }
-      
-      console.log('🧹 Multiple refresh failures, cleaning up session...');
-      cleanupService.clearLocalSession();
       return {
         isValid: false,
         session: null,
         user: null,
         needsRefresh: false,
-        requiresCleanup: true,
         error: 'Session refresh failed'
       };
     }
   };
 
-  const handleSessionError = async (error: any) => {
-    console.log('🔧 Handling session error:', error.message);
-    
-    const errorHandlers = {
-      'refresh_token_not_found': () => {
-        console.log('🧹 Refresh token not found - clearing session');
-        cleanupService.clearLocalSession();
-        return { action: 'redirect_to_auth', requiresCleanup: true };
-      },
-      'Invalid Refresh Token': () => {
-        console.log('🧹 Invalid refresh token - clearing session');
-        cleanupService.clearLocalSession();
-        return { action: 'redirect_to_auth', requiresCleanup: true };
-      },
-      'refresh_token_revoked': () => {
-        console.log('🧹 Refresh token revoked - clearing session');
-        cleanupService.clearLocalSession();
-        return { action: 'redirect_to_auth', requiresCleanup: true };
-      },
-      'Invalid login credentials': () => {
-        console.log('❌ Invalid credentials - user needs to re-authenticate');
-        return { action: 'show_error', message: 'Credenciais inválidas. Verifique email e senha.' };
-      },
-      'Email not confirmed': () => {
-        console.log('📧 Email not confirmed');
-        return { action: 'show_error', message: 'Email não confirmado. Verifique sua caixa de entrada.' };
-      },
-      'Cross-Origin-Opener-Policy': () => {
-        console.log('🔒 CORS policy error - session issue');
-        cleanupService.clearLocalSession();
-        return { action: 'redirect_to_auth', message: 'Erro de sessão. Tente fazer login novamente.', requiresCleanup: true };
-      }
-    };
-
-    for (const [errorType, handler] of Object.entries(errorHandlers)) {
-      if (error.message?.includes(errorType)) {
-        return handler();
-      }
-    }
-
-    // Default error handling
-    console.log('❓ Unhandled session error, applying default cleanup');
-    cleanupService.clearLocalSession();
-    return { 
-      action: 'redirect_to_auth', 
-      message: 'Erro de autenticação. Faça login novamente.', 
-      requiresCleanup: true 
-    };
-  };
-
   return {
     validateSession,
-    refreshSession,
-    handleSessionError
+    refreshSession
   };
 };

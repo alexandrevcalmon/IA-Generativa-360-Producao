@@ -1,124 +1,60 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { logEmailAttempt } from '@/utils/emailDebugger';
+import { getResetPasswordRedirectUrl } from './authUtils';
 
 export const createPasswordService = (toast: ReturnType<typeof useToast>['toast']) => {
   const resetPassword = async (email: string) => {
     try {
-      console.log('🔐 Starting password reset for email:', email);
+      const redirectUrl = getResetPasswordRedirectUrl();
       
-      // Create the redirect URL that points to the auth page
-      // The ResetPasswordHandler will detect and handle the tokens
-      const redirectUrl = `${window.location.origin}/auth`;
-      console.log('🔗 Reset redirect URL:', redirectUrl);
-      
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        toast({
-          title: "Email inválido",
-          description: "Por favor, digite um endereço de email válido.",
-          variant: "destructive",
-        });
-        return { error: { message: "Invalid email format" } };
-      }
-      
-      // Use Supabase's built-in reset password system
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl
+        redirectTo: redirectUrl,
       });
       
       if (error) {
-        console.error('❌ Reset password error:', {
-          message: error.message,
-          status: error.status,
-          name: error.name
-        });
-        
-        // Enhanced error handling
-        if (error.message.includes('User not found') || error.message.includes('not found')) {
+        if (error.message.includes('User not found')) {
           toast({
             title: "Email não encontrado",
             description: "Não encontramos uma conta com este email. Verifique o endereço ou crie uma nova conta.",
             variant: "destructive",
           });
-        } else if (error.message.includes('For security purposes') || error.message.includes('rate limit')) {
+        } else if (error.message.includes('For security purposes')) {
           toast({
             title: "Limite de tentativas atingido",
             description: "Por segurança, aguarde alguns minutos antes de solicitar outro email de redefinição.",
             variant: "destructive",
           });
-        } else if (error.message.includes('Email not confirmed')) {
-          toast({
-            title: "Email não confirmado",
-            description: "Sua conta precisa ser confirmada antes de redefinir a senha. Verifique seu email de cadastro.",
-            variant: "destructive",
-          });
-        } else if (error.message.includes('SMTP') || error.message.includes('email')) {
-          console.error('🚨 SMTP Configuration Error detected');
-          toast({
-            title: "Erro de configuração de email",
-            description: "Há um problema com o envio de emails. Entre em contato com o suporte.",
-            variant: "destructive",
-          });
         } else {
           toast({
             title: "Erro ao enviar email",
-            description: `Erro: ${error.message}. Tente novamente em alguns minutos.`,
+            description: error.message,
             variant: "destructive",
           });
         }
-        
-        logEmailAttempt(email, false, error);
-        return { error };
       } else {
-        console.log('✅ Password reset email sent successfully');
-        logEmailAttempt(email, true);
         toast({
           title: "Email enviado com sucesso!",
-          description: "Verifique sua caixa de entrada e spam para as instruções de redefinição de senha. O email pode levar alguns minutos para chegar.",
-        });
-        return { error: null };
-      }
-    } catch (error: any) {
-      console.error('💥 Critical password reset error:', error);
-      
-      if (error.message?.includes('Failed to fetch') || error.message?.includes('Network')) {
-        toast({
-          title: "Erro de conexão",
-          description: "Não foi possível conectar ao servidor. Verifique sua conexão com a internet.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro inesperado",
-          description: "Ocorreu um erro inesperado. Tente novamente em alguns minutos.",
-          variant: "destructive",
+          description: "Verifique sua caixa de entrada e spam para as instruções de redefinição de senha.",
         });
       }
       
-      return { error: error };
+      return { error };
+    } catch (error) {
+      console.error('Reset password error:', error);
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível enviar o email. Verifique sua conexão com a internet.",
+        variant: "destructive",
+      });
+      return { error };
     }
   };
 
-  const changePassword = async (newPassword: string) => {
+  const changePassword = async (newPassword: string, userId?: string, companyUserData?: any) => {
     try {
-      console.log('🔐 Changing password for current user');
+      console.log('🔐 Changing password for user:', userId);
       
-      // First verify we have a valid session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        console.error('❌ No valid session for password change:', sessionError);
-        toast({
-          title: "Sessão inválida",
-          description: "Sua sessão expirou. Faça login novamente para alterar sua senha.",
-          variant: "destructive",
-        });
-        return { error: { message: "Invalid session" } };
-      }
-
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -209,12 +145,6 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             description: "A senha deve ter pelo menos 6 caracteres.",
             variant: "destructive",
           });
-        } else if (error.message.includes('expired') || error.message.includes('invalid')) {
-          toast({
-            title: "Sessão expirada",
-            description: "Sua sessão de redefinição expirou. Solicite um novo link de redefinição.",
-            variant: "destructive",
-          });
         } else {
           toast({
             title: "Erro ao alterar senha",
@@ -226,7 +156,7 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
 
       return { error };
     } catch (error) {
-      console.error('💥 Change password error:', error);
+      console.error('Change password error:', error);
       toast({
         title: "Erro de conexão",
         description: "Não foi possível alterar a senha. Verifique sua conexão com a internet.",

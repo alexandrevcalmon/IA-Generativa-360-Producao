@@ -69,52 +69,37 @@ export function useAuthMethods({
   };
 
   const signIn = async (email: string, password: string, role?: string) => {
-    console.log('🔑 Starting simplified sign in for:', email, 'with role:', role);
+    console.log('🔑 Starting enhanced sign in for:', email, 'with role:', role);
     setLoading(true);
     
     try {
-      // Clear any corrupted session data first
-      try {
-        localStorage.removeItem('supabase.auth.token');
-        sessionStorage.clear();
-      } catch (cleanupError) {
-        console.log('Pre-login cleanup completed');
-      }
-
       const result = await authService.signIn(email, password, role);
       
-      if (result.error) {
-        console.error('❌ Authentication failed:', result.error.message);
-        setLoading(false);
-        return result;
-      }
-
-      if (result.user && result.session) {
-        console.log('✅ Authentication successful for:', result.user.email);
+      if (result.user && !result.error) {
+        console.log('✅ Sign in successful, validating session...');
         
-        // Set user and session immediately
-        setUser(result.user);
-        setSession(result.session);
+        // Validate the session immediately after sign in
+        const validation = await sessionService.validateSession();
+        
+        if (!validation.isValid) {
+          console.error('❌ Session validation failed after sign in');
+          setLoading(false);
+          return { error: { message: 'Session validation failed' } };
+        }
         
         // Handle password change requirement
         if (result.needsPasswordChange) {
-          console.log('🔐 Password change required');
-          setNeedsPasswordChange(true);
-          setUserRole(result.user.user_metadata?.role || 'student');
-          setLoading(false);
-          return { error: null, needsPasswordChange: true };
-        }
-        
-        // Load user role data asynchronously
-        setTimeout(async () => {
+          console.log('🔐 Password change required from authService');
+          
+          const authUser = result.user as User;
+          
+          // Get role and auxiliary data with improved error handling
           try {
-            const auxData = await fetchUserRoleAuxiliaryData(result.user as User);
-            const finalRole = auxData.role || result.user.user_metadata?.role || 'student';
+            const auxData = await fetchUserRoleAuxiliaryData(authUser);
+            const finalRole = auxData.role || authUser.user_metadata?.role || 'student';
             
             setUserRole(finalRole);
-            setNeedsPasswordChange(false);
-
-            // Set company data based on role
+            
             if (finalRole === 'company') {
               setCompanyUserData(auxData.companyData);
             } else if (finalRole === 'collaborator') {
@@ -123,28 +108,64 @@ export function useAuthMethods({
               setCompanyUserData(null);
             }
           } catch (auxError) {
-            console.error('⚠️ Error loading user data:', auxError);
-            setUserRole(result.user.user_metadata?.role || 'student');
+            console.error('❌ Error fetching auxiliary data during password change flow:', auxError);
+            // Set safe defaults
+            setUserRole(authUser.user_metadata?.role || 'student');
             setCompanyUserData(null);
           }
-        }, 0);
-        
-        setLoading(false);
-        return { error: null, needsPasswordChange: false };
+
+          setUser(authUser);
+          setSession(result.session);
+          setNeedsPasswordChange(true);
+          
+          setLoading(false);
+          return { error: null, needsPasswordChange: true };
+        } else {
+          // Normal login flow
+          const authUser = result.user as User;
+          
+          try {
+            const auxData = await fetchUserRoleAuxiliaryData(authUser);
+            const finalRole = auxData.role || authUser.user_metadata?.role || 'student';
+            
+            setUserRole(finalRole);
+            setNeedsPasswordChange(result.needsPasswordChange || false);
+
+            if (finalRole === 'company') {
+              setCompanyUserData(auxData.companyData);
+            } else if (finalRole === 'collaborator') {
+              setCompanyUserData(auxData.collaboratorData);
+            } else {
+              setCompanyUserData(null);
+            }
+          } catch (auxError) {
+            console.error('❌ Error fetching auxiliary data during normal login:', auxError);
+            // Set safe defaults
+            setUserRole(authUser.user_metadata?.role || 'student');
+            setCompanyUserData(null);
+          }
+          
+          setUser(authUser);
+          setSession(result.session);
+          
+          console.log('✅ Sign in complete');
+          
+          setLoading(false);
+          return { error: null, needsPasswordChange: result.needsPasswordChange || false };
+        }
       }
       
-      console.error('❌ No user data received');
       setLoading(false);
-      return { error: { message: 'Login failed - no user data' } };
+      return result;
     } catch (error) {
-      console.error('❌ Critical sign in error:', error);
+      console.error('❌ Sign in error:', error);
       setLoading(false);
-      return { error: { message: 'Erro de conexão' } };
+      return { error };
     }
   };
 
   const changePassword = async (newPassword: string) => {
-    const result = await authService.changePassword(newPassword);
+    const result = await authService.changePassword(newPassword, user?.id, companyUserData);
     
     if (!result.error && companyUserData) {
       setNeedsPasswordChange(false);

@@ -3,10 +3,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://generativa-360-platform.lovable.app',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Credentials': 'true',
 };
 
 serve(async (req) => {
@@ -98,10 +96,12 @@ serve(async (req) => {
         console.log('[create-company-auth-user] Successfully updated metadata for existing auth user.');
       }
     } else {
+      const tempPassword = Deno.env.get('NEW_COMPANY_USER_DEFAULT_PASSWORD') || 'ia360graus';
       console.log(`[create-company-auth-user] No existing auth user. Creating new one for email: ${email}`);
       const { data: newAuthUserData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
         email: email,
-        email_confirm: true,
+        password: tempPassword,
+        email_confirm: true, // Auto-confirm for simplicity in this flow
         user_metadata: { role: 'company', company_id: companyId, company_name: effectiveCompanyName, name: contactName || effectiveCompanyName }
       });
 
@@ -158,34 +158,6 @@ serve(async (req) => {
       // Non-fatal, but log it. The main goal was to link auth user to company.
     } else {
       console.log('[create-company-auth-user] Profile record upserted successfully.');
-    }
-
-    // Send secure invitation link if new user
-    if (isNewUser) {
-      console.log(`[create-company-auth-user] Generating secure invitation link for ${email}`);
-      try {
-        const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
-          type: 'signup',
-          email: email,
-          options: {
-            redirectTo: 'https://generativa-360-platform.lovable.app/auth',
-            data: {
-              role: 'company',
-              company_id: companyId,
-              company_name: effectiveCompanyName,
-              name: contactName || effectiveCompanyName
-            }
-          }
-        });
-
-        if (inviteError) {
-          console.error(`[create-company-auth-user] Error generating invitation link:`, inviteError.message);
-        } else {
-          console.log(`[create-company-auth-user] Secure invitation link generated successfully for ${email}`);
-        }
-      } catch (linkError: any) {
-        console.error(`[create-company-auth-user] Error in invitation link generation:`, linkError.message);
-      }
     }
 
     console.log('[create-company-auth-user] Process completed successfully:', { authUserId, companyId, isNewUser, needsPasswordChange: true });

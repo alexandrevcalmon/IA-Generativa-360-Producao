@@ -46,10 +46,10 @@ export const useAddCompanyCollaborator = () => {
       const isReactivation = response.isReactivation;
       
       toast({
-        title: isReactivation ? "Colaborador reativado!" : "Colaborador adicionado!",
+        title: isReactivation ? "Colaborador reativado com sucesso!" : "Colaborador adicionado com sucesso!",
         description: isReactivation 
-          ? `${variables.name} foi reativado na empresa. Um convite de ativação foi enviado por email.`
-          : `${variables.name} foi adicionado à empresa. Um convite de ativação foi enviado para ${variables.email}. O colaborador deve verificar o email e clicar no link para definir sua senha e ativar a conta.`,
+          ? `${variables.name} foi reativado na empresa.`
+          : `${variables.name} foi adicionado à empresa e receberá instruções para definir a senha.`,
       });
     },
     onError: (error: Error) => {
