@@ -89,6 +89,18 @@ export const createSessionValidationService = () => {
           code: error.code,
           timestamp: new Date().toISOString()
         });
+        
+        // If it's a refresh token error, clear corrupted data
+        if (error.message?.includes('refresh_token_not_found') || 
+            error.message?.includes('Invalid Refresh Token')) {
+          console.log('🧹 Clearing corrupted session data...');
+          try {
+            await supabase.auth.signOut({ scope: 'local' });
+          } catch (signOutError) {
+            console.warn('Warning clearing session:', signOutError);
+          }
+        }
+        
         return {
           isValid: false,
           session: null,
@@ -109,8 +121,28 @@ export const createSessionValidationService = () => {
         };
       }
       
-      // Validate the fresh session
-      return await validateSession(freshSession);
+      // For fresh sessions, do a simple validity check without recursion
+      const now = Math.floor(Date.now() / 1000);
+      const isExpired = freshSession.expires_at && now >= freshSession.expires_at;
+      const hasTokens = !!freshSession.access_token && !!freshSession.refresh_token;
+      
+      if (isExpired || !hasTokens) {
+        console.log('🚫 Fresh session is invalid', { isExpired, hasTokens });
+        return {
+          isValid: false,
+          session: freshSession,
+          user: freshSession.user,
+          needsRefresh: !hasTokens ? false : true
+        };
+      }
+      
+      console.log('✅ Fresh session is valid');
+      return {
+        isValid: true,
+        session: freshSession,
+        user: freshSession.user,
+        needsRefresh: false
+      };
       
     } catch (error) {
       console.error('💥 Session validation failed:', {
@@ -118,6 +150,14 @@ export const createSessionValidationService = () => {
         stack: error.stack,
         timestamp: new Date().toISOString()
       });
+      
+      // Clear potentially corrupted session data
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (signOutError) {
+        console.warn('Warning clearing session after error:', signOutError);
+      }
+      
       return {
         isValid: false,
         session: null,
@@ -141,6 +181,19 @@ export const createSessionValidationService = () => {
           code: error.code,
           timestamp: new Date().toISOString()
         });
+        
+        // Handle corrupted refresh token errors
+        if (error.message?.includes('refresh_token_not_found') || 
+            error.message?.includes('Invalid Refresh Token') ||
+            error.message?.includes('refresh token not found')) {
+          console.log('🧹 Corrupted refresh token detected, clearing local data...');
+          try {
+            await supabase.auth.signOut({ scope: 'local' });
+          } catch (signOutError) {
+            console.warn('Warning during cleanup signout:', signOutError);
+          }
+        }
+        
         return {
           isValid: false,
           session: null,
@@ -179,6 +232,14 @@ export const createSessionValidationService = () => {
         stack: error.stack,
         timestamp: new Date().toISOString()
       });
+      
+      // Clear potentially corrupted data on critical errors
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (signOutError) {
+        console.warn('Warning clearing session after refresh error:', signOutError);
+      }
+      
       return {
         isValid: false,
         session: null,

@@ -62,7 +62,20 @@ export function useAuthMethods({
       });
     } catch (error) {
       console.error('❌ Error refreshing user role:', error);
-      // Set safe defaults
+      
+      // Check if it's a critical auth error that needs cleanup
+      if (error.message?.includes('refresh_token_not_found') || 
+          error.message?.includes('Invalid Refresh Token')) {
+        console.log('🚨 Critical auth error detected during role refresh, forcing cleanup...');
+        await cleanupService.forceCleanCorruptedTokens();
+        setUser(null);
+        setSession(null);
+        setUserRole(null);
+        setCompanyUserData(null);
+        return;
+      }
+      
+      // Set safe defaults for other errors
       setUserRole('student');
       setCompanyUserData(null);
     }
