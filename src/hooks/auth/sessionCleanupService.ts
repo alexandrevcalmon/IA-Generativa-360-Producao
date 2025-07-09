@@ -1,6 +1,4 @@
 
-import { supabase } from '@/integrations/supabase/client';
-
 export const createSessionCleanupService = () => {
   const clearLocalSession = () => {
     console.log('🧹 Starting enhanced local session cleanup...');
@@ -12,19 +10,14 @@ export const createSessionCleanupService = () => {
         key.includes('supabase-auth-token') ||
         key.includes('auth-token') ||
         key.startsWith('supabase_auth_') ||
-        key.includes('sb-') ||
-        key.includes('supabase') // Additional Supabase keys
+        key.includes('sb-') // Additional Supabase keys
       );
       
       console.log(`🔍 Found ${authKeys.length} auth-related localStorage keys to clear:`, authKeys);
       
       authKeys.forEach(key => {
-        try {
-          localStorage.removeItem(key);
-          console.log(`🗑️ Removed localStorage: ${key}`);
-        } catch (removeError) {
-          console.warn(`⚠️ Could not remove localStorage key ${key}:`, removeError);
-        }
+        localStorage.removeItem(key);
+        console.log(`🗑️ Removed localStorage: ${key}`);
       });
       
       // Clear session storage with enhanced logging
@@ -35,12 +28,8 @@ export const createSessionCleanupService = () => {
       console.log(`🔍 Found ${sessionKeys.length} auth-related sessionStorage keys to clear:`, sessionKeys);
       
       sessionKeys.forEach(key => {
-        try {
-          sessionStorage.removeItem(key);
-          console.log(`🗑️ Removed sessionStorage: ${key}`);
-        } catch (removeError) {
-          console.warn(`⚠️ Could not remove sessionStorage key ${key}:`, removeError);
-        }
+        sessionStorage.removeItem(key);
+        console.log(`🗑️ Removed sessionStorage: ${key}`);
       });
       
       // Force clear any remaining Supabase-related data
@@ -51,20 +40,14 @@ export const createSessionCleanupService = () => {
           key.toLowerCase().includes('token') || 
           key.toLowerCase().includes('session') ||
           key.toLowerCase().includes('user') ||
-          key.startsWith('supabase') ||
-          key.includes('refresh') ||
-          key.includes('access')
+          key.startsWith('supabase')
         );
         
         if (suspiciousKeys.length > 0) {
           console.log(`🔍 Additional cleanup - found ${suspiciousKeys.length} suspicious keys:`, suspiciousKeys);
           suspiciousKeys.forEach(key => {
-            try {
-              localStorage.removeItem(key);
-              console.log(`🗑️ Deep cleanup removed: ${key}`);
-            } catch (removeError) {
-              console.warn(`⚠️ Could not remove suspicious key ${key}:`, removeError);
-            }
+            localStorage.removeItem(key);
+            console.log(`🗑️ Deep cleanup removed: ${key}`);
           });
         }
       } catch (deepCleanError) {
@@ -81,44 +64,7 @@ export const createSessionCleanupService = () => {
     }
   };
 
-  const forceCleanCorruptedTokens = async () => {
-    console.log('🚨 Force cleaning corrupted tokens...');
-    
-    try {
-      // Clear all storage first
-      clearLocalSession();
-      
-      // Force clear from Supabase client
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
-      if (error) {
-        console.warn('⚠️ Error during force signout:', error);
-      }
-      
-      // Additional manual cleanup of specific Supabase storage keys
-      const commonSupabaseKeys = [
-        'sb-swmxqjdvungochdjvtjg-auth-token',
-        'supabase.auth.token',
-        'sb-auth-token',
-        'supabase_auth_token'
-      ];
-      
-      commonSupabaseKeys.forEach(key => {
-        try {
-          localStorage.removeItem(key);
-          sessionStorage.removeItem(key);
-        } catch (error) {
-          console.warn(`Could not remove ${key}:`, error);
-        }
-      });
-      
-      console.log('✅ Force cleanup completed');
-    } catch (error) {
-      console.error('❌ Error during force cleanup:', error);
-    }
-  };
-
   return {
-    clearLocalSession,
-    forceCleanCorruptedTokens
+    clearLocalSession
   };
 };

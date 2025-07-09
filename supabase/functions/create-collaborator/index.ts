@@ -140,11 +140,10 @@ serve(async (req) => {
       if (updateMetaError) console.error(`[create-collaborator] Error updating metadata for existing auth user ${authUserId}:`, updateMetaError.message); // Non-fatal for this flow.
       else console.log(`[create-collaborator] Metadata updated for existing auth user ${authUserId}.`);
     } else {
-      const tempPassword = Deno.env.get('NEW_COLLABORATOR_DEFAULT_PASSWORD') || 'TempPass123!';
+      const tempPassword = Deno.env.get('NEW_COLLABORATOR_DEFAULT_PASSWORD') || 'ia360graus';
       console.log(`[create-collaborator] No existing auth user. Creating new one for email: ${email}`);
-      console.log(`[create-collaborator] Using temp password for new user creation`);
       const { data: newAuthUserData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
-        email: email, password: tempPassword, email_confirm: false,
+        email: email, password: tempPassword, email_confirm: true,
         user_metadata: { role: 'collaborator', company_id: company_id, name: name }
       });
       if (createAuthError || !newAuthUserData?.user) {

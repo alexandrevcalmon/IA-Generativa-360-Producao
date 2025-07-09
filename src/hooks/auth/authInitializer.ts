@@ -17,18 +17,6 @@ export function createAuthInitializer(props: AuthInitializerProps) {
       console.log('🔍 Checking for existing session...');
       const validation = await sessionService.validateSession();
       
-      // Handle validation errors (like corrupted tokens)
-      if (validation.error) {
-        console.log('⚠️ Session validation error during init:', validation.error);
-        if (isMounted.current) {
-          clearUserState();
-          setLoading(false);
-          setIsInitialized(true);
-        }
-        return;
-      }
-      
-      // Try to refresh if needed and possible
       if (!validation.isValid && validation.needsRefresh) {
         console.log('🔄 Session expired during init, attempting refresh...');
         const refreshResult = await sessionService.refreshSession();
@@ -37,18 +25,9 @@ export function createAuthInitializer(props: AuthInitializerProps) {
           console.log('✅ Session refreshed during initialization');
           await handleAuthStateChange('SIGNED_IN', refreshResult.session);
           return;
-        } else if (refreshResult.error) {
-          console.log('❌ Refresh failed during init:', refreshResult.error);
-          if (isMounted.current) {
-            clearUserState();
-            setLoading(false);
-            setIsInitialized(true);
-          }
-          return;
         }
       }
       
-      // Handle valid session
       if (validation.isValid && validation.session && isMounted.current) {
         console.log('✅ Found valid existing session');
         await handleAuthStateChange('SIGNED_IN', validation.session);
