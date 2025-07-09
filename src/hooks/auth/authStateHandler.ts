@@ -29,11 +29,10 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
   const sessionService = createSessionValidationService();
 
   const handleAuthStateChange = async (event: string, session: Session | null) => {
-    console.log('🔐 Enhanced auth state change:', { 
+    console.log('🔐 Simplified auth state change:', { 
       event, 
       userEmail: session?.user?.email, 
-      hasSession: !!session,
-      sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A'
+      hasSession: !!session
     });
     
     if (event === 'SIGNED_OUT' || !session?.user) {
@@ -51,58 +50,26 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
       return; // Don't refetch user data on token refresh
     }
     
-    // For SIGNED_IN events, validate session before proceeding
-    if (event === 'SIGNED_IN') {
-      const validation = await sessionService.validateSession(session);
-      
-      if (!validation.isValid) {
-        if (validation.needsRefresh) {
-          console.log('🔄 New session needs refresh, attempting...');
-          const refreshResult = await sessionService.refreshSession();
-          
-          if (refreshResult.isValid && refreshResult.session) {
-            console.log('✅ Session refreshed during sign-in');
-            session = refreshResult.session;
-          } else {
-            console.log('❌ Session refresh failed during sign-in, clearing state');
-            clearUserState();
-            setLoading(false);
-            setIsInitialized(true);
-            return;
-          }
-        } else {
-          console.log('❌ Invalid session during sign-in, clearing state');
-          clearUserState();
-          setLoading(false);
-          setIsInitialized(true);
-          return;
-        }
-      }
-    }
-    
-    // Update session and user immediately
+    // Update session and user immediately for all other events
     setSession(session);
     setUser(session.user);
     
-    // Fetch role data asynchronously with improved error handling
+    // Fetch role data asynchronously with simplified error handling
     setTimeout(async () => {
       try {
         const user = session.user as User;
-        console.log('👤 Determining role and fetching auxiliary data for:', user.email);
+        console.log('👤 Loading user data for:', user.email);
         
         const auxData = await fetchUserRoleAuxiliaryData(user);
         
-        console.log('🔍 Role determination result:', {
+        console.log('✅ User data loaded:', {
           userEmail: user.email,
-          determinedRole: auxData.role,
-          needsPasswordChange: auxData.needsPasswordChange,
-          hasCompanyData: !!auxData.companyData,
-          hasCollaboratorData: !!auxData.collaboratorData,
-          hasProfileData: !!auxData.profileData
+          role: auxData.role,
+          needsPasswordChange: auxData.needsPasswordChange
         });
 
         // Set role with fallback
-        const finalRole = auxData.role || 'student';
+        const finalRole = auxData.role || user.user_metadata?.role || 'student';
         setUserRole(finalRole);
 
         // Set password change requirement
@@ -118,9 +85,9 @@ export function createAuthStateHandler(props: AuthStateHandlerProps) {
         }
 
       } catch (error) {
-        console.error('❌ Error loading user auxiliary data:', error);
+        console.error('⚠️ Error loading user data:', error);
         // Set safe defaults on error
-        setUserRole('student');
+        setUserRole(session.user.user_metadata?.role || 'student');
         setNeedsPasswordChange(false);
         setCompanyUserData(null);
       } finally {

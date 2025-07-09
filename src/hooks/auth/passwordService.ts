@@ -8,11 +8,14 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
     try {
       const redirectUrl = getResetPasswordRedirectUrl();
       
+      // Use Supabase's built-in reset password system
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
       
       if (error) {
+        console.error('Reset password error:', error);
+        
         if (error.message.includes('User not found')) {
           toast({
             title: "Email não encontrado",
@@ -32,14 +35,15 @@ export const createPasswordService = (toast: ReturnType<typeof useToast>['toast'
             variant: "destructive",
           });
         }
+        
+        return { error };
       } else {
         toast({
           title: "Email enviado com sucesso!",
           description: "Verifique sua caixa de entrada e spam para as instruções de redefinição de senha.",
         });
+        return { error: null };
       }
-      
-      return { error };
     } catch (error) {
       console.error('Reset password error:', error);
       toast({

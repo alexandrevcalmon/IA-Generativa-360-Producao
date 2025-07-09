@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { ForgotPasswordDialog } from './ForgotPasswordDialog';
+import { AuthErrorHandler } from './AuthErrorHandler';
 
 interface AuthFormProps {
   isLogin: boolean;
@@ -17,6 +17,7 @@ interface AuthFormProps {
   setRole: (role: string) => void;
   loading: boolean;
   onSubmit: (e: React.FormEvent) => Promise<void>;
+  authError?: string | null;
 }
 
 export function AuthForm({
@@ -25,7 +26,8 @@ export function AuthForm({
   password,
   setPassword,
   loading,
-  onSubmit
+  onSubmit,
+  authError
 }: AuthFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
@@ -34,10 +36,24 @@ export function AuthForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('📝 AuthForm submit - Values before sending:', { 
+      email: email?.trim(), 
+      password: password?.length > 0 ? '[PRESENT]' : '[EMPTY]' 
+    });
+    
+    // Clear any existing session corruption before attempting login
+    try {
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.clear();
+    } catch (cleanupError) {
+      console.log('Pre-login cleanup completed');
+    }
+    
     // Track login attempts for better UX
     const now = Date.now();
     if (lastAttemptTime && now - lastAttemptTime < 2000) {
       // Prevent rapid successive attempts
+      console.log('⏰ Preventing rapid login attempts');
       return;
     }
     
@@ -90,10 +106,14 @@ export function AuthForm({
         </div>
       </div>
 
-      {showRecoveryHint && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
+      <AuthErrorHandler 
+        error={authError}
+        attempts={loginAttempts}
+      />
+
+      {showRecoveryHint && !authError && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <p className="text-sm text-yellow-800">
             Várias tentativas de login. Verifique suas credenciais ou{' '}
             <ForgotPasswordDialog 
               trigger={
@@ -102,8 +122,8 @@ export function AuthForm({
                 </span>
               }
             />
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
       )}
 
       <div className="space-y-3">
