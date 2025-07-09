@@ -144,7 +144,7 @@ serve(async (req) => {
       console.log(`[create-collaborator] No existing auth user. Creating new one for email: ${email}`);
       console.log(`[create-collaborator] Using temp password for new user creation`);
       const { data: newAuthUserData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
-        email: email, password: tempPassword, email_confirm: true,
+        email: email, password: tempPassword, email_confirm: false,
         user_metadata: { role: 'collaborator', company_id: company_id, name: name }
       });
       if (createAuthError || !newAuthUserData?.user) {
