@@ -32,6 +32,11 @@ import ProducerPlans from '@/pages/ProducerPlans';
 import ProducerProfile from '@/pages/ProducerProfile';
 import ProducerAIConfigurations from '@/pages/ProducerAIConfigurations';
 
+// Subscription pages
+import Plans from '@/pages/Plans';
+import CompanySignup from '@/pages/CompanySignup';
+import PaymentSuccess from '@/pages/PaymentSuccess';
+
 // Company pages
 import CompanyDashboard from '@/pages/CompanyDashboard';
 import CompanyCourses from '@/pages/CompanyCourses';
@@ -76,6 +81,11 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/login-produtor" element={<LoginProdutor />} />
+            
+            {/* Subscription routes */}
+            <Route path="/plans" element={<Plans />} />
+            <Route path="/company-signup" element={<CompanySignup />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
 
             {/* Legacy company dashboard redirect */}
             <Route path="/company-dashboard" element={<Navigate to="/company/dashboard" replace />} />
