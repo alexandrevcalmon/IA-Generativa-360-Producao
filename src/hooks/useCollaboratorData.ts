@@ -16,6 +16,8 @@ export interface CollaboratorData {
     id: string;
     name: string;
     logo_url?: string;
+    subscription_status?: string;
+    subscription_ends_at?: string;
   };
 }
 

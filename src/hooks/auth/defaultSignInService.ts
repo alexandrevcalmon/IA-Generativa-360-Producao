@@ -86,7 +86,7 @@ export const createDefaultSignInService = (toast: any) => {
       if (!collaboratorError && collaborator) {
         console.log(`[DefaultSignIn] User ${user.id} identified as collaborator for company ID: ${collaborator.company_id}`);
         userFinalRole = 'collaborator';
-        needsPwdChange = collaborator.needs_password_change || false;
+        needsPwdChange = false; // TODO: Add needs_password_change to company_users table
 
         // Update user metadata
         const { error: updateError } = await supabase.auth.updateUser({

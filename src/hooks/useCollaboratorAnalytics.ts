@@ -24,6 +24,9 @@ export interface CollaboratorStats {
   current_level: number;
   streak_days: number;
   last_login_at?: string;
+  last_activity?: string;
+  quizzes_completed?: number;
+  days_active?: number;
   updated_at: string;
 }
 
@@ -97,12 +100,8 @@ export const useCollaboratorAnalytics = () => {
               .eq('user_id', collaborator.auth_user_id)
               .not('completed_at', 'is', null);
 
-            // Get total points - using company_users.id (not auth_user_id)
-            const { data: pointsData } = await supabase
-              .from('student_points')
-              .select('total_points, level, streak_days')
-              .eq('student_id', collaborator.id) // Use company_users.id, not auth_user_id
-              .maybeSingle();
+            // Get total points - stub for now since table doesn't exist
+            const pointsData = null; // TODO: Implement when student_points table exists
 
             return {
               id: collaborator.id,
@@ -120,9 +119,12 @@ export const useCollaboratorAnalytics = () => {
               courses_enrolled: coursesEnrolled || 0,
               lessons_started: lessonsStarted || 0,
               total_watch_time_minutes: totalWatchTimeMinutes,
-              total_points: pointsData?.total_points || 0,
-              current_level: pointsData?.level || 1,
-              streak_days: pointsData?.streak_days || 0,
+              total_points: 0, // TODO: Get from student_points when available
+              current_level: 1,
+              streak_days: 0,
+              last_activity: null,
+              quizzes_completed: 0,
+              days_active: 0,
               last_login_at: null, // This would need to be tracked separately
               updated_at: collaborator.created_at, // Using created_at as fallback
             };
@@ -147,6 +149,9 @@ export const useCollaboratorAnalytics = () => {
               total_points: 0,
               current_level: 1,
               streak_days: 0,
+              last_activity: null,
+              quizzes_completed: 0,
+              days_active: 0,
               last_login_at: null,
               updated_at: collaborator.created_at,
             };

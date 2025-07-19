@@ -65,7 +65,7 @@ const StudentGamification = lazy(() => import('@/pages/StudentGamification'));
 const StudentProfile = lazy(() => import('@/pages/StudentProfile'));
 const StudentAnalytics = lazy(() => import('@/pages/StudentAnalytics'));
 const StudentQuizView = lazy(() => import('@/pages/StudentQuizView'));
-const TopicDetailView = lazy(() => import('@/components/community/TopicDetailView'));
+// const TopicDetailView = lazy(() => import('@/components/community/TopicDetailView')); // Disabled
 
 // Loading component optimized for latest React patterns
 const LoadingSpinner = React.memo(() => (
@@ -197,7 +197,7 @@ function App() {
                   <Route path="courses/:courseId/quizzes/:quizId" element={<StudentQuizView />} />
                   <Route path="mentorship" element={<StudentMentorship />} />
                   <Route path="community" element={<StudentCommunity />} />
-                  <Route path="community/topic/:topicId" element={<TopicDetailView />} />
+                  {/* <Route path="community/topic/:topicId" element={<TopicDetailView />} /> */}
                   <Route path="gamification" element={<StudentGamification />} />
                   <Route path="profile" element={<StudentProfile />} />
                   <Route path="analytics" element={<StudentAnalytics />} />

@@ -58,10 +58,14 @@ export const useCompanyData = () => {
           console.log('🔄 Attempting to fix user-company linkage...');
           
           try {
-            const { data: linkageResult, error: linkageError } = await supabase.rpc(
-              'ensure_user_company_linkage',
-              { user_id: user.id, user_role: 'company' }
-            );
+            // TODO: Re-enable when function exists
+            // const { data: linkageResult, error: linkageError } = await supabase.rpc(
+            //   'ensure_user_company_linkage',
+            //   { user_id: user.id, user_role: 'company' }
+            // );
+
+            const linkageError = null;
+            const linkageResult = null;
 
             if (linkageError) {
               console.error('❌ Linkage error:', linkageError);

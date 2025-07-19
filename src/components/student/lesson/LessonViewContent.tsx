@@ -53,7 +53,7 @@ export const LessonViewContent = ({
     return attempts.slice().sort((a: any, b: any) => (b.attempt_number || 0) - (a.attempt_number || 0))[0];
   }, [quiz, allAttempts]);
   const registerQuizAttempt = useRegisterQuizAttempt();
-  const updateLessonProgress = useUpdateLessonProgress();
+  // const updateLessonProgress = useUpdateLessonProgress(); // Disabled - missing hook
 
   const [quizAnswers, setQuizAnswers] = useState<any>({});
   const [quizSubmitting, setQuizSubmitting] = useState(false);
@@ -83,10 +83,10 @@ export const LessonViewContent = ({
     const passed = score >= 75;
     setQuizResult({ score, passed });
     handleQuizSubmit(quizAnswers, correctAnswers, quiz.questions.length);
-    // NOVO: Se passou no quiz e progresso >= 95%, marca aula como concluída
-    if (passed && progressPercentage >= 95) {
-      updateLessonProgress.mutate({ lessonId: currentLesson.id, completed: true });
-    }
+    // TODO: Mark lesson as completed when quiz is passed
+    // if (passed && progressPercentage >= 95) {
+    //   updateLessonProgress.mutate({ lessonId: currentLesson.id, completed: true });
+    // }
     setQuizSubmitting(false);
     setQuizAnswers({});
   };
@@ -124,13 +124,13 @@ export const LessonViewContent = ({
       onSuccess: () => {
         setQuizModalOpen(false);
         if (passed) {
-          // Só marca como concluída se quiz foi aprovado
-          if (progressPercentage >= 95) {
-            updateLessonProgress.mutate({ lessonId: currentLesson.id, completed: true });
-          }
+          // TODO: Mark lesson as completed when quiz is passed
+          // if (progressPercentage >= 95) {
+          //   updateLessonProgress.mutate({ lessonId: currentLesson.id, completed: true });
+          // }
         } else {
-          // Reverter conclusão da aula
-          updateLessonProgress.mutate({ lessonId: currentLesson.id, completed: false });
+          // TODO: Revert lesson completion
+          // updateLessonProgress.mutate({ lessonId: currentLesson.id, completed: false });
           toast.error('Você não atingiu 75% de acerto. Assista novamente a aula e refaça o quiz.');
         }
       }

@@ -16,7 +16,7 @@ export const ChatInput = ({
     if (e) e.preventDefault();
     console.log('Form submitted with message:', inputMessage);
     if (inputMessage?.trim() && !isDisabled) {
-      onSubmit(); // Chama sem evento
+      onSubmit(); // Call without parameters
     }
   };
 
@@ -29,7 +29,7 @@ export const ChatInput = ({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (inputMessage?.trim() && !isDisabled) {
-        handleSubmit(); // Chama sem evento
+        handleSubmit(); // Call without event
       }
     }
   };

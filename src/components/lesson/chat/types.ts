@@ -33,7 +33,7 @@ export interface ChatMessagesProps {
 export interface ChatInputProps {
   inputMessage: string;
   onInputChange: (value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: () => void; // Simplified signature
   isDisabled: boolean;
   lessonId?: string;
 }
