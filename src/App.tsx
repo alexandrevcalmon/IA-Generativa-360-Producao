@@ -67,8 +67,8 @@ const StudentAnalytics = lazy(() => import('@/pages/StudentAnalytics'));
 const StudentQuizView = lazy(() => import('@/pages/StudentQuizView'));
 const TopicDetailView = lazy(() => import('@/components/community/TopicDetailView'));
 
-// Loading component
-const LoadingSpinner = () => (
+// Loading component optimized for latest React patterns
+const LoadingSpinner = React.memo(() => (
   <div className="flex items-center justify-center min-h-screen bg-slate-900">
     <div className="flex flex-col items-center space-y-4">
       <div className="relative">
@@ -78,19 +78,33 @@ const LoadingSpinner = () => (
       <div className="text-slate-400 text-sm font-medium">Carregando...</div>
     </div>
   </div>
-);
+));
 
+LoadingSpinner.displayName = 'LoadingSpinner';
+
+// Optimized QueryClient with latest best practices
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
       refetchOnWindowFocus: false,
+      retry: (failureCount, error) => {
+        // Smart retry logic
+        if (failureCount < 2 && error?.message !== 'Network request failed') {
+          return true;
+        }
+        return false;
+      },
+    },
+    mutations: {
+      retry: false,
     },
   },
 });
 
 // Componente para preload de páginas importantes
-const PagePreloader = () => {
+const PagePreloader = React.memo(() => {
   useEffect(() => {
     // Preload das páginas mais importantes após o carregamento inicial
     const preloadPages = () => {
@@ -116,7 +130,9 @@ const PagePreloader = () => {
   }, []);
 
   return null;
-};
+});
+
+PagePreloader.displayName = 'PagePreloader';
 
 function App() {
   return (
