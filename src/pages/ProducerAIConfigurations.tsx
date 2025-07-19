@@ -1,8 +1,9 @@
-
 import React, { useState } from 'react';
+import { PageLayout } from '@/components/PageLayout';
+import { PageSection } from '@/components/PageSection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Bot, Settings } from 'lucide-react';
+import { Plus, Bot } from 'lucide-react';
 import { useAIConfigurations, useCreateAIConfiguration, useUpdateAIConfiguration, useDeleteAIConfiguration, AIConfiguration } from '@/hooks/useAIConfigurations';
 import { AIConfigurationCard } from '@/components/producer/AIConfigurationCard';
 import { AIConfigurationDialog } from '@/components/producer/AIConfigurationDialog';
@@ -52,66 +53,60 @@ const ProducerAIConfigurations = () => {
     setIsDialogOpen(true);
   };
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <header className="border-b bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Bot className="h-6 w-6" />
-              Configurações de IA
-            </h1>
-            <p className="text-gray-600">Gerencie os provedores de IA e suas configurações para chatbots de lições</p>
-          </div>
-          <Button onClick={handleCreateNew}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Configuração
-          </Button>
-        </div>
-      </header>
+  // Header content com botão de criar nova configuração
+  const headerContent = (
+    <Button onClick={handleCreateNew}>
+      <Plus className="h-4 w-4 mr-2" />
+      Nova Configuração
+    </Button>
+  );
 
-      {/* Main Content */}
-      <div className="flex-1 p-6 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
-                <p className="text-gray-600">Carregando configurações...</p>
-              </div>
+  return (
+    <PageLayout
+      title="Configurações de IA"
+      subtitle="Gerencie os provedores de IA e suas configurações para chatbots de lições"
+      headerContent={headerContent}
+    >
+      {isLoading ? (
+        <PageSection>
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+              <p className="text-gray-600">Carregando configurações...</p>
             </div>
-          ) : configurations.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {configurations.map((config) => (
-                <AIConfigurationCard
-                  key={config.id}
-                  config={config}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onToggleStatus={handleToggleStatus}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardHeader className="text-center py-12">
-                <Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <CardTitle>Nenhuma configuração de IA encontrada</CardTitle>
-                <CardDescription>
-                  Crie sua primeira configuração de IA para habilitar chatbots inteligentes nas lições
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center pb-12">
-                <Button onClick={handleCreateNew}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar primeira configuração
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          </div>
+        </PageSection>
+      ) : configurations.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {configurations.map((config) => (
+            <AIConfigurationCard
+              key={config.id}
+              config={config}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onToggleStatus={handleToggleStatus}
+            />
+          ))}
         </div>
-      </div>
+      ) : (
+        <PageSection>
+          <Card>
+            <CardHeader className="text-center py-12">
+              <Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <CardTitle>Nenhuma configuração de IA encontrada</CardTitle>
+              <CardDescription>
+                Crie sua primeira configuração de IA para habilitar chatbots inteligentes nas lições
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center pb-12">
+              <Button onClick={handleCreateNew}>
+                <Plus className="h-4 w-4 mr-2" />
+                Criar primeira configuração
+              </Button>
+            </CardContent>
+          </Card>
+        </PageSection>
+      )}
 
       {/* Configuration Dialog */}
       <AIConfigurationDialog
@@ -138,7 +133,7 @@ const ProducerAIConfigurations = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageLayout>
   );
 };
 

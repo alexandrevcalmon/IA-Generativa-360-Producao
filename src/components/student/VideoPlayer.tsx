@@ -59,14 +59,14 @@ export const VideoPlayer = ({ currentLesson, course, onTimeUpdate }: VideoPlayer
 
   return (
     <div 
-      className="relative bg-black rounded-lg overflow-hidden group w-full touch-manipulation"
+      className="relative bg-black rounded-lg overflow-hidden group w-full touch-manipulation max-w-full"
       onMouseEnter={() => !isMobile && setShowControls(true)}
       onMouseLeave={() => !isMobile && setShowControls(false)}
       onTouchStart={() => isMobile && setShowControls(true)}
     >
       <video
         ref={videoRef}
-        className="w-full aspect-video object-contain cursor-pointer"
+        className="w-full aspect-video object-contain cursor-pointer max-h-[calc(100vh-200px)]"
         src={videoUrl}
         onClick={handleVideoClick}
         playsInline

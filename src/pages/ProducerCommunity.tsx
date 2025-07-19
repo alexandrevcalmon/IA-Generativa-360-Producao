@@ -1,8 +1,9 @@
-
 import { useState } from 'react';
+import { PageLayout } from '@/components/PageLayout';
+import { PageSection } from '@/components/PageSection';
+import { StatsGrid, type StatItem } from '@/components/StatsGrid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -11,21 +12,14 @@ import {
   Search,
   Plus,
   Pin,
-  Lock,
-  Unlock,
-  Trash2,
-  AlertCircle,
-  TrendingUp,
-  Eye,
   ThumbsUp,
   Filter,
-  PinOff
+  Eye,
+  AlertCircle,
+  TrendingUp
 } from 'lucide-react';
 import {
   useCommunityTopics,
-  useToggleTopicPin,
-  useToggleTopicLock,
-  useDeleteCommunityTopic,
   type CommunityTopic
 } from '@/hooks/useCommunityTopics';
 import { CreateTopicDialog } from '@/components/community/CreateTopicDialog';
@@ -60,27 +54,75 @@ const ProducerCommunity = () => {
     totalViews: topics.reduce((sum, topic) => sum + topic.views_count, 0),
   };
 
+  // Stats para o StatsGrid
+  const statsItems: StatItem[] = [
+    {
+      title: "Total de Tópicos",
+      value: communityStats.totalTopics,
+      icon: MessageCircle,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
+    },
+    {
+      title: "Total de Respostas",
+      value: communityStats.totalReplies,
+      icon: Users,
+      color: "text-green-600",
+      bgColor: "bg-green-100",
+    },
+    {
+      title: "Total de Curtidas",
+      value: communityStats.totalLikes,
+      icon: ThumbsUp,
+      color: "text-purple-600",
+      bgColor: "bg-purple-100",
+    },
+    {
+      title: "Total de Visualizações",
+      value: communityStats.totalViews,
+      icon: Eye,
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
+    },
+  ];
+
+  // Header content com botão de criar tópico
+  const headerContent = (
+    <Button 
+      className="bg-gradient-to-r from-calmon-500 to-calmon-700 hover:from-calmon-600 hover:to-calmon-800 text-white"
+      onClick={() => setCreateTopicOpen(true)}
+    >
+      <Plus className="w-4 h-4 mr-2" />
+      Novo Tópico
+    </Button>
+  );
+
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="bg-white border-b p-6">
-          <h1 className="text-2xl font-bold text-gray-900">Gerenciar Comunidade</h1>
+      <PageLayout
+        title="Gerenciar Comunidade"
+        subtitle="Carregando dados..."
+      >
+        <div className="animate-pulse space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[1,2,3,4].map((i) => (
+              <div key={i} className="bg-gray-200 h-24 rounded-lg"></div>
+            ))}
+          </div>
+          <div className="bg-gray-200 h-64 rounded-lg"></div>
         </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-lg text-gray-600">Carregando comunidade...</div>
-        </div>
-      </div>
+      </PageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="bg-white border-b p-6">
-          <h1 className="text-2xl font-bold text-gray-900">Gerenciar Comunidade</h1>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
+      <PageLayout
+        title="Gerenciar Comunidade"
+        subtitle="Erro ao carregar dados"
+      >
+        <PageSection>
+          <div className="flex flex-col items-center justify-center p-12">
             <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               Erro ao carregar comunidade
@@ -88,113 +130,53 @@ const ProducerCommunity = () => {
             <p className="text-gray-600">
               Tente recarregar a página ou entre em contato com o suporte.
             </p>
+            <Button 
+              onClick={() => window.location.reload()}
+              className="mt-4"
+            >
+              Tentar novamente
+            </Button>
           </div>
-        </div>
-      </div>
+        </PageSection>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="bg-white border-b p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Gerenciar Comunidade
-            </h1>
-            <p className="text-gray-600">
-              Modere discussões, fixe tópicos importantes e acompanhe a atividade
-            </p>
-          </div>
-          <Button 
-            className="bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white"
-            onClick={() => setCreateTopicOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Tópico
-          </Button>
-        </div>
-      </div>
+    <PageLayout
+      title="Gerenciar Comunidade"
+      subtitle="Modere discussões, fixe tópicos importantes e acompanhe a atividade"
+      headerContent={headerContent}
+    >
+      <div className="space-y-6">
+        {/* Estatísticas */}
+        <StatsGrid stats={statsItems} />
 
-      <div className="flex-1 overflow-auto p-6 bg-gray-50">
-        <div className="space-y-6">
-          {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <MessageCircle className="h-8 w-8 text-blue-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total de Tópicos</p>
-                    <p className="text-2xl font-bold text-gray-900">{communityStats.totalTopics}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <Users className="h-8 w-8 text-green-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total de Respostas</p>
-                    <p className="text-2xl font-bold text-gray-900">{communityStats.totalReplies}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <ThumbsUp className="h-8 w-8 text-purple-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total de Curtidas</p>
-                    <p className="text-2xl font-bold text-gray-900">{communityStats.totalLikes}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <Eye className="h-8 w-8 text-orange-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total de Visualizações</p>
-                    <p className="text-2xl font-bold text-gray-900">{communityStats.totalViews}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Filtros e Busca */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Buscar tópicos..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Button variant="outline">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filtros
-                  </Button>
-                </div>
+        {/* Filtros e Busca */}
+        <PageSection>
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Buscar tópicos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline">
+                <Filter className="h-4 w-4 mr-2" />
+                Filtros
+              </Button>
+            </div>
+          </div>
+        </PageSection>
 
-          {/* Lista de Tópicos */}
+        {/* Lista de Tópicos */}
+        <PageSection>
           <Tabs defaultValue="all" className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="all">Todos</TabsTrigger>
@@ -281,7 +263,7 @@ const ProducerCommunity = () => {
               </Card>
             </TabsContent>
           </Tabs>
-        </div>
+        </PageSection>
       </div>
 
       <CreateTopicDialog 
@@ -294,7 +276,7 @@ const ProducerCommunity = () => {
         onOpenChange={setEditTopicOpen} 
         topic={selectedTopic}
       />
-    </div>
+    </PageLayout>
   );
 };
 

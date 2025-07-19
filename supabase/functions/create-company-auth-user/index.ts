@@ -96,28 +96,26 @@ serve(async (req) => {
         console.log('[create-company-auth-user] Successfully updated metadata for existing auth user.');
       }
     } else {
-      const tempPassword = Deno.env.get('NEW_COMPANY_USER_DEFAULT_PASSWORD') || 'ia360graus';
-      console.log(`[create-company-auth-user] No existing auth user. Creating new one for email: ${email}`);
-      const { data: newAuthUserData, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
-        email: email,
-        password: tempPassword,
-        email_confirm: true, // Auto-confirm for simplicity in this flow
-        user_metadata: { role: 'company', company_id: companyId, company_name: effectiveCompanyName, name: contactName || effectiveCompanyName }
+      // Usar inviteUserByEmail para enviar e-mail de ativação
+      const redirectTo = Deno.env.get('SUPABASE_ACTIVATION_REDIRECT_URL') || 'https://staging.grupocalmon.com/activate-account';
+      console.log(`[create-company-auth-user] No existing auth user. Inviting new one for email: ${email}`);
+      const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        data: { role: 'company', company_id: companyId, company_name: effectiveCompanyName, name: contactName || effectiveCompanyName },
+        redirectTo
       });
-
-      if (createAuthError || !newAuthUserData?.user) {
-        console.error('[create-company-auth-user] Error creating new auth user:', createAuthError?.message || 'User object not returned.');
-        return new Response(JSON.stringify({ error: `Failed to create auth user: ${createAuthError?.message}` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (inviteError || !inviteData?.user) {
+        console.error('[create-company-auth-user] Error inviting new auth user:', inviteError?.message || 'User object not returned.');
+        return new Response(JSON.stringify({ error: `Failed to invite auth user: ${inviteError?.message}` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-      authUserId = newAuthUserData.user.id;
+      authUserId = inviteData.user.id;
       isNewUser = true;
-      console.log(`[create-company-auth-user] New auth user created successfully. ID: ${authUserId}`);
+      console.log(`[create-company-auth-user] New auth user invited successfully. ID: ${authUserId}`);
     }
 
     console.log(`[create-company-auth-user] Updating 'companies' table for ID ${companyId} with auth_user_id ${authUserId}.`);
     const { error: updateCompanyError } = await supabaseAdmin
       .from('companies')
-      .update({ auth_user_id: authUserId, needs_password_change: true, updated_at: new Date().toISOString() })
+      .update({ auth_user_id: authUserId, updated_at: new Date().toISOString() })
       .eq('id', companyId);
 
     if (updateCompanyError) {
@@ -158,6 +156,43 @@ serve(async (req) => {
       // Non-fatal, but log it. The main goal was to link auth user to company.
     } else {
       console.log('[create-company-auth-user] Profile record upserted successfully.');
+    }
+
+    // NOVO: Upsert em company_users para garantir vínculo
+    console.log('[create-company-auth-user] Upserting company_users record...');
+    const { data: existingCompanyUser, error: findCompanyUserError } = await supabaseAdmin
+      .from('company_users')
+      .select('id')
+      .eq('auth_user_id', authUserId)
+      .maybeSingle();
+    let companyUserId = existingCompanyUser?.id;
+    if (!companyUserId) {
+      // Gerar novo uuid se necessário
+      const { data: uuidData, error: uuidError } = await supabaseAdmin.rpc('gen_random_uuid');
+      if (uuidError || !uuidData) {
+        // Fallback para Date.now se não houver função uuid
+        companyUserId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+      } else {
+        companyUserId = uuidData;
+      }
+    }
+    const companyUserUpsert = {
+      id: companyUserId,
+      email: email,
+      company_id: companyId,
+      auth_user_id: authUserId,
+      name: contactName || effectiveCompanyName || email,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    const { error: upsertCompanyUserError } = await supabaseAdmin
+      .from('company_users')
+      .upsert(companyUserUpsert, { onConflict: 'auth_user_id' });
+    if (upsertCompanyUserError) {
+      console.error('[create-company-auth-user] Error upserting company_users record:', upsertCompanyUserError.message, upsertCompanyUserError.details);
+      // Non-fatal, mas importante logar
+    } else {
+      console.log('[create-company-auth-user] company_users record upserted successfully.');
     }
 
     console.log('[create-company-auth-user] Process completed successfully:', { authUserId, companyId, isNewUser, needsPasswordChange: true });

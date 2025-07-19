@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
 import { PasswordChangeDialog } from '@/components/PasswordChangeDialog';
+import { SubscriptionBlockedMessage } from '@/components/SubscriptionBlockedMessage';
+import { logger } from '@/lib/logger';
 
 interface AuthGuardProps {
   children?: React.ReactNode;
@@ -11,14 +13,23 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: AuthGuardProps) {
-  const { user, loading, userRole, needsPasswordChange, refreshUserRole } = useAuth();
+  const { 
+    user, 
+    loading, 
+    userRole, 
+    needsPasswordChange, 
+    isSubscriptionBlocked,
+    subscriptionStatus,
+    subscriptionAlert,
+    refreshUserRole 
+  } = useAuth();
   const navigate = useNavigate();
   const [isValidating, setIsValidating] = useState(true);
 
   // Handle redirect for unauthenticated users
   useEffect(() => {
     if (!loading && !user) {
-      console.log('🚫 No user, redirecting to:', redirectTo);
+      logger.debug('No user, redirecting to:', redirectTo);
       navigate(redirectTo, { replace: true });
     }
   }, [user, loading, navigate, redirectTo]);
@@ -30,8 +41,7 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
         return;
       }
 
-      console.log('🔒 AuthGuard validating access:', {
-        userEmail: user.email,
+      logger.debug('AuthGuard validating access', {
         userRole,
         requiredRole,
         needsPasswordChange
@@ -39,7 +49,7 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
 
       // If no role yet, try to refresh
       if (!userRole) {
-        console.log('🔄 No role detected, refreshing...');
+        logger.debug('No role detected, refreshing...');
         await refreshUserRole();
       }
 
@@ -63,35 +73,57 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
     return null;
   }
 
+  // Show subscription blocked message if subscription is blocked
+  if (isSubscriptionBlocked && subscriptionStatus) {
+    logger.debug('Subscription blocked, showing blocked message');
+    return (
+      <SubscriptionBlockedMessage 
+        status={subscriptionStatus}
+        alert={subscriptionAlert}
+      />
+    );
+  }
+
   // Show password change dialog if needed
   if (needsPasswordChange) {
-    console.log('🔐 Password change required for:', user.email);
+    logger.debug('Password change required');
     return <PasswordChangeDialog />;
   }
 
   // Check role requirements
-  if (requiredRole && userRole !== requiredRole) {
-    console.warn('⚠️ Role mismatch - expected:', requiredRole, 'but got:', userRole);
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
-          <p className="text-gray-600 mb-4">Você não tem permissão para acessar esta página.</p>
-          <p className="text-sm text-gray-500 mb-4">
-            Role atual: {userRole || 'indefinido'} | Role necessário: {requiredRole}
-          </p>
-          <button 
-            onClick={() => navigate('/', { replace: true })}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Voltar ao Início
-          </button>
+  if (requiredRole) {
+    // Só mostrar acesso negado se a role já foi carregada e não bate com a requerida
+    if (!userRole) {
+      // Ainda não carregou a role, mostrar loading
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-lg">Carregando permissões...</div>
         </div>
-      </div>
-    );
+      );
+    }
+    if (userRole !== requiredRole) {
+      logger.warn('Role mismatch - expected:', requiredRole, 'but got:', userRole);
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
+            <p className="text-gray-600 mb-4">Você não tem permissão para acessar esta página.</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Role atual: {userRole || 'indefinido'} | Role necessário: {requiredRole}
+            </p>
+            <button 
+              onClick={() => navigate('/', { replace: true })}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Voltar ao Início
+            </button>
+          </div>
+        </div>
+      );
+    }
   }
 
-  console.log('✅ AuthGuard access granted for:', user.email, 'with role:', userRole);
+  logger.debug('AuthGuard access granted for:', user.email, 'with role:', userRole);
   
   // If children are provided, render them; otherwise render Outlet for nested routes
   return children ? <>{children}</> : <Outlet />;

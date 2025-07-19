@@ -18,6 +18,7 @@ export interface Lesson {
   image_url?: string | null;
   video_file_url?: string | null;
   material_url?: string | null;
+  is_optional?: boolean;
 }
 
 export const useLessons = (moduleId: string) => {
@@ -28,21 +29,39 @@ export const useLessons = (moduleId: string) => {
     queryFn: async () => {
       console.log('Fetching lessons for module:', moduleId);
       
-      const { data, error } = await supabase
+      const { data: lessons, error: lessonsError } = await supabase
         .from('lessons')
         .select('*')
         .eq('module_id', moduleId)
-        .order('order_index', { ascending: true }); // Mudança aqui: ordenar por order_index
+        .order('order_index', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching lessons:', error);
-        throw error;
+      if (lessonsError) {
+        console.error('Error fetching lessons:', lessonsError);
+        throw lessonsError;
       }
       
-      console.log('Lessons fetched successfully:', data?.length);
-      return data as Lesson[];
+      console.log('Lessons fetched successfully:', lessons?.length);
+      return lessons as Lesson[];
     },
     enabled: !!moduleId && !!user,
+  });
+};
+
+export const useLesson = (lessonId: string) => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['lesson', lessonId],
+    queryFn: async () => {
+      if (!lessonId) return null;
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('id', lessonId)
+        .single();
+      if (error) throw error;
+      return data as Lesson;
+    },
+    enabled: !!lessonId && !!user,
   });
 };
 
@@ -84,19 +103,32 @@ export const useCreateLesson = () => {
       console.log('Lesson created successfully:', data);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Invalidar a query das aulas do módulo
       queryClient.invalidateQueries({ queryKey: ['lessons', data.module_id] });
-      toast({
+      
+      // Buscar o course_id do módulo para invalidar a query course-modules
+      const { data: moduleData } = await supabase
+        .from('course_modules')
+        .select('course_id')
+        .eq('id', data.module_id)
+        .single();
+      
+      if (moduleData) {
+        // Invalidar a query dos módulos do curso (que inclui as aulas)
+        queryClient.invalidateQueries({ queryKey: ['course-modules', moduleData.course_id] });
+      }
+      
+      toast.success({
         title: "Sucesso",
-        description: "Aula criada com sucesso!",
+        description: "Aula criada com sucesso!"
       });
     },
     onError: (error) => {
       console.error('Create lesson error:', error);
-      toast({
+      toast.error({
         title: "Erro",
-        description: "Erro ao criar aula: " + error.message,
-        variant: "destructive",
+        description: "Erro ao criar aula: " + error.message
       });
     },
   });
@@ -130,19 +162,32 @@ export const useUpdateLesson = () => {
       console.log('Lesson updated successfully:', data);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Invalidar a query das aulas do módulo
       queryClient.invalidateQueries({ queryKey: ['lessons', data.module_id] });
-      toast({
+      
+      // Buscar o course_id do módulo para invalidar a query course-modules
+      const { data: moduleData } = await supabase
+        .from('course_modules')
+        .select('course_id')
+        .eq('id', data.module_id)
+        .single();
+      
+      if (moduleData) {
+        // Invalidar a query dos módulos do curso (que inclui as aulas)
+        queryClient.invalidateQueries({ queryKey: ['course-modules', moduleData.course_id] });
+      }
+      
+      toast.success({
         title: "Sucesso",
-        description: "Aula atualizada com sucesso!",
+        description: "Aula atualizada com sucesso!"
       });
     },
     onError: (error) => {
       console.error('Update lesson error:', error);
-      toast({
+      toast.error({
         title: "Erro",
-        description: "Erro ao atualizar aula: " + error.message,
-        variant: "destructive",
+        description: "Erro ao atualizar aula: " + error.message
       });
     },
   });
@@ -177,19 +222,32 @@ export const useUpdateLessonOrder = () => {
       await Promise.all(updates);
       return { moduleId };
     },
-    onSuccess: ({ moduleId }) => {
+    onSuccess: async ({ moduleId }) => {
+      // Invalidar a query das aulas do módulo
       queryClient.invalidateQueries({ queryKey: ['lessons', moduleId] });
-      toast({
+      
+      // Buscar o course_id do módulo para invalidar a query course-modules
+      const { data: moduleData } = await supabase
+        .from('course_modules')
+        .select('course_id')
+        .eq('id', moduleId)
+        .single();
+      
+      if (moduleData) {
+        // Invalidar a query dos módulos do curso (que inclui as aulas)
+        queryClient.invalidateQueries({ queryKey: ['course-modules', moduleData.course_id] });
+      }
+      
+      toast.success({
         title: "Sucesso",
-        description: "Ordem das aulas atualizada com sucesso!",
+        description: "Ordem das aulas atualizada com sucesso!"
       });
     },
     onError: (error) => {
       console.error('Update lesson order error:', error);
-      toast({
+      toast.error({
         title: "Erro",
-        description: "Erro ao atualizar ordem das aulas: " + error.message,
-        variant: "destructive",
+        description: "Erro ao atualizar ordem das aulas: " + error.message
       });
     },
   });
@@ -220,19 +278,32 @@ export const useDeleteLesson = () => {
 
       return { lessonId, moduleId };
     },
-    onSuccess: ({ moduleId }) => {
+    onSuccess: async ({ moduleId }) => {
+      // Invalidar a query das aulas do módulo
       queryClient.invalidateQueries({ queryKey: ['lessons', moduleId] });
-      toast({
+      
+      // Buscar o course_id do módulo para invalidar a query course-modules
+      const { data: moduleData } = await supabase
+        .from('course_modules')
+        .select('course_id')
+        .eq('id', moduleId)
+        .single();
+      
+      if (moduleData) {
+        // Invalidar a query dos módulos do curso (que inclui as aulas)
+        queryClient.invalidateQueries({ queryKey: ['course-modules', moduleData.course_id] });
+      }
+      
+      toast.success({
         title: "Sucesso",
-        description: "Aula excluída com sucesso!",
+        description: "Aula excluída com sucesso!"
       });
     },
     onError: (error) => {
       console.error('Delete lesson error:', error);
-      toast({
+      toast.error({
         title: "Erro",
-        description: "Erro ao excluir aula: " + error.message,
-        variant: "destructive",
+        description: "Erro ao excluir aula: " + error.message
       });
     },
   });

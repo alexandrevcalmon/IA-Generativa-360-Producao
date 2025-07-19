@@ -9,7 +9,7 @@ export function Footer() {
           <div>
             <div className="flex items-center space-x-3 mb-4">
               <img 
-                src="/lovable-uploads/4e37cba3-373f-4630-ac8b-6fdea4e6d0e8.png" 
+                src="/Logomarca Calmon Academy.png" 
                 alt="Calmon Academy" 
                 className="h-8 w-auto"
               />
@@ -25,6 +25,7 @@ export function Footer() {
               <li><Link to="/courses" className="hover:text-calmon-400 transition-colors">Cursos</Link></li>
               <li><Link to="/community" className="hover:text-calmon-400 transition-colors">Comunidade</Link></li>
               <li><Link to="/analytics" className="hover:text-calmon-400 transition-colors">Analytics</Link></li>
+              <li><Link to="/auth?role=producer" className="hover:text-calmon-400 transition-colors">Sou Produtor</Link></li>
             </ul>
           </div>
           

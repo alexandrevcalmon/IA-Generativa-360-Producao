@@ -19,37 +19,106 @@ export const useUpdateCompanyCollaborator = () => {
       companyId: string;
       data: UpdateCollaboratorData
     }) => {
-      // TODO: Implement email change in auth.users (requires admin privileges or specific flow).
-      if (data.email) {
-        console.warn("Attempting to change email in company_users. Auth.users email update is not yet implemented.");
-        // Consider if you want to prevent email changes from here or allow them only in company_users table.
+      console.log('Updating collaborator:', { collaboratorId, companyId, data });
+
+      // Separar email dos outros campos
+      const { email, ...otherFields } = data;
+      
+      let updatedData = null;
+
+      // Tentar atualizar campos básicos diretamente primeiro
+      if (Object.keys(otherFields).length > 0) {
+        console.log('Attempting direct update for basic fields:', otherFields);
+        
+        const { data: directUpdateResult, error: directError } = await supabase
+          .from('company_users')
+          .update({
+            ...otherFields,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', collaboratorId)
+          .eq('company_id', companyId)
+          .select()
+          .single();
+        
+        if (directError) {
+          console.error('Direct update failed:', directError);
+          throw new Error(`Erro ao atualizar dados básicos: ${directError.message}`);
+        }
+        
+        updatedData = directUpdateResult;
+        console.log('Direct update successful:', updatedData);
       }
 
-      const { data: updatedData, error } = await supabase
-        .from("company_users")
-        .update(data)
-        .eq("id", collaboratorId)
-        .select()
-        .single();
+      // Se houver mudança de email, usar Edge Function
+      if (email) {
+        console.log('Email change detected, using Edge Function');
+        
+        try {
+          // Buscar auth_user_id do colaborador
+          const { data: collaboratorData, error: fetchError } = await supabase
+            .from('company_users')
+            .select('auth_user_id')
+            .eq('id', collaboratorId)
+            .single();
+          
+          if (fetchError || !collaboratorData?.auth_user_id) {
+            throw new Error('Não foi possível localizar o usuário autenticado do colaborador.');
+          }
 
-      if (error) {
-        console.error("Error updating company collaborator:", error);
-        throw error;
+          const { data: emailUpdateResult, error: emailError } = await supabase.functions.invoke('update-collaborator-email', {
+            body: {
+              auth_user_id: collaboratorData.auth_user_id,
+              new_email: email,
+              company_id: companyId
+            }
+          });
+
+          if (emailError) {
+            console.error('Edge Function error:', emailError);
+            throw new Error(`Erro ao atualizar e-mail: ${emailError.message}`);
+          }
+
+          if (!emailUpdateResult || !emailUpdateResult.success) {
+            throw new Error(emailUpdateResult?.error || 'Erro ao atualizar e-mail do colaborador.');
+          }
+
+          console.log('Email updated successfully via Edge Function');
+        } catch (error) {
+          console.error('Email update failed:', error);
+          throw new Error(`Erro ao atualizar e-mail: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        }
       }
+
+      // Se não temos dados atualizados ainda, buscar os dados finais
+      if (!updatedData) {
+        const { data: finalData, error: finalError } = await supabase
+          .from('company_users')
+          .select('*')
+          .eq('id', collaboratorId)
+          .single();
+
+        if (finalError) {
+          throw new Error(`Erro ao buscar dados atualizados: ${finalError.message}`);
+        }
+
+        updatedData = finalData;
+      }
+
       return updatedData;
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["companyCollaborators", variables.companyId] });
-      toast({
+      toast.success({
         title: "Colaborador atualizado!",
-        description: `Os dados de ${data.name} foram atualizados.`,
+        description: `Os dados foram atualizados com sucesso.`
       });
     },
     onError: (error: Error) => {
-      toast({
+      console.error('Update collaborator error:', error);
+      toast.error({
         title: "Erro ao atualizar colaborador",
-        description: error.message || "Ocorreu um erro inesperado.",
-        variant: "destructive",
+        description: error.message || "Ocorreu um erro inesperado."
       });
     },
   });

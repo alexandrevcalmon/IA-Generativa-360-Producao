@@ -11,6 +11,11 @@ interface LessonSidebarProps {
   duration: number;
   prevLesson?: { id: string; title: string };
   nextLesson?: { id: string; title: string };
+  nextLessonBlocked?: boolean;
+  nextLessonBlockedReason?: string;
+  nextLessonBlockedAction?: React.ReactNode;
+  quizzesByLesson?: Record<string, any[]>;
+  allAttempts?: any[];
 }
 
 export const LessonSidebar = ({ 
@@ -19,13 +24,18 @@ export const LessonSidebar = ({
   watchTime, 
   duration, 
   prevLesson, 
-  nextLesson 
+  nextLesson,
+  nextLessonBlocked,
+  nextLessonBlockedReason,
+  nextLessonBlockedAction,
+  quizzesByLesson,
+  allAttempts
 }: LessonSidebarProps) => {
   return (
     <div className="space-y-4 w-full">
       {/* Progress Card */}
-      <Card className="w-full border-gray-200 bg-white shadow-lg">
-        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-white text-gray-900 rounded-t-lg border-b border-gray-200">
+      <Card className="w-full border-slate-700/50 bg-slate-900/20 shadow-lg">
+        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 bg-slate-900/20 text-white rounded-t-lg border-b border-slate-700/50">
           <CardTitle className="text-base sm:text-lg font-semibold">Progresso</CardTitle>
         </CardHeader>
         <CardContent className="pt-4 px-4 sm:px-6 pb-4 sm:pb-6">
@@ -43,6 +53,12 @@ export const LessonSidebar = ({
           courseId={courseId}
           prevLesson={prevLesson}
           nextLesson={nextLesson}
+          nextLessonBlocked={nextLessonBlocked}
+          nextLessonBlockedReason={nextLessonBlockedReason}
+          nextLessonBlockedAction={nextLessonBlockedAction}
+          currentLessonId={currentLesson.id}
+          quizzesByLesson={quizzesByLesson}
+          allAttempts={allAttempts}
         />
       </div>
     </div>

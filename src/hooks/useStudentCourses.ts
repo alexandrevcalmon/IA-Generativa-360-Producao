@@ -14,6 +14,10 @@ export interface StudentCourse {
   progress_percentage: number;
   enrolled_at?: string;
   modules: StudentModule[];
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+  is_sequential?: boolean;
 }
 
 export interface StudentModule {
@@ -36,6 +40,21 @@ export interface StudentLesson {
   is_free: boolean;
   completed: boolean;
   watch_time_seconds: number;
+  is_optional?: boolean;
+}
+
+export type StudentLessonOrQuiz = StudentLesson | StudentQuizItem;
+
+export interface StudentQuizItem {
+  id: string;
+  type: 'quiz';
+  lesson_id: string;
+  title: string;
+  status: 'Aprovado' | 'Não Respondido' | 'Reprovado';
+  completed: boolean;
+  passing_score: number;
+  user_score?: number;
+  attempts?: number;
 }
 
 export const useStudentCourses = () => {
@@ -44,29 +63,64 @@ export const useStudentCourses = () => {
   return useQuery({
     queryKey: ['student-courses', user?.id, userRole],
     queryFn: async () => {
-      if (!user) throw new Error('User not authenticated');
+      console.log('🔍 [useStudentCourses] Starting query with:', { 
+        userId: user?.id, 
+        userEmail: user?.email,
+        userRole,
+        hasUser: !!user 
+      });
 
-      console.log('Fetching courses for user:', user.id, 'with role:', userRole);
+      if (!user) {
+        console.error('❌ [useStudentCourses] User not authenticated');
+        throw new Error('User not authenticated');
+      }
+
+      console.log('📚 [useStudentCourses] Fetching courses for user:', user.id, 'with role:', userRole);
 
       // Get published courses with improved error handling
       const { data: courses, error: coursesError } = await supabase
         .from('courses')
-        .select('*')
+        .select(`
+          *,
+          is_sequential
+        `)
         .eq('is_published', true)
         .order('created_at', { ascending: false });
 
       if (coursesError) {
-        console.error('Error fetching courses:', coursesError);
+        console.error('❌ [useStudentCourses] Error fetching courses:', coursesError);
         throw coursesError;
       }
 
-      console.log('Found published courses:', courses?.length || 0);
+      console.log('✅ [useStudentCourses] Found published courses:', courses?.length || 0);
 
       // Get enrollment data for the current user using auth.uid()
-      const { data: enrollments } = await supabase
-        .from('enrollments')
-        .select('course_id, enrolled_at, progress_percentage')
-        .eq('user_id', user.id);
+      console.log('🎓 [useStudentCourses] Fetching enrollments for user:', user.id);
+      
+      let enrollments = null;
+      let enrollmentsError = null;
+      
+      try {
+        // Primeira tentativa: busca direta
+        const { data, error } = await supabase
+          .from('enrollments')
+          .select('course_id, enrolled_at, progress_percentage')
+          .eq('user_id', user.id);
+          
+        enrollments = data;
+        enrollmentsError = error;
+      } catch (error) {
+        console.error('❌ [useStudentCourses] Direct enrollment query failed:', error);
+        enrollmentsError = error;
+      }
+
+      if (enrollmentsError) {
+        console.error('❌ [useStudentCourses] Error fetching enrollments:', enrollmentsError);
+        console.warn('⚠️ [useStudentCourses] Continuing without enrollment data');
+        enrollments = []; // Use empty array as fallback
+      }
+
+      console.log('✅ [useStudentCourses] Found enrollments:', enrollments?.length || 0);
 
       const enrollmentMap = new Map(
         enrollments?.map(e => [e.course_id, e]) || []
@@ -82,7 +136,13 @@ export const useStudentCourses = () => {
           // Get modules with better error handling
           const { data: modules, error: modulesError } = await supabase
             .from('course_modules')
-            .select('*')
+            .select(`
+              *,
+              lessons(
+                *,
+                is_optional
+              )
+            `)
             .eq('course_id', course.id)
             .eq('is_published', true)
             .order('order_index');
@@ -109,39 +169,77 @@ export const useStudentCourses = () => {
               }
 
               // Get progress for each lesson with improved handling - using auth user ID directly
-              const lessonsWithProgress = await Promise.all(
+              const lessonsWithProgressAndQuizzes = await Promise.all(
                 (lessons || []).map(async (lesson) => {
+                  // Busca progresso da aula
+                  let lessonProgress = { completed: false, watch_time_seconds: 0 };
                   try {
-                    const { data: lessonProgress, error: progressError } = await supabase
+                    const { data: progress, error: progressError } = await supabase
                       .from('lesson_progress')
                       .select('completed, watch_time_seconds')
                       .eq('lesson_id', lesson.id)
-                      .eq('user_id', user.id) // Use auth user ID directly
+                      .eq('user_id', user.id)
                       .maybeSingle();
-
-                    if (progressError) {
-                      console.warn('Warning: Could not fetch lesson progress for lesson', lesson.id, ':', progressError);
+                    if (!progressError && progress) lessonProgress = progress;
+                  } catch {}
+                  // Monta lesson normal
+                  const lessonItem: StudentLessonOrQuiz = {
+                    ...lesson,
+                    completed: lessonProgress.completed || false,
+                    watch_time_seconds: lessonProgress.watch_time_seconds || 0,
+                    type: 'lesson',
+                  };
+                  // Busca quizzes relacionados
+                  const { data: quizzes } = await supabase
+                    .from('quizzes')
+                    .select('*')
+                    .eq('lesson_id', lesson.id)
+                    .order('created_at');
+                  const quizItems: StudentQuizItem[] = [];
+                  if (quizzes && quizzes.length > 0) {
+                    for (const quiz of quizzes) {
+                      // Busca tentativas do usuário
+                      const { data: attempts } = await supabase
+                        .from('quiz_attempts')
+                        .select('score, passed')
+                        .eq('quiz_id', quiz.id)
+                        .eq('user_id', user.id)
+                        .order('attempt_number', { ascending: false })
+                        .limit(1);
+                      let status: 'Aprovado' | 'Não Respondido' | 'Reprovado' = 'Não Respondido';
+                      let completed = false;
+                      let user_score = undefined;
+                      if (attempts && attempts.length > 0) {
+                        user_score = attempts[0].score;
+                        if (attempts[0].passed) {
+                          status = 'Aprovado';
+                          completed = true;
+                        } else {
+                          status = 'Reprovado';
+                        }
+                      }
+                      quizItems.push({
+                        id: quiz.id,
+                        type: 'quiz',
+                        lesson_id: lesson.id,
+                        title: quiz.title,
+                        status,
+                        completed,
+                        passing_score: quiz.passing_score || 75,
+                        user_score,
+                      });
                     }
-
-                    return {
-                      ...lesson,
-                      completed: lessonProgress?.completed || false,
-                      watch_time_seconds: lessonProgress?.watch_time_seconds || 0,
-                    };
-                  } catch (error) {
-                    console.warn('Exception while fetching progress for lesson', lesson.id, ':', error);
-                    return {
-                      ...lesson,
-                      completed: false,
-                      watch_time_seconds: 0,
-                    };
                   }
+                  // Retorna lesson + quizzes
+                  return [lessonItem, ...quizItems];
                 })
               );
+              // Achata a lista
+              const flatLessons = lessonsWithProgressAndQuizzes.flat();
 
               return {
                 ...module,
-                lessons: lessonsWithProgress,
+                lessons: flatLessons,
               };
             })
           );
@@ -149,7 +247,7 @@ export const useStudentCourses = () => {
           // Calculate progress percentage based on completed lessons
           const totalLessons = modulesWithLessons.reduce((total, module) => total + module.lessons.length, 0);
           const completedLessons = modulesWithLessons.reduce((total, module) => 
-            total + module.lessons.filter(lesson => lesson.completed).length, 0
+            total + module.lessons.filter(item => item.completed).length, 0
           );
           const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 

@@ -310,7 +310,7 @@ const ProducerCompanyDetails = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-muted-foreground">Cursos Ativos</p>
-                          <p className="text-2xl font-bold text-orange-600">8</p>
+                          <p className="text-2xl font-bold text-orange-600">-</p>
                         </div>
                         <Building2 className="h-8 w-8 text-orange-600" />
                       </div>
@@ -412,11 +412,6 @@ const ProducerCompanyDetails = () => {
                                 <Badge variant={collaborator.is_active ? "default" : "outline"} className="text-xs ml-2">
                                   {collaborator.is_active ? "Ativo" : "Inativo"}
                                 </Badge>
-                                {collaborator.needs_password_change && (
-                                   <Badge variant="outline" className="text-xs ml-2 border-yellow-500 text-yellow-600">
-                                      Pendente Senha
-                                   </Badge>
-                                )}
                               </div>
                             </div>
                           </div>

@@ -32,13 +32,15 @@ export const LessonVideoSection = ({ currentLesson, course, onTimeUpdate }: Less
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full overflow-hidden">
       <CardContent className="p-0">
-        <VideoPlayer
-          currentLesson={currentLesson}
-          course={course}
-          onTimeUpdate={onTimeUpdate}
-        />
+        <div className="w-full max-w-full overflow-hidden">
+          <VideoPlayer
+            currentLesson={currentLesson}
+            course={course}
+            onTimeUpdate={onTimeUpdate}
+          />
+        </div>
       </CardContent>
     </Card>
   );
