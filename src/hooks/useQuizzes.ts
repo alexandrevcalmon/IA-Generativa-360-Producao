@@ -18,7 +18,7 @@ export interface QuizQuestion {
   correct_answer: number;
 }
 
-export const useLessonQuizzes = () => {
+export const useLessonQuizzes = (lessonId?: string) => {
   return {
     data: [],
     isLoading: false,
@@ -26,7 +26,7 @@ export const useLessonQuizzes = () => {
   };
 };
 
-export const useLessonQuizAttempts = () => {
+export const useLessonQuizAttempts = (lessonId?: string) => {
   return {
     data: [],
     isLoading: false,
@@ -36,15 +36,15 @@ export const useLessonQuizAttempts = () => {
 
 export const useRegisterQuizAttempt = () => {
   return {
-    mutate: () => {},
+    mutate: (data?: any) => {},
     isLoading: false
   };
 };
 
 export const useCreateQuiz = () => {
   return {
-    mutate: () => {},
-    mutateAsync: async () => {},
+    mutate: (data?: any) => {},
+    mutateAsync: async (data?: any) => {},
     isLoading: false,
     isPending: false
   };
@@ -52,8 +52,8 @@ export const useCreateQuiz = () => {
 
 export const useUpdateQuiz = () => {
   return {
-    mutate: () => {},
-    mutateAsync: async () => {},
+    mutate: (data?: any) => {},
+    mutateAsync: async (data?: any) => {},
     isLoading: false,
     isPending: false
   };
@@ -61,8 +61,8 @@ export const useUpdateQuiz = () => {
 
 export const useDeleteQuiz = () => {
   return {
-    mutate: () => {},
-    mutateAsync: async () => {},
+    mutate: (data?: any) => {},
+    mutateAsync: async (data?: any) => {},
     isLoading: false,
     isPending: false
   };

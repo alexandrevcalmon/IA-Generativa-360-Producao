@@ -23,7 +23,7 @@ export interface StudentLesson {
   watch_time_seconds?: number;
 }
 
-export const useStudentCourses = () => {
+export const useStudentCourses = (params?: any) => {
   return {
     data: [],
     isLoading: false,

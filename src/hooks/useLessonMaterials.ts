@@ -10,7 +10,7 @@ export interface LessonMaterial {
   extracted_content?: string;
 }
 
-export const useLessonMaterials = () => {
+export const useLessonMaterials = (lessonId?: string) => {
   return {
     data: [],
     isLoading: false,

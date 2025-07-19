@@ -1,7 +1,7 @@
 // Stub file for useCommunityReplies hook
 // TODO: Implement when community_replies table exists
 
-export const useCommunityReplies = () => {
+export const useCommunityReplies = (topicId?: string) => {
   return {
     data: [],
     isLoading: false,
@@ -11,7 +11,29 @@ export const useCommunityReplies = () => {
 
 export const useCreateCommunityReply = () => {
   return {
-    mutate: () => {},
+    mutate: (data?: any, options?: any) => {},
+    isLoading: false,
+    isPending: false
+  };
+};
+
+export const useToggleReplyLike = () => {
+  return {
+    mutate: (data?: any) => {},
+    isLoading: false
+  };
+};
+
+export const useUpdateCommunityReply = () => {
+  return {
+    mutate: (data?: any) => {},
+    isLoading: false
+  };
+};
+
+export const useDeleteCommunityReply = () => {
+  return {
+    mutate: (data?: any) => {},
     isLoading: false
   };
 };

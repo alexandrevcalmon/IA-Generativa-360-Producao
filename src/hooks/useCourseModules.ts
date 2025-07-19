@@ -22,8 +22,8 @@ export const useCourseModules = () => {
 
 export const useCreateModule = () => {
   return {
-    mutate: () => {},
-    mutateAsync: async () => {},
+    mutate: (data?: any) => {},
+    mutateAsync: async (data?: any) => {},
     isLoading: false,
     isPending: false
   };
@@ -31,8 +31,8 @@ export const useCreateModule = () => {
 
 export const useUpdateModule = () => {
   return {
-    mutate: () => {},
-    mutateAsync: async () => {},
+    mutate: (data?: any) => {},
+    mutateAsync: async (data?: any) => {},
     isLoading: false,
     isPending: false
   };
@@ -40,8 +40,8 @@ export const useUpdateModule = () => {
 
 export const useDeleteModule = () => {
   return {
-    mutate: () => {},
-    mutateAsync: async () => {},
+    mutate: (data?: any) => {},
+    mutateAsync: async (data?: any) => {},
     isLoading: false,
     isPending: false
   };

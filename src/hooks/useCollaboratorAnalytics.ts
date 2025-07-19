@@ -13,6 +13,7 @@ export interface CollaboratorStats {
     phone?: string;
     position?: string;
     is_active: boolean;
+    created_at?: string;
   };
   collaborator_id: string;
   lessons_completed: number;
