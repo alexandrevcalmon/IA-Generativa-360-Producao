@@ -2,29 +2,34 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
+import { useSubscriptionAccess } from '@/hooks/useSubscriptionAccess';
 import { PasswordChangeDialog } from '@/components/PasswordChangeDialog';
-import { SubscriptionBlockedMessage } from '@/components/SubscriptionBlockedMessage';
+import { AccessGuard } from '@/components/AccessGuard';
 import { logger } from '@/lib/logger';
 
 interface AuthGuardProps {
   children?: React.ReactNode;
   requiredRole?: 'producer' | 'company' | 'student';
   redirectTo?: string;
+  requireSubscription?: boolean;
 }
 
-export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: AuthGuardProps) {
+export function AuthGuard({ 
+  children, 
+  requiredRole, 
+  redirectTo = '/auth',
+  requireSubscription = false 
+}: AuthGuardProps) {
   const { 
     user, 
     loading, 
     userRole, 
-    needsPasswordChange, 
-    isSubscriptionBlocked,
-    subscriptionStatus,
-    subscriptionAlert,
+    needsPasswordChange,
     refreshUserRole 
   } = useAuth();
   const navigate = useNavigate();
   const [isValidating, setIsValidating] = useState(true);
+  const accessInfo = useSubscriptionAccess();
 
   // Handle redirect for unauthenticated users
   useEffect(() => {
@@ -44,7 +49,8 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
       logger.debug('AuthGuard validating access', {
         userRole,
         requiredRole,
-        needsPasswordChange
+        needsPasswordChange,
+        requireSubscription
       });
 
       // If no role yet, try to refresh
@@ -60,7 +66,7 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
   }, [user, loading, userRole, requiredRole, refreshUserRole]);
 
   // Show loading while validating
-  if (loading || isValidating) {
+  if (loading || isValidating || accessInfo.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Carregando...</div>
@@ -71,17 +77,6 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
   // Redirect if no user
   if (!user) {
     return null;
-  }
-
-  // Show subscription blocked message if subscription is blocked
-  if (isSubscriptionBlocked && subscriptionStatus) {
-    logger.debug('Subscription blocked, showing blocked message');
-    return (
-      <SubscriptionBlockedMessage 
-        status={subscriptionStatus}
-        alert={subscriptionAlert}
-      />
-    );
   }
 
   // Show password change dialog if needed
@@ -121,6 +116,15 @@ export function AuthGuard({ children, requiredRole, redirectTo = '/auth' }: Auth
         </div>
       );
     }
+  }
+
+  // Check subscription requirements
+  if (requireSubscription) {
+    return (
+      <AccessGuard>
+        {children ? <>{children}</> : <Outlet />}
+      </AccessGuard>
+    );
   }
 
   logger.debug('AuthGuard access granted for:', user.email, 'with role:', userRole);
