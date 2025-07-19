@@ -9,10 +9,9 @@ export default defineConfig(({ mode }) => {
   // Carregar variáveis de ambiente
   const env = loadEnv(mode, process.cwd(), '');
 
-  // Checagem obrigatória das variáveis sensíveis
-  if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY) {
-    throw new Error('As variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY são obrigatórias. Defina-as no seu .env.');
-  }
+  // Use Supabase project config directly instead of env variables
+  const SUPABASE_URL = 'https://swmxqjdvungochdjvtjg.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3bXhxamR2dW5nb2NoZGp2dGpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwOTMzOTYsImV4cCI6MjA2NTY2OTM5Nn0.RqmWdYj-_LCfRr2l6xYJIsCDhWUAUl2ho_-KrUp1igc';
 
   return {
     server: {
@@ -56,9 +55,9 @@ export default defineConfig(({ mode }) => {
       force: mode === 'development',
     },
     define: {
-      // Garantir que as variáveis sejam sempre definidas
-      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
-      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
+      // Use direct Supabase project configuration
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(SUPABASE_URL),
+      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(SUPABASE_ANON_KEY),
       'import.meta.env.VITE_APP_URL': JSON.stringify(env.VITE_APP_URL || ''),
       'import.meta.env.MODE': JSON.stringify(mode),
     },

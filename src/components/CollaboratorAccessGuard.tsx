@@ -31,9 +31,13 @@ export function CollaboratorAccessGuard({ children, fallback }: CollaboratorAcce
     
     return (
       <SubscriptionBlockedMessage
-        companyName={companyName}
-        subscriptionStatus={subscriptionStatus}
-        subscriptionEndsAt={subscriptionEndsAt}
+        status={{
+          isActive: false,
+          status: subscriptionStatus || 'inactive',
+          expiresAt: subscriptionEndsAt,
+          needsRenewal: true,
+          isExpired: true
+        }}
       />
     );
   }
