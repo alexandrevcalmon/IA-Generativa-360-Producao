@@ -8,7 +8,7 @@ import { AIChatWidget } from '@/components/lesson/AIChatWidget';
 import { StudentLesson, StudentCourse } from '@/hooks/useStudentCourses';
 import { useLessonQuizzes, useLessonQuizAttempts, useRegisterQuizAttempt } from '@/hooks/useQuizzes';
 import { Button } from '@/components/ui/button';
-import { useUpdateLessonProgress } from '@/hooks/progress/useUpdateLessonProgress';
+// import { useUpdateLessonProgress } from '@/hooks/progress/useUpdateLessonProgress'; // Disabled - missing module
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';

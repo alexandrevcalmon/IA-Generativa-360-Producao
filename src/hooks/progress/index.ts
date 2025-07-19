@@ -1,6 +1,6 @@
 
 // Main export file for progress-related hooks
-export { useUpdateLessonProgress } from './useUpdateLessonProgress';
+// export { useUpdateLessonProgress } from './useUpdateLessonProgress'; // Disabled - missing module
 export { useMarkLessonComplete } from './useMarkLessonComplete';
 export { useEnrollInCourse } from './useEnrollInCourse';
 export { useDebouncedLessonProgress } from './useDebouncedLessonProgress';
