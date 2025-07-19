@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { useStudentCourse } from '@/hooks/useStudentCourses';
 
 export const useLessonInCourse = (courseId: string, lessonId: string) => {
-  const { data: course, isLoading: courseLoading, error: courseError } = useStudentCourse(courseId);
+  const { data: course, isLoading: courseLoading, error: courseError } = useStudentCourse();
 
   const lessonData = useMemo(() => {
     if (!course || !lessonId) {

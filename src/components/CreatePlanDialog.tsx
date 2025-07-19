@@ -23,6 +23,7 @@ export function CreatePlanDialog({ isOpen, onClose }: CreatePlanDialogProps) {
   const [formData, setFormData] = useState<CreatePlanData>({
     name: "",
     description: "",
+    price: 0,
     semester_price: 0,
     annual_price: 0,
     max_students: 50,
@@ -45,6 +46,7 @@ export function CreatePlanDialog({ isOpen, onClose }: CreatePlanDialogProps) {
     setFormData({
       name: "",
       description: "",
+      price: 0,
       semester_price: 0,
       annual_price: 0,
       max_students: 50,

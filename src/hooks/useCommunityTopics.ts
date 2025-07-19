@@ -37,7 +37,7 @@ export const useCreateCommunityTopic = () => {
 
 export const useUpdateCommunityTopic = () => {
   return {
-    mutate: (data?: any) => {},
+    mutate: (data?: any, options?: any) => {},
     isLoading: false,
     isPending: false
   };

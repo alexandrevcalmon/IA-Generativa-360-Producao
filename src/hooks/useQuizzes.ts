@@ -67,3 +67,27 @@ export const useDeleteQuiz = () => {
     isPending: false
   };
 };
+
+export const useUserQuizAttempts = (params?: any) => {
+  return {
+    data: [],
+    isLoading: false,
+    error: null
+  };
+};
+
+export const useQuizById = (quizId?: string) => {
+  return {
+    data: null,
+    isLoading: false,
+    error: null
+  };
+};
+
+export const useLastUserQuizAttempt = (params?: any) => {
+  return {
+    data: null,
+    isLoading: false,
+    error: null
+  };
+};

@@ -120,21 +120,19 @@ export const LessonViewContent = ({
       correct_answers: correctAnswers,
       answers,
       passed,
-    }, {
-      onSuccess: () => {
-        setQuizModalOpen(false);
-        if (passed) {
-          // TODO: Mark lesson as completed when quiz is passed
-          // if (progressPercentage >= 95) {
-          //   updateLessonProgress.mutate({ lessonId: currentLesson.id, completed: true });
-          // }
-        } else {
-          // TODO: Revert lesson completion
-          // updateLessonProgress.mutate({ lessonId: currentLesson.id, completed: false });
-          toast.error('Você não atingiu 75% de acerto. Assista novamente a aula e refaça o quiz.');
-        }
-      }
     });
+    
+    setQuizModalOpen(false);
+    if (passed) {
+      // TODO: Mark lesson as completed when quiz is passed
+      // if (progressPercentage >= 95) {
+      //   updateLessonProgress.mutate({ lessonId: currentLesson.id, completed: true });
+      // }
+    } else {
+      // TODO: Revert lesson completion
+      // updateLessonProgress.mutate({ lessonId: currentLesson.id, completed: false });
+      toast.error('Você não atingiu 75% de acerto. Assista novamente a aula e refaça o quiz.');
+    }
   };
 
   // Corrige erro: define handleTimeUpdate
